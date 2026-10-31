@@ -12,6 +12,7 @@ Start at the contents page, `index.html`, which lists the tools by topic. The si
 | 1 | Democracy's collapse in interwar Germany | The national Nazi vote, and who voted differently from it | `king-swing-decomposer.html` |
 | 3 | Communist parties in postwar Eastern Europe | Choosing your ministries | `postwar-cabinet-bargaining.html` |
 | 4 | Collective action and protest | Would you take part? | `collective-action-practice.html` |
+| 5 | Transitions to democracy | The tipping model: why nobody saw 1989 coming | `tipping-model.html` |
 
 ## Notes
 

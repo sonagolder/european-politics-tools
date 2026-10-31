@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The tipping model: thresholds and the surprise of 1989</title>
+<style>
+  :root {
+    --bg: #FAFAFA;
+    --panel: #FFFFFF;
+    --border: #D0D0D0;
+    --text: #111111;
+    --text-2: #555555;
+    --hint: #999999;
+    --deemph: #707070;
+    --accent: #0072B2;
+    --favorable: #0072B2;
+    --unfavorable: #B33E00;
+    --neutral-state: #5F5E5A;
+    --gold-ui: #B8860B;
+    --gold-text: #946B09;
+    --opposition: #009E73;
+    --government: #CC79A7;
+    --body-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --data-font: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --u: 8px;
+  }
+
+  html[data-theme="dark"] {
+    --bg: #1A1A1A;
+    --panel: #2A2A2A;
+    --border: #3A3A3A;
+    --text: #F2F2F2;
+    --text-2: #B3B3B3;
+    --hint: #7A7A7A;
+    --deemph: #8F8F8F;
+    --accent: #7FC7EE;
+    --favorable: #7FC7EE;
+    --unfavorable: #F08A4B;
+    --neutral-state: #A8A6A0;
+    --gold-ui: #E0B23D;
+    --gold-text: #E0B23D;
+    --opposition: #3FCFA0;
+    --government: #E29FC4;
+  }
+
+  * { box-sizing: border-box; }
+
+  /* Author rules that set `display` outrank the browser's [hidden] rule, so anything
+     given a display value here would stay visible when hidden. Enforce it globally. */
+  [hidden] { display: none !important; }
+
+  body {
+    margin: 0;
+    padding: calc(var(--u) * 3);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body-font);
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  code, .num { font-family: var(--data-font); font-variant-numeric: tabular-nums; }
+
+  header { margin-bottom: calc(var(--u) * 3); }
+  h1 { font-size: 1.65rem; font-weight: 600; margin: 0 0 var(--u) 0; line-height: 1.25; }
+  .standfirst { margin: 0; color: var(--text-2); max-width: 68ch; }
+
+  .topbar {
+    display: flex; flex-wrap: wrap; gap: calc(var(--u) * 2);
+    align-items: flex-end; justify-content: space-between;
+    margin-bottom: calc(var(--u) * 3);
+  }
+
+  .field-label { display: block; font-size: 0.8rem; color: var(--text-2); margin-bottom: var(--u); }
+
+  [role="tablist"] { display: flex; flex-wrap: wrap; gap: var(--u); }
+
+  [role="tab"] {
+    font: inherit; font-size: 0.95rem;
+    padding: var(--u) calc(var(--u) * 2);
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+
+  [role="tab"][aria-selected="true"] {
+    border-color: var(--accent);
+    box-shadow: inset 0 -3px 0 var(--accent);
+    font-weight: 600;
+  }
+
+  .theme-toggle {
+    font: inherit; font-size: 0.85rem;
+    padding: var(--u) calc(var(--u) * 2);
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+
+  button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible,
+  input:focus-visible, h2[tabindex="-1"]:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* ---------- the society block ---------- */
+
+  .model-block {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 6px; padding: calc(var(--u) * 2);
+    margin-bottom: calc(var(--u) * 3);
+  }
+
+  .model-block h2 { font-size: 1.05rem; font-weight: 600; margin: 0 0 var(--u) 0; }
+
+  .model-block h3 {
+    font-size: 0.95rem; font-weight: 600;
+    margin: calc(var(--u) * 3) 0 var(--u) 0;
+    padding-top: calc(var(--u) * 2);
+    border-top: 1px solid var(--border);
+  }
+
+  .lede { margin: 0 0 calc(var(--u) * 2) 0; color: var(--text-2); max-width: 78ch; }
+
+  /* position: relative makes each scroller the containing block for the absolutely
+     positioned .sr-only text inside it. Without it that text is placed against the page
+     and widens it, so the whole page scrolled sideways below about 583px. */
+  .strip-scroll { overflow-x: auto; padding-bottom: var(--u); position: relative; }
+  .table-scroll { overflow-x: auto; padding-bottom: var(--u); position: relative; }
+
+  table.observer { border-collapse: collapse; min-width: 640px; width: 100%; }
+  table.observer caption {
+    text-align: left; font-size: 0.8rem; color: var(--text-2); padding-bottom: var(--u);
+  }
+  table.observer th, table.observer td {
+    border: 1px solid var(--border); padding: calc(var(--u) * 0.75) calc(var(--u) * 0.5);
+    text-align: center; font-size: 0.85rem;
+  }
+  table.observer thead th { font-weight: 600; background: var(--bg); font-size: 0.75rem; }
+  table.observer th[scope="row"] {
+    font-family: var(--data-font); font-weight: 600; text-align: left;
+    padding-left: var(--u); white-space: nowrap;
+  }
+  table.observer td.stance-cell { line-height: 1.15; }
+  table.observer td.stance-cell .glyph { font-size: 1.1rem; display: block; }
+  table.observer td.stance-cell .thr {
+    font-family: var(--data-font); font-variant-numeric: tabular-nums;
+    font-size: 0.8rem; display: block;
+  }
+  /* The threshold line is always laid out and only made visible on reveal, so the
+     reveal changes nothing's position. Adding it on reveal made every row taller. */
+  table.observer td.stance-cell .thr.is-concealed { visibility: hidden; }
+  table.observer td.in-opposition { color: var(--opposition); }
+  table.observer td.in-government { color: var(--government); }
+  table.observer td.settles {
+    font-family: var(--data-font); font-variant-numeric: tabular-nums; font-weight: 600;
+  }
+
+  .people-strip {
+    display: grid; grid-template-columns: repeat(10, minmax(58px, 1fr));
+    gap: var(--u); min-width: 620px;
+  }
+
+  .person {
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: var(--u); text-align: center; background: var(--bg);
+  }
+
+  .person .glyph { font-size: 1.4rem; line-height: 1.1; }
+  .person .who { font-size: 0.7rem; color: var(--text-2); }
+  .person .thr {
+    font-family: var(--data-font); font-variant-numeric: tabular-nums;
+    font-size: 1rem; font-weight: 600;
+  }
+  .person .stance { font-size: 0.62rem; line-height: 1.2; }
+
+  .person.is-opposition { border-color: var(--opposition); }
+  .person.is-opposition .glyph, .person.is-opposition .stance { color: var(--opposition); }
+  .person.is-government { border-color: var(--government); }
+  .person.is-government .glyph, .person.is-government .stance { color: var(--government); }
+
+  .person.is-unknown {
+    border-style: dashed; border-color: var(--border);
+    background: repeating-linear-gradient(45deg,
+      var(--bg), var(--bg) 5px, var(--panel) 5px, var(--panel) 10px);
+  }
+  .person.is-unknown .glyph, .person.is-unknown .stance { color: var(--deemph); }
+
+  .bigread {
+    display: flex; flex-wrap: wrap; gap: calc(var(--u) * 3);
+    align-items: baseline; margin-top: calc(var(--u) * 2);
+  }
+  .bigread .figure {
+    font-family: var(--data-font); font-variant-numeric: tabular-nums;
+    font-size: 1.9rem; font-weight: 600;
+  }
+  .bigread .cap { font-size: 0.8rem; color: var(--text-2); display: block; }
+
+  ol.rounds { margin: var(--u) 0 0 0; padding-left: calc(var(--u) * 3); }
+  ol.rounds li { margin-bottom: calc(var(--u) * 0.5); }
+
+  /* ---------- boards ---------- */
+
+  .board { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--u) * 3); }
+  @media (max-width: 860px) { .board { grid-template-columns: 1fr; } }
+
+  .col > h2 { font-size: 1.05rem; font-weight: 600; margin: 0 0 var(--u) 0; }
+
+  .cgroup {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 6px; padding: calc(var(--u) * 2);
+    margin-bottom: calc(var(--u) * 2);
+  }
+  .cgroup h3 { font-size: 0.95rem; font-weight: 600; margin: 0 0 var(--u) 0; }
+  .cgroup p { margin: 0 0 var(--u) 0; }
+  .cgroup p:last-child { margin-bottom: 0; }
+
+  .slider-row {
+    display: grid; grid-template-columns: 4.6rem 1fr 6.4rem;
+    gap: var(--u); align-items: center; margin-bottom: calc(var(--u) * 0.5);
+  }
+  .slider-row label { font-size: 0.85rem; }
+  .slider-row input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .slider-row .val {
+    font-family: var(--data-font); font-variant-numeric: tabular-nums;
+    font-size: 0.85rem; text-align: right;
+  }
+  .scale {
+    display: flex; justify-content: space-between;
+    font-size: 0.7rem; color: var(--text-2);
+    margin: 0 6.4rem var(--u) 4.6rem;
+  }
+
+  .btnrow { display: flex; flex-wrap: wrap; gap: var(--u); }
+
+  .preset-btn, .plain-btn {
+    font: inherit; font-size: 0.85rem;
+    padding: calc(var(--u) * 0.75) calc(var(--u) * 1.5);
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+  .preset-btn .pname { font-family: var(--data-font); font-weight: 600; }
+  .preset-btn[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 -3px 0 var(--accent); }
+
+  .primary-btn {
+    font: inherit; font-size: 0.95rem; font-weight: 600;
+    padding: var(--u) calc(var(--u) * 2);
+    background: var(--accent); color: var(--panel);
+    border: 1px solid var(--accent); border-radius: 4px; cursor: pointer;
+  }
+  html[data-theme="dark"] .primary-btn { color: var(--bg); }
+  .primary-btn[aria-disabled="true"] {
+    background: var(--panel); color: var(--hint);
+    border-style: dashed; border-color: var(--border);
+  }
+
+  .answer-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--u); }
+  .ans-btn {
+    font: inherit; font-family: var(--data-font); font-size: 0.95rem;
+    padding: var(--u); background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+  .ans-btn[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 -3px 0 var(--accent); }
+  .ans-btn[data-mark="correct"] { border-color: var(--favorable); color: var(--favorable); font-weight: 600; }
+  .ans-btn[data-mark="wrong"] { border-color: var(--unfavorable); color: var(--unfavorable); }
+
+  .result { margin-top: calc(var(--u) * 2); padding: calc(var(--u) * 1.5);
+            border: 1px solid var(--border); border-radius: 4px; }
+  .result.is-correct { border-color: var(--favorable); }
+  .result.is-wrong { border-color: var(--unfavorable); }
+  .result .verdict { font-weight: 600; }
+  .result.is-correct .verdict { color: var(--favorable); }
+  .result.is-wrong .verdict { color: var(--unfavorable); }
+
+  ul.setlist { list-style: none; margin: 0; padding: 0; }
+  ul.setlist li {
+    display: grid; grid-template-columns: 1.6rem 1fr; gap: var(--u);
+    padding: calc(var(--u) * 0.75) 0; border-bottom: 1px solid var(--border);
+    font-size: 0.9rem; align-items: start;
+  }
+  ul.setlist li:last-child { border-bottom: 0; }
+  ul.setlist li.done { color: var(--gold-text); }
+  ul.setlist li.done .tick { color: var(--gold-ui); font-weight: 700; }
+  ul.setlist li.current .cname { text-decoration: underline; }
+  ul.setlist .tick { text-align: center; }
+  ul.setlist .cname { font-weight: 600; }
+  ul.setlist .cseq {
+    display: block; font-weight: 400; color: var(--text-2);
+    font-family: var(--data-font); font-variant-numeric: tabular-nums; font-size: 0.8rem;
+  }
+
+  .tipline { margin: 0 0 calc(var(--u) * 0.5) 0; }
+  .tipline .who {
+    display: inline-block; border: 1px dashed var(--gold-ui); border-radius: 3px;
+    padding: 0 4px; font-family: var(--data-font); font-size: 0.85rem;
+    color: var(--gold-text);
+  }
+
+  .notes { margin-top: calc(var(--u) * 4); }
+  .notes details {
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: calc(var(--u) * 1.5) calc(var(--u) * 2);
+    margin-bottom: calc(var(--u) * 1.5); background: var(--panel);
+  }
+  .notes summary { cursor: pointer; font-weight: 600; }
+  .notes details > *:not(summary) { max-width: 78ch; }
+  .notes h4 { font-size: 0.95rem; margin: calc(var(--u) * 2) 0 var(--u) 0; }
+  .notes table { border-collapse: collapse; margin: var(--u) 0; font-size: 0.9rem; }
+  .notes th, .notes td { border: 1px solid var(--border); padding: var(--u); text-align: left; }
+  .notes th { font-weight: 600; }
+  .notes td.seq { font-family: var(--data-font); font-variant-numeric: tabular-nums; }
+
+  dl.defs { margin: var(--u) 0; }
+  dl.defs dt { font-weight: 600; margin-top: var(--u); }
+  dl.defs dd { margin: 0 0 0 calc(var(--u) * 2); color: var(--text-2); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .person { transition: border-color 0.15s ease; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>The tipping model</h1>
+    <p class="standfirst">
+      In 1989 the communist governments of eastern Europe fell within months of each other, and almost nobody
+      saw it coming — not western observers, not the people who had spent decades opposing those governments,
+      not the governments themselves. The examples here are based on the model Timur Kuran built to explain
+      the surprise. Ten people decide, one at a time, whether to reveal in public what they think in
+      private.
+    </p>
+  </header>
+
+  <div class="topbar">
+    <div>
+      <span class="field-label" id="mode-label">Two ways to use this</span>
+      <div role="tablist" aria-labelledby="mode-label" id="tabs">
+        <button role="tab" id="tab-explore" aria-selected="true" aria-controls="exploreBoard" type="button">Explore a society</button>
+        <button role="tab" id="tab-practice" aria-selected="false" aria-controls="practiceBoard" tabindex="-1" type="button">Seven societies to work out</button>
+      </div>
+    </div>
+    <button class="theme-toggle" id="themeToggle" type="button">Switch to dark mode</button>
+  </div>
+
+  <section class="model-block" aria-labelledby="societyTitle">
+    <h2 id="societyTitle">The society</h2>
+    <p class="lede" id="societyLede"></p>
+
+    <div class="strip-scroll">
+      <div class="people-strip" id="strip" aria-hidden="true"></div>
+    </div>
+
+    <p class="lede" id="privacyNote">
+      <strong>What you can see here, nobody in this society can.</strong> A threshold is private. Each of the
+      ten knows their own and none of the others, and neither does anyone watching from outside. The only
+      thing anybody can observe is the count of people currently opposing the government in public — the first
+      figure below. Everything else on this page is a view the model gives you and gives nobody in 1989.
+    </p>
+
+    <div class="bigread">
+      <div>
+        <span class="figure" id="oppFigure">1</span>
+        <span class="cap">people publicly opposing, out of 10</span>
+      </div>
+      <div>
+        <span class="figure" id="meanFigure">4.6</span>
+        <span class="cap">average threshold</span>
+      </div>
+      <div>
+        <span class="figure" id="roundsFigure">1</span>
+        <span class="cap" id="roundsCap">round before it settled</span>
+      </div>
+    </div>
+
+    <div id="cascadeWrap">
+      <h3 id="cascadeHead">How it unfolded</h3>
+      <ol class="rounds" id="rounds"></ol>
+    </div>
+
+    <div id="hiddenNote" hidden>
+      <h3>How it unfolds</h3>
+      <p class="lede">
+        Withheld until you have answered. Working out where the opposition settles is the exercise, and this
+        list would do it for you. The rule itself is not withheld — it is stated beside the sliders on the
+        other tab, and worked through once in the notes at the foot of the page.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================ EXPLORE ============================ -->
+
+  <div class="board" id="exploreBoard">
+
+    <div class="col">
+      <h2 id="exploreTitle" tabindex="-1">The ten people</h2>
+
+      <div class="cgroup">
+        <h3>Each person's revolutionary threshold</h3>
+        <p class="lede">
+          A person's <strong>revolutionary threshold</strong> is how many people would have to be publicly
+          opposing the government already before that person would join them. Set it to <span class="num">0</span>
+          and they oppose the government whatever anyone else does. Set it to <span class="num">10</span> and
+          nothing will ever bring them out, since there are only ten people and one of them is the person
+          themselves.
+        </p>
+        <div id="sliders"></div>
+        <div class="scale"><span>0</span><span>5</span><span>10</span></div>
+        <p class="lede">
+          <strong>The rule.</strong> Everyone whose threshold is at or below the number already opposing joins
+          them. That raises the number, which may bring in more people, and so on until nobody new is willing
+          to move.
+        </p>
+      </div>
+
+      <div class="cgroup">
+        <h3>The eight societies in the article</h3>
+        <p class="lede">
+          These are from section III of Kuran (1991), the week 5 reading, and the lecture works through the
+          same ones. Each is a ten-person society; the primed ones differ from their unprimed partner by a
+          single person's threshold.
+        </p>
+        <div class="btnrow" id="presets"></div>
+      </div>
+
+      <div class="cgroup">
+        <h3>A shock you can apply</h3>
+        <p class="lede">
+          Imagine a change that either makes individuals dislike the government more or that makes them fear
+          the government less; Kuran provided examples of each. Either kind of event can lower individuals'
+          revolutionary thresholds. You can apply this kind of shock and see how it affects a given society.
+        </p>
+        <div class="btnrow">
+          <button class="plain-btn" id="shockBtn" type="button">
+            Lower every threshold by one, apart from 0 and 10
+          </button>
+          <button class="plain-btn" id="resetBtn" type="button">Back to society A</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <h2 id="readTitle">What happens</h2>
+
+      <div class="cgroup">
+        <h3>Where the opposition settles</h3>
+        <p id="verdict"></p>
+        <p id="verdictWhy" class="lede"></p>
+      </div>
+
+      <div class="cgroup">
+        <h3>Is this society on the brink?</h3>
+        <p class="lede">
+          Whether one person becoming a single step more willing to oppose the government would bring others
+          out with them. A bandwagon is one person coming out bringing in the next, who brings in the next;
+          somebody coming out on their own does not count here, because nobody followed them. Nobody inside the society can run this check, because nobody can see anyone else's
+          threshold — which is also why nobody can say how finely balanced a real society is. The article's
+          eight societies were picked to make this point, so societies balanced this finely are probably not
+          common.
+        </p>
+        <div id="brink"></div>
+      </div>
+
+      <div class="cgroup">
+        <h3>What people would say afterward</h3>
+        <div id="afterward"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================ PRACTICE ============================ -->
+
+  <div class="board" id="practiceBoard" hidden>
+
+    <div class="col">
+      <h2 id="practiceTitle" tabindex="-1">Work it out</h2>
+
+      <div class="cgroup">
+        <h3 id="problemHead">Society 1 of 7</h3>
+        <p id="problemText"></p>
+        <p class="lede">
+          Start with anyone whose threshold is <span class="num">0</span>, and keep going as long as somebody
+          new is willing to move. How many of the ten end up publicly opposing?
+        </p>
+        <div class="answer-grid" id="answers" role="group" aria-label="How many of the ten end up publicly opposing"></div>
+        <div class="result" id="result" hidden>
+          <p class="verdict" id="resultVerdict"></p>
+          <p id="resultWhy"></p>
+          <p id="resultFragile"></p>
+          <p id="resultLesson"></p>
+        </div>
+        <p style="margin-top: var(--u)" class="btnrow">
+          <button class="plain-btn" id="prevBtn" type="button">Previous society</button>
+          <button class="primary-btn" id="nextBtn" type="button">Next society</button>
+        </p>
+      </div>
+    </div>
+
+    <div class="col">
+      <h2 id="setTitle">The seven societies</h2>
+
+      <div class="cgroup">
+        <h3>A fixed set, not a random stream</h3>
+        <p class="lede">
+          These seven are chosen rather than generated, and they are meant to be worked through in order. They
+          are close relatives of the societies in the lecture — same shapes, different numbers — so that
+          getting them right is not a matter of remembering what happened in class. Societies 1 to 4 come in two pairs. Within each pair the second society is the first with a
+          single threshold changed by one, and it is the same change both times.
+        </p>
+        <ul class="setlist" id="setlist"></ul>
+        <p class="lede" id="setNote"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= WHAT A CITIZEN CAN SEE ======================= -->
+
+  <section class="model-block" aria-labelledby="observerTitle">
+    <h2 id="observerTitle">What a citizen can see</h2>
+    <p class="lede" id="observerLede">
+      Five of the article's eight societies settle in the same place: one person publicly opposing, nine
+      publicly supporting. The table below is that, and nothing else — it is everything a person living in one
+      of these societies has to go on, and everything a foreign journalist, a diplomat or a political scientist
+      watching from outside has to go on too. The five rows are identical because the observation is identical.
+    </p>
+
+    <div class="table-scroll">
+      <table class="observer" id="observerTable">
+        <caption id="observerCaption">
+          Public stances in five of the article's societies. A filled circle is a person publicly opposing the
+          government; an open circle is a person publicly supporting it.
+        </caption>
+        <thead>
+          <tr id="observerHead"></tr>
+        </thead>
+        <tbody id="observerBody"></tbody>
+      </table>
+    </div>
+
+    <p>
+      <button class="plain-btn" id="revealBtn" type="button" aria-expanded="false"
+              aria-controls="observerTable">Show what nobody can see</button>
+    </p>
+
+    <p class="lede" id="observerAfter" hidden>
+      The same five rows, with each person's threshold written under their circle. These are five quite
+      different populations. In one of them seven people are sitting two steps from coming out; in another
+      nobody is within two steps of anything. Nothing in the row of circles above changes, because a threshold
+      is private and a public stance is all that gets expressed. That gap between what people think and what
+      they say is what Kuran calls <strong>preference falsification</strong>, and it is why these five
+      societies are, to anybody inside them, the same society.
+    </p>
+  </section>
+
+  <!-- ============================ NOTES ============================ -->
+
+  <div class="notes">
+
+    <details>
+      <summary>How to read a society, worked through once</summary>
+      <p>
+        Take the article's society <span class="num">A′</span>, whose thresholds are
+        <span class="num">{0, 1, 2, 3, 4, 5, 6, 7, 8, 10}</span>.
+      </p>
+      <p>
+        Start the count at <span class="num">0</span> and ask who is willing to come out at that count.
+        Person 1 is: a threshold of <span class="num">0</span> means opposing the government whatever anybody
+        else does. That makes the count <span class="num">1</span>.
+      </p>
+      <p>
+        The count of <span class="num">0</span> is where the arithmetic starts, not a moment the society was
+        ever in. Somebody with a threshold of <span class="num">0</span> is publicly opposing the government
+        the whole time, which is exactly what the article's lone dissidents are doing while everyone around
+        them stays quiet.
+      </p>
+      <p>
+        Person 2's threshold is <span class="num">1</span>. It is now satisfied, so person 2 comes out and the
+        count reaches <span class="num">2</span>. Person 3's threshold is <span class="num">2</span>, so person
+        3 comes out and the count reaches <span class="num">3</span>. Each person's arrival supplies exactly
+        the number the next one was waiting for. This runs all the way to person 9, and it settles at
+        <span class="num">9</span>. Only person 10, whose threshold is <span class="num">10</span>, never
+        moves.
+      </p>
+      <p>
+        Now change one number. In society <span class="num">A</span> person 2's threshold is
+        <span class="num">2</span> rather than <span class="num">1</span>, and everything else is identical.
+        Person 1 comes out, the count reaches <span class="num">1</span>, and person 2 is not satisfied by it.
+        Nobody else is either. The society settles at <span class="num">1</span> — one person, standing alone,
+        indefinitely.
+      </p>
+      <p>
+        <strong>One person's threshold moving by one is the difference between a lone dissident and a
+        revolution.</strong> That is the whole argument, and everything else in the article is an elaboration
+        of it.
+      </p>
+    </details>
+
+    <details>
+      <summary>The eight societies, and what each one is for</summary>
+      <table>
+        <caption class="sr-only">Kuran's eight threshold sequences and their outcomes</caption>
+        <thead>
+          <tr><th scope="col">Society</th><th scope="col">Thresholds</th><th scope="col">Settles at</th><th scope="col">What it shows</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="num">A</td><td class="seq">0, 2, 2, 3, 4, 5, 6, 7, 8, 10</td><td class="num">1</td>
+            <td>One dissident, standing alone. A stable arrangement.</td></tr>
+          <tr><td class="num">A′</td><td class="seq">0, 1, 2, 3, 4, 5, 6, 7, 8, 10</td><td class="num">9</td>
+            <td>Person 2's threshold falls by one and the society sweeps. Nothing else changed.</td></tr>
+          <tr><td class="num">B</td><td class="seq">0, 2, 3, 3, 4, 5, 6, 7, 8, 10</td><td class="num">1</td>
+            <td>Differs from A in one person's threshold, and settles the same way.</td></tr>
+          <tr><td class="num">B′</td><td class="seq">0, 1, 3, 3, 4, 5, 6, 7, 8, 10</td><td class="num">2</td>
+            <td>The same change that swept A′ produces two people here. A chain that runs out at once.</td></tr>
+          <tr><td class="num">C</td><td class="seq">0, 2, 2, 2, 2, 2, 2, 2, 6, 10</td><td class="num">1</td>
+            <td>Nearly everyone is close to joining. Nothing happens. Discontent is not enough.</td></tr>
+          <tr><td class="num">C′</td><td class="seq">0, 1, 2, 2, 2, 2, 2, 2, 6, 10</td><td class="num">9</td>
+            <td>Sweeps, but in a jump: six people come out in the same round.</td></tr>
+          <tr><td class="num">D</td><td class="seq">0, 3, 3, 3, 3, 3, 3, 3, 3, 10</td><td class="num">1</td>
+            <td>The society before an outside shock.</td></tr>
+          <tr><td class="num">D′</td><td class="seq">0, 2, 2, 2, 2, 2, 2, 2, 2, 10</td><td class="num">1</td>
+            <td>The same society after it. Eight people would now join if someone went first. Nobody does.</td></tr>
+        </tbody>
+      </table>
+      <p>
+        Compare <span class="num">A′</span> with <span class="num">C</span> and the point of the whole exercise
+        appears. The average threshold in <span class="num">C</span> is <span class="num">3</span> and in
+        <span class="num">A′</span> it is <span class="num">4.6</span>. By any measure of how much a population
+        dislikes its government, <span class="num">C</span> is the more disaffected society. Yet
+        <span class="num">C</span> sits still and <span class="num">A′</span> sweeps.
+      </p>
+      <p>
+        <strong>On the two ways of writing a threshold.</strong> The lecture writes thresholds as counts of
+        people, which is what this tool does throughout. The article writes the same societies as percentages
+        of the population, so its society A begins <span class="num">{0, 20, 20, 30, …}</span>. In a ten-person
+        society these are the same numbers: multiply a count by ten to get the article's figure.
+      </p>
+    </details>
+
+    <details>
+      <summary>What an observer could actually see</summary>
+      <p>
+        Everything this tool shows you about a society is invisible to the people inside it, and to anyone
+        watching from outside. Thresholds are not written on anyone's face. What is visible is the number of
+        people publicly opposing — and in societies <span class="num">A</span>, <span class="num">B</span>,
+        <span class="num">C</span>, <span class="num">D</span> and <span class="num">D′</span> that number is
+        identical: one person, year after year.
+      </p>
+      <p>
+        That is the point of the "what a citizen can see" table above. Five societies, indistinguishable from
+        outside, and no available observation separates them. Kuran's name for everyone being wrong about what
+        everyone else thinks is <strong>pluralistic ignorance</strong>.
+      </p>
+      <p>
+        A survey would not solve it. As the article puts it, offering people anonymity is easy and convincing
+        them that their answers will never be used against them is not. And a government that suspects its
+        support is thinner than it looks has no reason to commission the survey that would prove it, or to let
+        anyone else commission one.
+      </p>
+      <p>
+        The tool's "is this society on the brink" panel is therefore a view nobody in 1989 had. It is worth
+        using it that way: set a society, decide from the visible number whether you would have expected a
+        revolution, and then look.
+      </p>
+    </details>
+
+    <details>
+      <summary>Why it looks inevitable afterward</summary>
+      <p>
+        When a bandwagon runs, the people who join late are not the enthusiasts. They are the ones who held out
+        longest — the people whose high thresholds mean they were reasonably content with the government and
+        moved only when it became imprudent not to.
+      </p>
+      <p>
+        Afterward, those people have every reason to say they had opposed the government all along. Saying
+        anything else would contradict the position they now hold in public. So the same habit that hid the
+        revolution beforehand — saying in public something other than what you think — now hides how much
+        genuine support the government had. The regime ends up looking weaker in hindsight than it was, which
+        makes the failure to predict its fall even harder to explain.
+      </p>
+      <p>
+        The tool's afterward panel counts this using an assumption Kuran introduces for one comparison and does
+        not otherwise rely on: that a threshold below <span class="num">5</span> goes with privately wanting the
+        government gone, and <span class="num">5</span> or above with private satisfaction. On that reading,
+        four of the nine people who end up opposing in <span class="num">A′</span> are misrepresenting
+        themselves afterward, and only one of the nine in <span class="num">C′</span> is — even though the two
+        societies produce the same visible outcome and the same public story.
+      </p>
+    </details>
+
+    <details>
+      <summary>What this has to do with 1989</summary>
+      <p>
+        The model does not say the eastern European governments were bound to fall, and it does not say they
+        were bound to survive. It says something narrower and more useful: that whether they fell depended on
+        the distribution of thresholds across the population, that this distribution was not observable by
+        anybody, and that therefore no one — including the people who eventually brought the governments down —
+        was in a position to know.
+      </p>
+      <p>
+        What the late 1980s did was push thresholds down. Kuran's account, in the part of the article that goes
+        country by country, puts the push at the Soviet leadership's decision in the mid-1980s to admit to
+        economic problems and to call for restructuring and public openness, and at the accompanying move away
+        from confrontation with the west. Opposing the government became less dangerous, which is exactly what
+        lowers a threshold. The lecture adds poor economic conditions and the renunciation of the Soviet
+        commitment to intervene in eastern Europe.
+      </p>
+      <p>
+        The important thing is what follows, and it is the reason society <span class="num">D</span> is in the
+        article. Push every threshold down by one and you may get a revolution, or you may get a population in
+        which eight people out of ten would now join an opposition and none of them ever does, because each is
+        waiting for somebody else. The shock changes the odds. It does not settle the outcome.
+      </p>
+      <p>
+        This is also why the model has room for both halves of an argument students often meet as opposites.
+        Deep structural forces — economic decline, a superpower's retreat — are doing real work here: they move
+        the thresholds. But which way things then go can turn on one person having a bad morning at a
+        government office. Neither half is the whole story.
+      </p>
+    </details>
+
+
+    <details>
+      <summary>Where these numbers come from</summary>
+      <p>
+        The model, the eight societies on the first tab, and every outcome this tool reports for them are from
+        section III of Kuran (1991), the week 5 reading. The seven societies on the other tab are not from the
+        article or from the lecture — they were built for this tool, as close relatives of the ones worked
+        through in class.
+      </p>
+      <p>
+        Every threshold here is an illustration. They are not measurements of anybody, and no survey of
+        eastern Europe produced them.
+      </p>
+    </details>
+  </div>
+
+  <div class="sr-only" role="status" aria-live="polite" id="liveRegion"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var N = 10;
+
+  /* ---------- the model ----------
+     Thresholds are counts of people, following the lecture. A person joins once
+     the number already publicly opposing is at or above their threshold. */
+
+  function cascade(t) {
+    var inOpposition = [];
+    for (var i = 0; i < N; i++) inOpposition.push(false);
+
+    var s = 0;
+    var path = [{ level: 0, joined: [], members: [] }];
+    var guard = 0;
+
+    while (guard++ <= N) {
+      var joined = [];
+      for (var j = 0; j < N; j++) {
+        if (!inOpposition[j] && t[j] <= s) joined.push(j);
+      }
+      if (joined.length === 0) break;
+      for (var k = 0; k < joined.length; k++) inOpposition[joined[k]] = true;
+
+      var members = [];
+      for (var m = 0; m < N; m++) if (inOpposition[m]) members.push(m);
+      s = members.length;
+      path.push({ level: s, joined: joined, members: members });
+    }
+
+    var last = path[path.length - 1];
+    return { finalLevel: s, members: last.members, path: path, rounds: path.length - 1 };
+  }
+
+  function meanOf(t) {
+    var sum = 0;
+    for (var i = 0; i < N; i++) sum += t[i];
+    return Math.round(sum / N * 10) / 10;
+  }
+
+  function people(n) { return n === 1 ? "1 person" : n + " people"; }
+
+  /* ---------- societies from the article ---------- */
+
+  var PRESETS = [
+    { id: "A",  label: "A",        t: [0, 2, 2, 3, 4, 5, 6, 7, 8, 10] },
+    { id: "Ap", label: "A\u2032",  t: [0, 1, 2, 3, 4, 5, 6, 7, 8, 10] },
+    { id: "B",  label: "B",        t: [0, 2, 3, 3, 4, 5, 6, 7, 8, 10] },
+    { id: "Bp", label: "B\u2032",  t: [0, 1, 3, 3, 4, 5, 6, 7, 8, 10] },
+    { id: "C",  label: "C",        t: [0, 2, 2, 2, 2, 2, 2, 2, 6, 10] },
+    { id: "Cp", label: "C\u2032",  t: [0, 1, 2, 2, 2, 2, 2, 2, 6, 10] },
+    { id: "D",  label: "D",        t: [0, 3, 3, 3, 3, 3, 3, 3, 3, 10] },
+    { id: "Dp", label: "D\u2032",  t: [0, 2, 2, 2, 2, 2, 2, 2, 2, 10] }
+  ];
+
+  /* ---------- the seven societies to work out ----------
+     Chosen, not generated. Each is a relative of one the lecture works through.
+     Societies 1 and 2 are a pair, and so are 3 and 4: in each pair the second
+     differs from the first only in person 2's threshold, by one. The same change
+     produces two people in one pair and eight in the other. */
+
+  var SET = [
+    { name: "Society 1",
+      t: [0, 2, 3, 3, 4, 4, 6, 6, 9, 10],
+      lesson: "One person comes out and nobody follows. Society 2 is this society with one number " +
+              "changed." },
+    { name: "Society 2",
+      t: [0, 1, 3, 3, 4, 4, 6, 6, 9, 10],
+      lesson: "Person 2's threshold has dropped from 2 to 1, and that is the only difference from " +
+              "society 1. It is enough to bring person 2 out and not enough to bring anybody else." },
+    { name: "Society 3",
+      t: [0, 2, 2, 3, 4, 4, 6, 6, 9, 10],
+      lesson: "A different society, which also settles at 1. Society 4 is this one with person 2's " +
+              "threshold dropped from 2 to 1 \u2014 exactly the change that took society 1 to " +
+              "society 2. Before you answer it, decide what you expect." },
+    { name: "Society 4",
+      t: [0, 1, 2, 3, 4, 4, 6, 6, 9, 10],
+      lesson: "The same single change as before, and this time eight of the ten come out rather than " +
+              "two. The change was identical. What differed was the society it was made in." },
+    { name: "Society 5",
+      t: [0, 2, 2, 2, 2, 2, 2, 2, 3, 10],
+      lesson: "Nine of the ten are within two steps of coming out, and nothing happens at all. A " +
+              "population can dislike its government this much and still produce nothing an " +
+              "outsider could point to." },
+    { name: "Society 6",
+      t: [0, 1, 2, 2, 5, 5, 6, 7, 8, 10],
+      lesson: "The chain runs a little way and then meets a gap it cannot cross: four people are out " +
+              "and the next threshold up is 5. Fewer people here were close to coming out than in " +
+              "society 5, and more of them ended up out." },
+    { name: "Society 7",
+      t: [0, 1, 2, 3, 3, 3, 3, 3, 8, 10],
+      lesson: "Five people share a threshold of 3, so all five come out in the same round and the " +
+              "count goes straight from 3 to 8. Working down the list one person at a time, and " +
+              "stopping when the next threshold is larger than the count so far, is what keeps you " +
+              "right here." }
+  ];
+
+  /* ---------- state ---------- */
+
+  var thresholds = PRESETS[0].t.slice();
+  var mode = "explore";
+  var index = 0;
+  var chosen = null;
+  var answered = false;
+  var solved = {};
+  var announcedComplete = false;
+
+  var live = document.getElementById("liveRegion");
+  function say(msg) { live.textContent = msg; }
+
+  /* ---------- the strip ---------- */
+
+  var strip = document.getElementById("strip");
+  var personEls = [];
+  (function buildStrip() {
+    for (var i = 0; i < N; i++) {
+      var d = document.createElement("div");
+      d.className = "person";
+      d.innerHTML =
+        '<div class="glyph"></div>' +
+        '<div class="who">person ' + (i + 1) + '</div>' +
+        '<div class="thr"></div>' +
+        '<div class="stance"></div>';
+      strip.appendChild(d);
+      personEls.push(d);
+    }
+  })();
+
+  function renderStrip(res, hide) {
+    for (var i = 0; i < N; i++) {
+      var el = personEls[i];
+      var inOpp = res && res.members.indexOf(i) !== -1;
+      el.className = "person " + (hide ? "is-unknown" : (inOpp ? "is-opposition" : "is-government"));
+      el.querySelector(".glyph").textContent = hide ? "?" : (inOpp ? "\u25CF" : "\u25CB");
+      el.querySelector(".thr").textContent = thresholds[i];
+      el.querySelector(".stance").textContent =
+        hide ? "not yet worked out" : (inOpp ? "in opposition" : "supports government");
+    }
+  }
+
+  /* ---------- sliders ---------- */
+
+  var slidersWrap = document.getElementById("sliders");
+  var sliderEls = [], valEls = [];
+  (function buildSliders() {
+    for (var i = 0; i < N; i++) {
+      var row = document.createElement("div");
+      row.className = "slider-row";
+      var id = "thr" + i;
+      row.innerHTML =
+        '<label for="' + id + '">Person ' + (i + 1) + '</label>' +
+        '<input type="range" id="' + id + '" min="0" max="10" step="1">' +
+        '<span class="val" id="v' + i + '"></span>';
+      slidersWrap.appendChild(row);
+      var input = row.querySelector("input");
+      (function (idx, control) {
+        control.addEventListener("input", function () {
+          thresholds[idx] = parseInt(control.value, 10);
+          clearPreset();
+          renderExplore();
+          say("Person " + (idx + 1) + ", threshold " + thresholds[idx] + ". It now settles at " +
+              cascade(thresholds).finalLevel + ".");
+        });
+      })(i, input);
+      sliderEls.push(input);
+      valEls.push(row.querySelector(".val"));
+    }
+  })();
+
+  function syncSliders() {
+    for (var i = 0; i < N; i++) {
+      sliderEls[i].value = thresholds[i];
+      valEls[i].textContent = thresholds[i] + " of 10";
+      sliderEls[i].setAttribute("aria-valuetext",
+        "threshold " + thresholds[i] + ": joins once " + people(thresholds[i]) +
+        " are already publicly opposing");
+    }
+  }
+
+  /* ---------- presets ---------- */
+
+  var presetWrap = document.getElementById("presets");
+  var presetBtns = {};
+  (function buildPresets() {
+    PRESETS.forEach(function (p) {
+      var b = document.createElement("button");
+      b.className = "preset-btn";
+      b.type = "button";
+      b.setAttribute("aria-pressed", "false");
+      b.innerHTML = 'Society <span class="pname">' + p.label + '</span>';
+      b.addEventListener("click", function () {
+        thresholds = p.t.slice();
+        setPreset(p.id);
+        renderExplore();
+        say("Society " + p.label + " loaded. It settles at " + cascade(thresholds).finalLevel + ".");
+      });
+      presetWrap.appendChild(b);
+      presetBtns[p.id] = b;
+    });
+  })();
+
+  function setPreset(id) {
+    for (var k in presetBtns) {
+      if (Object.prototype.hasOwnProperty.call(presetBtns, k)) {
+        presetBtns[k].setAttribute("aria-pressed", k === id ? "true" : "false");
+      }
+    }
+  }
+  function clearPreset() { setPreset(null); }
+
+  document.getElementById("shockBtn").addEventListener("click", function () {
+    for (var i = 0; i < N; i++) {
+      if (thresholds[i] >= 1 && thresholds[i] <= 9) thresholds[i] -= 1;
+    }
+    clearPreset();
+    renderExplore();
+    say("Every threshold lowered by one, apart from 0 and 10. It now settles at " +
+        cascade(thresholds).finalLevel + ".");
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", function () {
+    thresholds = PRESETS[0].t.slice();
+    setPreset("A");
+    renderExplore();
+    say("Back to society A. It settles at 1.");
+  });
+
+  /* ---------- the brink test ---------- */
+
+  /* A person becoming one step more willing and then coming out on their own is
+     not a bandwagon - nobody followed them. Only count a change if it brings out
+     at least one person besides the one who changed, or the panel reports a
+     society that has already swept as being on the brink of something. */
+  function brinkReport(t) {
+    var base = cascade(t).finalLevel;
+    var out = [];
+    for (var i = 0; i < N; i++) {
+      if (t[i] === 0) continue;
+      var alt = t.slice();
+      alt[i] -= 1;
+      var f = cascade(alt).finalLevel;
+      if (f - base >= 2) out.push({ person: i + 1, from: t[i], to: alt[i], result: f });
+    }
+    return { base: base, tips: out };
+  }
+
+  /* ---------- shared rendering of the society block ---------- */
+
+  var oppFigure = document.getElementById("oppFigure");
+  var meanFigure = document.getElementById("meanFigure");
+  var roundsFigure = document.getElementById("roundsFigure");
+  var roundsCap = document.getElementById("roundsCap");
+  var roundsList = document.getElementById("rounds");
+  var societyLede = document.getElementById("societyLede");
+  var cascadeWrap = document.getElementById("cascadeWrap");
+  var hiddenNote = document.getElementById("hiddenNote");
+
+  function renderRounds(res) {
+    roundsList.innerHTML = "";
+    for (var r = 1; r < res.path.length; r++) {
+      var step = res.path[r];
+      var names = step.joined.map(function (i) {
+        return "person " + (i + 1) + " (threshold " + thresholds[i] + ")";
+      });
+      var joinedText = names.length === 1
+        ? names[0] + " comes out"
+        : names.slice(0, -1).join(", ") + " and " + names[names.length - 1] + " come out";
+      var li = document.createElement("li");
+      li.innerHTML = joinedText + " \u2014 now <span class=\"num\">" + step.level +
+        "</span> of 10 publicly opposing";
+      roundsList.appendChild(li);
+    }
+    var end = document.createElement("li");
+    end.innerHTML = "nobody else is willing to move. It settles at <span class=\"num\">" +
+      res.finalLevel + "</span>.";
+    roundsList.appendChild(end);
+  }
+
+  function showOutcome(res) {
+    renderStrip(res, false);
+    oppFigure.textContent = res.finalLevel;
+    roundsFigure.textContent = res.rounds;
+    roundsCap.textContent = res.rounds === 1 ? "round before it settled" : "rounds before it settled";
+    cascadeWrap.hidden = false;
+    hiddenNote.hidden = true;
+    renderRounds(res);
+  }
+
+  function hideOutcome() {
+    renderStrip(null, true);
+    oppFigure.textContent = "\u2014";
+    roundsFigure.textContent = "\u2014";
+    roundsCap.textContent = "rounds before it settled";
+    cascadeWrap.hidden = true;
+    hiddenNote.hidden = false;
+  }
+
+  /* ---------- explore ---------- */
+
+  function renderExplore() {
+    syncSliders();
+    var res = cascade(thresholds);
+    meanFigure.textContent = meanOf(thresholds);
+    societyLede.textContent = "Ten people, each with a threshold. The circles show where this society " +
+      "has settled: who ended up publicly opposing the government, and who ended up publicly supporting " +
+      "it. The list underneath works through how it got there.";
+    showOutcome(res);
+
+    var v = document.getElementById("verdict");
+    var vw = document.getElementById("verdictWhy");
+    var n = res.members.length;
+    if (n === 0) {
+      v.innerHTML = "<strong>Nothing starts.</strong> Not one person is willing to oppose the government " +
+        "when nobody else is.";
+      vw.textContent = "Give somebody a threshold of 0 and there is a first mover. Without one, no level of " +
+        "private discontent produces anything visible at all.";
+    } else if (res.rounds === 1) {
+      v.innerHTML = "<strong>It stops where it starts.</strong> " + people(n) +
+        " publicly opposing, out of ten.";
+      vw.textContent = "Whoever comes out first does not bring anybody with them. This is a stable " +
+        "arrangement: it can last for decades, and it tells an observer nothing about how close the society " +
+        "is to something else.";
+    } else if (n >= 9) {
+      v.innerHTML = "<strong>It sweeps.</strong> " + people(n) + " publicly opposing, out of ten, after " +
+        res.rounds + " rounds.";
+      vw.textContent = "Everyone who could be moved at all has been moved. The people who joined last did " +
+        "so because so many others already had, not because they wanted to.";
+    } else {
+      v.innerHTML = "<strong>It runs, and then stops.</strong> " + people(n) +
+        " publicly opposing, out of ten, after " + res.rounds + " rounds.";
+      vw.textContent = "The chain reached somebody whose threshold it could not satisfy, and stopped there. " +
+        "One more person willing to move at this point and it would have gone further.";
+    }
+
+    var b = brinkReport(thresholds);
+    var brinkEl = document.getElementById("brink");
+    brinkEl.innerHTML = "";
+    if (b.tips.length === 0) {
+      var p0 = document.createElement("p");
+      p0.textContent = "No. Nobody here could bring others out with them by becoming a single step more " +
+        "willing to oppose the government.";
+      brinkEl.appendChild(p0);
+    } else {
+      var lead = document.createElement("p");
+      lead.innerHTML = "<strong>Yes \u2014 " + people(b.tips.length) +
+        "</strong> could set off a bandwagon by becoming one step more willing, with everyone else " +
+        "unchanged.";
+      brinkEl.appendChild(lead);
+      b.tips.forEach(function (t) {
+        var p = document.createElement("p");
+        p.className = "tipline";
+        p.innerHTML = '<span class="who">person ' + t.person + "</span> threshold " + t.from +
+          " \u2192 " + t.to + ": it would settle at <span class=\"num\">" + t.result +
+          "</span> instead of <span class=\"num\">" + b.base + "</span>";
+        brinkEl.appendChild(p);
+      });
+    }
+
+    var a = document.getElementById("afterward");
+    a.innerHTML = "";
+    var liars = res.members.filter(function (i) { return thresholds[i] >= 5; });
+    if (res.members.length < 2) {
+      a.innerHTML = "<p class=\"lede\">Nothing has happened, so there is nothing to give an account of. " +
+        "This panel fills in once more than one person has come out.</p>";
+    } else {
+      var p1 = document.createElement("p");
+      p1.innerHTML = "Of the " + res.members.length + " people now publicly opposing the government, " +
+        "<strong>" + liars.length + "</strong> " + (liars.length === 1 ? "has" : "have") +
+        " a threshold of 5 or above.";
+      a.appendChild(p1);
+      var p2 = document.createElement("p");
+      p2.className = "lede";
+      p2.textContent = liars.length === 0
+        ? "Everyone who came out would have been glad to see the government go. An account written " +
+          "afterward, in which the population turns out to have been against the government all along, " +
+          "would be accurate about this society."
+        : "Reading a high threshold as private satisfaction with the government \u2014 an assumption the " +
+          "article makes for one comparison and nowhere else \u2014 that is " + liars.length + " " +
+          (liars.length === 1 ? "person" : "people") + " who came out only because staying in became the " +
+          "risky choice, and who now have every reason to say they had opposed the government all along. " +
+          "An account written afterward will make this government look weaker than it was.";
+      a.appendChild(p2);
+    }
+  }
+
+  /* ---------- the seven societies ---------- */
+
+  var answersWrap = document.getElementById("answers");
+  var ansBtns = [];
+  (function buildAnswers() {
+    for (var v = 1; v <= 10; v++) {
+      var b = document.createElement("button");
+      b.className = "ans-btn";
+      b.type = "button";
+      b.textContent = v;
+      b.setAttribute("aria-pressed", "false");
+      (function (val) {
+        b.addEventListener("click", function () {
+          if (answered) return;
+          chosen = val;
+          submitAnswer();
+        });
+      })(v);
+      answersWrap.appendChild(b);
+      ansBtns.push(b);
+    }
+  })();
+
+  var problemHead = document.getElementById("problemHead");
+  var problemText = document.getElementById("problemText");
+  var resultBox = document.getElementById("result");
+  var resultVerdict = document.getElementById("resultVerdict");
+  var resultWhy = document.getElementById("resultWhy");
+  var resultFragile = document.getElementById("resultFragile");
+  var resultLesson = document.getElementById("resultLesson");
+  var nextBtn = document.getElementById("nextBtn");
+  var prevBtn = document.getElementById("prevBtn");
+
+  function current() { return SET[index]; }
+
+  function paintPractice() {
+    var item = current();
+    thresholds = item.t.slice();
+    meanFigure.textContent = meanOf(thresholds);
+    societyLede.textContent = answered
+      ? item.name + ": ten people, their thresholds, and what they did."
+      : item.name + ": ten people and their thresholds. Work out who ends up publicly opposing the " +
+        "government before you answer.";
+    if (answered) showOutcome(cascade(thresholds)); else hideOutcome();
+
+    problemHead.textContent = item.name + " of 7";
+    problemText.innerHTML = "The ten thresholds, lowest first: <span class=\"num\">{" +
+      item.t.join(", ") + "}</span>";
+
+    prevBtn.textContent = index === 0 ? "Previous society" : "Previous \u2014 " + SET[index - 1].name;
+    nextBtn.textContent = index === SET.length - 1
+      ? "Back to the first society" : "Next \u2014 " + SET[index + 1].name;
+    if (index === 0) prevBtn.setAttribute("aria-disabled", "true");
+    else prevBtn.removeAttribute("aria-disabled");
+
+    renderSetList();
+  }
+
+  function loadProblem() {
+    answered = false;
+    chosen = null;
+    ansBtns.forEach(function (b) {
+      b.setAttribute("aria-pressed", "false");
+      b.removeAttribute("aria-disabled");
+      b.removeAttribute("data-mark");
+      b.setAttribute("aria-label", b.textContent + " of the ten end up publicly opposing");
+    });
+    resultBox.hidden = true;
+    resultBox.className = "result";
+    paintPractice();
+    say(current().name + " loaded. How many of the ten end up publicly opposing?");
+  }
+
+  function submitAnswer() {
+    var item = current();
+    var res = cascade(item.t);
+    answered = true;
+    var right = chosen === res.finalLevel;
+
+    ansBtns.forEach(function (b) {
+      var v = parseInt(b.textContent, 10);
+      b.setAttribute("aria-disabled", "true");
+      b.setAttribute("aria-pressed", v === chosen ? "true" : "false");
+      if (v === res.finalLevel) b.setAttribute("data-mark", "correct");
+      else if (v === chosen) b.setAttribute("data-mark", "wrong");
+      b.setAttribute("aria-label", v + (v === chosen ? ", your answer" : "") +
+        (v === res.finalLevel ? ", the correct answer" : "") + ". Answered.");
+    });
+
+    paintPractice();
+
+    resultBox.hidden = false;
+    resultBox.className = "result " + (right ? "is-correct" : "is-wrong");
+    resultVerdict.textContent = right
+      ? "\u2713 Correct \u2014 it settles at " + res.finalLevel + "."
+      : "\u2717 Not quite \u2014 it settles at " + res.finalLevel + ", not " + chosen + ".";
+
+    var why;
+    if (res.rounds === 1) {
+      var starters = res.path[1].joined.length;
+      var nextUp = lowestAbove(item.t, res.finalLevel);
+      why = (starters === 1 ? "One person" : starters + " people") +
+        " will come out with nobody else already out. " +
+        (nextUp === null
+          ? "Everyone else has a threshold of 10, so nothing more happens."
+          : "The lowest threshold above " + res.finalLevel + " is " + nextUp +
+            ", so nobody is satisfied and nothing more happens.");
+    } else {
+      var steps = [];
+      for (var r = 1; r < res.path.length; r++) steps.push(res.path[r].level);
+      why = "The count goes " + steps.join(", then ") + ", and stops there.";
+    }
+    resultWhy.textContent = why;
+
+    /* Where it settles is only half of what the model is for. The other half is
+       how close it came to settling somewhere else, and that is invisible to
+       everyone inside the society. Shown only after the answer is in. */
+    var b = brinkReport(item.t);
+    if (b.tips.length === 0) {
+      resultFragile.textContent = "No one person here could set off a bandwagon: nobody becoming a single " +
+        "step more willing would bring others out with them.";
+    } else {
+      var outcomes = [];
+      b.tips.forEach(function (x) { if (outcomes.indexOf(x.result) === -1) outcomes.push(x.result); });
+      outcomes.sort(function (x, y) { return x - y; });
+      resultFragile.textContent = people(b.tips.length) + " could set off a bandwagon on their own, by " +
+        "becoming a single step more willing: it would then settle at " + outcomes.join(" or ") +
+        " instead of " + res.finalLevel + ". Nobody inside the society can work that out, because nobody " +
+        "can see anyone else's threshold.";
+    }
+
+    resultLesson.textContent = item.lesson;
+
+    if (right && !solved[item.name]) solved[item.name] = true;
+    renderSetList();
+    say((right ? "Correct. " : "Not quite. ") + "It settles at " + res.finalLevel + ". " +
+        why + " " + resultFragile.textContent + " " + item.lesson);
+    nextBtn.focus();
+  }
+
+  function lowestAbove(t, v) {
+    var best = null;
+    for (var i = 0; i < N; i++) {
+      if (t[i] > v && (best === null || t[i] < best)) best = t[i];
+    }
+    return best;
+  }
+
+  var setlistEl = document.getElementById("setlist");
+  var setNote = document.getElementById("setNote");
+  function renderSetList() {
+    setlistEl.innerHTML = "";
+    SET.forEach(function (item, i) {
+      var li = document.createElement("li");
+      var done = !!solved[item.name];
+      li.className = (done ? "done " : "") + (i === index ? "current" : "");
+      li.innerHTML = '<span class="tick">' + (done ? "\u2713" : "\u25CB") + '</span>' +
+        '<span class="cname">' + item.name + (i === index ? " \u2014 open now" : "") +
+        '<span class="cseq">' + (done || i === index ? "{" + item.t.join(", ") + "}" : "not yet opened") +
+        '</span></span>';
+      setlistEl.appendChild(li);
+    });
+    var n = SET.filter(function (item) { return solved[item.name]; }).length;
+    if (n === SET.length) {
+      setNote.textContent = "All seven worked out correctly. There are no more — this is a fixed set, not " +
+        "a stream. The explore tab is where to go next: build your own society, or apply the shock to one " +
+        "of the article's.";
+      if (!announcedComplete) { announcedComplete = true; say("All seven societies worked out."); }
+    } else {
+      setNote.textContent = n + " of " + SET.length + " worked out correctly so far.";
+    }
+  }
+
+  nextBtn.addEventListener("click", function () {
+    index = (index + 1) % SET.length;
+    loadProblem();
+    document.getElementById("practiceTitle").focus();
+  });
+
+  prevBtn.addEventListener("click", function () {
+    if (index === 0) { say("This is the first society."); return; }
+    index -= 1;
+    loadProblem();
+    document.getElementById("practiceTitle").focus();
+  });
+
+  /* ---------- what a citizen can see ----------
+     The societies from the article that all settle in the same place. Which
+     those are is not hardcoded: it is worked out from the presets, so the table
+     cannot drift out of step with the model if a preset is ever edited. */
+
+  var observerHead = document.getElementById("observerHead");
+  var observerBody = document.getElementById("observerBody");
+  var observerAfter = document.getElementById("observerAfter");
+  var revealBtn = document.getElementById("revealBtn");
+  var revealed = false;
+
+  function lookAlikes() {
+    var byOutcome = {};
+    PRESETS.forEach(function (p) {
+      var f = cascade(p.t).finalLevel;
+      (byOutcome[f] = byOutcome[f] || []).push(p);
+    });
+    var best = [];
+    for (var k in byOutcome) {
+      if (Object.prototype.hasOwnProperty.call(byOutcome, k) && byOutcome[k].length > best.length) {
+        best = byOutcome[k];
+      }
+    }
+    return best;
+  }
+
+  var ALIKE = lookAlikes();
+
+  (function buildObserverHead() {
+    var cells = ['<th scope="col">Society</th>'];
+    for (var i = 1; i <= N; i++) cells.push('<th scope="col">person ' + i + '</th>');
+    cells.push('<th scope="col">publicly opposing</th>');
+    observerHead.innerHTML = cells.join("");
+  })();
+
+  function renderObserver() {
+    observerBody.innerHTML = "";
+    ALIKE.forEach(function (p) {
+      var res = cascade(p.t);
+      var tr = document.createElement("tr");
+      var cells = ['<th scope="row">' + p.label + "</th>"];
+      for (var i = 0; i < N; i++) {
+        var inOpp = res.members.indexOf(i) !== -1;
+        cells.push(
+          '<td class="stance-cell ' + (inOpp ? "in-opposition" : "in-government") + '">' +
+          '<span class="glyph" aria-hidden="true">' + (inOpp ? "\u25CF" : "\u25CB") + "</span>" +
+          '<span class="sr-only">' + (inOpp ? "publicly opposing" : "publicly supporting") +
+          (revealed ? ", threshold " + p.t[i] : "") + "</span>" +
+          '<span class="thr' + (revealed ? "" : " is-concealed") + '" aria-hidden="true">' +
+          p.t[i] + "</span>" +
+          "</td>");
+      }
+      cells.push('<td class="settles">' + res.finalLevel + " of 10</td>");
+      tr.innerHTML = cells.join("");
+      observerBody.appendChild(tr);
+    });
+  }
+
+  revealBtn.addEventListener("click", function () {
+    revealed = !revealed;
+    revealBtn.setAttribute("aria-expanded", revealed ? "true" : "false");
+    revealBtn.textContent = revealed ? "Hide the thresholds again" : "Show what nobody can see";
+    observerAfter.hidden = !revealed;
+    renderObserver();
+    say(revealed
+      ? "Thresholds shown. The five rows of circles are unchanged; the numbers underneath them differ."
+      : "Thresholds hidden again. This is what an observer sees.");
+    revealBtn.focus();
+  });
+
+  /* ---------- modes ---------- */
+
+  var tabExplore = document.getElementById("tab-explore");
+  var tabPractice = document.getElementById("tab-practice");
+  var exploreBoard = document.getElementById("exploreBoard");
+  var practiceBoard = document.getElementById("practiceBoard");
+  var savedExplore = thresholds.slice();
+  var everLoaded = false;
+
+  function selectMode(next, moveFocus) {
+    if (next === mode) return;
+    if (mode === "explore") savedExplore = thresholds.slice();
+    mode = next;
+
+    tabExplore.setAttribute("aria-selected", next === "explore" ? "true" : "false");
+    tabPractice.setAttribute("aria-selected", next === "practice" ? "true" : "false");
+    tabExplore.tabIndex = next === "explore" ? 0 : -1;
+    tabPractice.tabIndex = next === "practice" ? 0 : -1;
+    exploreBoard.hidden = next !== "explore";
+    practiceBoard.hidden = next !== "practice";
+
+    if (next === "explore") {
+      thresholds = savedExplore.slice();
+      renderExplore();
+      if (moveFocus) document.getElementById("exploreTitle").focus();
+      say("Explore a society.");
+    } else {
+      if (!everLoaded) { everLoaded = true; loadProblem(); } else { paintPractice(); }
+      if (moveFocus) document.getElementById("practiceTitle").focus();
+      say("Seven societies to work out.");
+    }
+  }
+
+  tabExplore.addEventListener("click", function () { selectMode("explore", true); });
+  tabPractice.addEventListener("click", function () { selectMode("practice", true); });
+
+  document.getElementById("tabs").addEventListener("keydown", function (e) {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight" && e.key !== "Home" && e.key !== "End") return;
+    e.preventDefault();
+    var next = (e.key === "ArrowRight" || e.key === "End") ? "practice" : "explore";
+    selectMode(next, false);
+    (next === "explore" ? tabExplore : tabPractice).focus();
+  });
+
+  /* ---------- theme ---------- */
+
+  var themeBtn = document.getElementById("themeToggle");
+  function applyTheme(m) {
+    document.documentElement.setAttribute("data-theme", m);
+    themeBtn.textContent = m === "dark" ? "Switch to light mode" : "Switch to dark mode";
+  }
+  applyTheme(window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  themeBtn.addEventListener("click", function () {
+    applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  });
+
+  /* ---------- start ---------- */
+
+  setPreset("A");
+  renderExplore();
+  renderSetList();
+  renderObserver();
+})();
+</script>
+</body>
+</html>

@@ -6,7 +6,3 @@
 
 # Local-only check against exam items; must never go into a shared repository
 exam-overlap-check.js
-
-# Held back until its sourcing file and index row exist (decided 2026-10-31).
-# Delete this line when the tool is ready to publish.
-tipping-model.html

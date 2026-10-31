@@ -1,6 +1,6 @@
 # Interactive tools for Governments and Politics of Europe (PLSC 200N)
 
-Practice tools for PLSC 200N, Governments and Politics of Europe. Each tool works through a historical case or a political science model from the course, alongside that week's readings and lecture.
+Practice tools for PLSC 200N, Governments and Politics of Europe. Each tool works through a historical case, a political science model, or an example of how an institution works, alongside that week's readings and lecture.
 
 Start at the contents page, `index.html`, which lists the tools by topic. The site is at https://sonagolder.github.io/european-politics-tools/. Each tool is a single self-contained HTML file. It runs in any current browser on a computer or phone, with no login, installation, or external dependencies, and it stores nothing about its users.
 

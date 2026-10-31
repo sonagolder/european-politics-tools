@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The national Nazi vote, and who voted differently from it</title>
+<style>
+  :root {
+    --bg: #FAFAFA; --panel: #FFFFFF; --border: #D0D0D0;
+    --text: #111111; --text-2: #555555; --hint: #999999; --deemph: #707070;
+    --accent: #0072B2; --favorable: #0072B2; --unfavorable: #B33E00;
+    --neutral-state: #5F5E5A; --gold-ui: #B8860B; --gold-text: #946B09;
+    --body-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --data-font: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --u: 8px;
+  }
+  html[data-theme="dark"] {
+    --bg: #1A1A1A; --panel: #2A2A2A; --border: #3A3A3A;
+    --text: #F2F2F2; --text-2: #B3B3B3; --hint: #7A7A7A; --deemph: #8F8F8F;
+    --accent: #7FC7EE; --favorable: #7FC7EE; --unfavorable: #F08A4B;
+    --neutral-state: #A8A6A0; --gold-ui: #E0B23D; --gold-text: #E0B23D;
+  }
+
+  * { box-sizing: border-box; }
+
+  /* Author rules that set display outrank the browser's built-in [hidden] rule at equal
+     specificity, so any element toggled with the attribute keeps rendering without this guard.
+     Required by teaching-tools-house-style.md; verify with check_hidden.py. */
+  [hidden] { display: none !important; }
+
+  body {
+    margin: 0; padding: calc(var(--u) * 3);
+    background: var(--bg); color: var(--text);
+    font-family: var(--body-font); font-size: 16px; line-height: 1.55;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  header { margin-bottom: calc(var(--u) * 3); }
+  h1 { font-size: 1.65rem; font-weight: 600; margin: 0 0 var(--u) 0; line-height: 1.25; }
+  .standfirst { margin: 0; color: var(--text-2); max-width: 68ch; }
+
+  .topbar {
+    display: flex; flex-wrap: wrap; gap: calc(var(--u) * 2);
+    align-items: flex-end; justify-content: space-between; margin-bottom: calc(var(--u) * 3);
+  }
+  .field-label { display: block; font-size: 0.8rem; color: var(--text-2); margin-bottom: var(--u); }
+
+  [role="tablist"] { display: flex; flex-wrap: wrap; gap: var(--u); }
+  [role="tab"] {
+    font: inherit; font-size: 0.95rem; padding: var(--u) calc(var(--u) * 2);
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+  [role="tab"][aria-selected="true"] {
+    border-color: var(--accent); box-shadow: inset 0 -3px 0 var(--accent); font-weight: 600;
+  }
+  .theme-toggle {
+    font: inherit; font-size: 0.85rem; padding: var(--u) calc(var(--u) * 2);
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+  button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible {
+    outline: 3px solid var(--accent); outline-offset: 2px;
+  }
+
+  /* ---------- interval plot (signature element) ---------- */
+
+  .plot-block {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
+    padding: calc(var(--u) * 2); margin-bottom: calc(var(--u) * 3);
+  }
+  .plot-head { margin-bottom: calc(var(--u) * 2); }
+  .plot-head h2 { font-size: 1rem; font-weight: 600; margin: 0 0 4px 0; }
+  .plot-head p { margin: 0; font-size: 0.85rem; color: var(--text-2); max-width: 74ch; }
+
+  .plot { position: relative; }
+  .plot-rows { position: relative; }
+
+  .plot-cat {
+    font-size: 0.72rem; color: var(--text-2); font-weight: 600;
+    margin: var(--u) 0 2px 0; padding-left: var(--track-left, 88px);
+  }
+
+  .prow { position: relative; display: flex; align-items: center; height: 22px; }
+  .prow-label {
+    flex: none; width: var(--track-left, 88px);
+    font-family: var(--data-font); font-size: 0.72rem; color: var(--text-2);
+  }
+  .prow.is-current .prow-label { color: var(--accent); font-weight: 700; }
+  .track { position: relative; flex: 1; height: 100%; z-index: 1; }
+
+  .ival {
+    position: absolute; top: 50%; height: 3px; transform: translateY(-50%);
+    background: var(--neutral-state); border-radius: 2px;
+  }
+  .ival.is-above { background: var(--favorable); }
+  .ival.is-below { background: var(--unfavorable); }
+  .pt {
+    position: absolute; top: 50%; width: 7px; height: 7px;
+    transform: translate(-50%, -50%); border-radius: 50%;
+    background: var(--panel); border: 2px solid var(--neutral-state);
+  }
+  .pt.is-above { border-color: var(--favorable); }
+  .pt.is-below { border-color: var(--unfavorable); }
+  .prow.is-current .pt { width: 11px; height: 11px; background: var(--accent); border-color: var(--accent); }
+
+  .plot.is-summary { --track-left: 150px; }
+
+  .zero-wrap {
+    position: absolute; left: var(--track-left, 88px); right: 0; top: 0; bottom: 0;
+    pointer-events: none; z-index: 0;
+  }
+  .zero { position: absolute; top: 0; bottom: 0; width: 3px; background: var(--gold-ui); }
+
+  .axis {
+    position: relative; height: 18px; margin-top: 4px;
+    margin-left: var(--track-left, 88px);
+  }
+  .axis .tick {
+    position: absolute; top: 0; transform: translateX(-50%);
+    font-family: var(--data-font); font-size: 0.68rem; color: var(--text-2);
+    white-space: nowrap;
+  }
+  .axis-title {
+    display: block; margin-top: var(--u); padding-left: var(--track-left, 88px);
+    font-size: 0.72rem; color: var(--text-2);
+  }
+
+  .plot-caption {
+    display: block; margin-top: calc(var(--u) * 1.5);
+    font-size: 0.78rem; color: var(--gold-text); font-weight: 600; font-family: var(--data-font);
+  }
+
+  @media (max-width: 620px) { .plot-block { --track-left: 60px; } }
+
+  /* ---------- board ---------- */
+
+  .board {
+    display: grid; grid-template-columns: 1.2fr 1fr;
+    gap: calc(var(--u) * 3); align-items: start;
+  }
+  @media (max-width: 900px) { .board { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 6px; padding: calc(var(--u) * 2);
+  }
+  .panel h2 { font-size: 1rem; font-weight: 600; margin: 0 0 var(--u) 0; }
+  .panel .lede { margin: 0 0 calc(var(--u) * 2) 0; font-size: 0.85rem; color: var(--text-2); }
+
+  .cat { margin-bottom: calc(var(--u) * 2); }
+  .cat-head {
+    font-size: 0.78rem; font-weight: 600; color: var(--text-2);
+    margin: 0 0 var(--u) 0; padding-bottom: 4px; border-bottom: 1px solid var(--border);
+  }
+  .cat-head .cat-note { font-weight: 400; }
+
+  .group-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  .group-btn {
+    width: 100%; font: inherit; text-align: left;
+    display: flex; align-items: baseline; gap: var(--u);
+    padding: var(--u); background: var(--bg); color: var(--text);
+    border: 1px solid var(--border); border-left: 4px solid var(--border);
+    border-radius: 4px; cursor: pointer;
+  }
+  .group-btn[aria-pressed="true"] {
+    border-color: var(--accent); border-left-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, var(--panel));
+  }
+  .group-btn .mark { font-family: var(--data-font); width: 1.2em; flex: none; color: var(--hint); }
+  .group-btn.is-above .mark { color: var(--favorable); }
+  .group-btn.is-below .mark { color: var(--unfavorable); }
+  .group-btn.is-flat .mark { color: var(--neutral-state); }
+  .group-btn .code { font-family: var(--data-font); font-weight: 600; flex: none; width: 3.4em; }
+  .group-btn .desc { font-size: 0.8rem; color: var(--text-2); flex: 1; min-width: 0; }
+  .group-btn .val {
+    font-family: var(--data-font); font-variant-numeric: tabular-nums;
+    font-size: 0.8rem; flex: none; color: var(--deemph);
+  }
+  .group-btn.is-hidden { display: none; }
+
+  .list-actions { display: flex; gap: var(--u); margin-top: calc(var(--u) * 2); flex-wrap: wrap; }
+  .viewbar { display: flex; gap: var(--u); flex-wrap: wrap; margin-bottom: calc(var(--u) * 2); }
+
+  .codekey {
+    font-size: 0.78rem; color: var(--text-2); background: var(--bg);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: var(--u) calc(var(--u) * 1.5); margin-bottom: calc(var(--u) * 2);
+  }
+  .codekey p { margin: 0 0 var(--u) 0; }
+  .codekey p:last-child { margin-bottom: 0; }
+  .codekey dl { margin: 0 0 var(--u) 0; }
+  .codekey dt { font-size: 0.72rem; color: var(--deemph); margin-top: 4px; }
+  .codekey dd { margin: 0; }
+  .codekey b { font-family: var(--data-font); color: var(--text); }
+
+  .plot-rows.is-summary { --track-left: 150px; }
+  .plot-rows.is-summary .prow.is-bloc .prow-label { font-family: var(--body-font); font-size: 0.8rem; }
+
+  .bloc-row { display: flex; gap: 4px; align-items: stretch; }
+  .bloc-row .group-btn { flex: 1; }
+  .expand-btn {
+    font: inherit; font-size: 0.75rem; font-family: var(--data-font);
+    flex: none; width: 2.4em; cursor: pointer;
+    background: var(--panel); color: var(--accent);
+    border: 1px solid var(--border); border-radius: 4px;
+  }
+  .expand-btn[aria-expanded="true"] { border-color: var(--accent); font-weight: 700; }
+  .comp-list { margin: 4px 0 0 calc(var(--u) * 2); padding: 0; list-style: none;
+               display: flex; flex-direction: column; gap: 4px;
+               border-left: 2px solid var(--border); padding-left: var(--u); }
+  .comp-list .group-btn { padding: 4px var(--u); }
+  .comp-list .code { font-size: 0.85rem; }
+  .comp-list .desc { font-size: 0.74rem; }
+
+  .flag {
+    display: inline-block; margin-left: 6px; font-size: 0.68rem; font-weight: 700;
+    font-family: var(--data-font); color: var(--gold-text);
+    border: 1px solid var(--gold-ui); border-radius: 3px; padding: 0 4px;
+  }
+
+  .prow.is-comp { height: 18px; }
+  .prow.is-comp .prow-label { font-size: 0.66rem; padding-left: var(--u); color: var(--deemph); }
+  .prow.is-comp .ival { height: 2px; }
+  .prow.is-comp .pt { width: 5px; height: 5px; border-width: 1px; }
+  .prow.is-bloc .prow-label { font-weight: 700; color: var(--text); }
+  .prow.is-bloc .ival { height: 5px; }
+  .prow.is-bloc .pt { width: 9px; height: 9px; }
+
+  .comp-strip { list-style: none; margin: 0 0 var(--u) 0; padding: 0; font-size: 0.82rem; }
+  .comp-strip li { display: flex; gap: var(--u); align-items: baseline; padding: 2px 0; }
+  .comp-strip .c { font-family: var(--data-font); font-weight: 600; width: 3.4em; flex: none; }
+  .comp-strip .n { font-family: var(--data-font); font-variant-numeric: tabular-nums; width: 4em; flex: none; }
+  .comp-strip .v { font-size: 0.78rem; }
+  .comp-strip .v.is-above { color: var(--favorable); }
+  .comp-strip .v.is-below { color: var(--unfavorable); }
+  .comp-strip .v.is-flat { color: var(--neutral-state); }
+
+  .warn {
+    border: 1px solid var(--gold-ui); border-left: 4px solid var(--gold-ui);
+    border-radius: 4px; padding: var(--u); font-size: 0.82rem;
+    margin: 0 0 var(--u) 0; background: var(--bg);
+  }
+  .minor-btn {
+    font: inherit; font-size: 0.85rem; padding: var(--u) calc(var(--u) * 1.5);
+    background: var(--panel); color: var(--accent);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+  .minor-btn[aria-pressed="true"] {
+    border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--panel)); font-weight: 600;
+  }
+
+  .rightcol { display: flex; flex-direction: column; gap: calc(var(--u) * 3); }
+
+  .natl-label {
+    display: block; font-size: 0.78rem; color: var(--text-2);
+    margin-bottom: 2px;
+  }
+  .natl-figure {
+    font-family: var(--data-font); font-variant-numeric: tabular-nums;
+    font-size: 2.4rem; line-height: 1.1; display: block;
+  }
+  .natl-sub {
+    font-size: 0.82rem; color: var(--text-2); display: block;
+    margin-top: var(--u); max-width: 48ch;
+  }
+
+  .sum {
+    font-family: var(--data-font); font-variant-numeric: tabular-nums;
+    font-size: 0.88rem; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 4px; padding: calc(var(--u) * 1.5); margin: 0 0 calc(var(--u) * 2) 0;
+  }
+  .sum div { display: flex; justify-content: space-between; gap: var(--u); }
+  .sum .rule { border-top: 1px solid var(--border); margin: 4px 0; }
+  .sum .lbl { color: var(--text-2); }
+  .sum .tot { font-weight: 700; }
+
+  .predict-q { margin: 0 0 var(--u) 0; font-size: 0.9rem; }
+  .predict-opts { display: flex; flex-direction: column; gap: var(--u); }
+  .predict-opts button {
+    font: inherit; font-size: 0.86rem; text-align: left;
+    padding: var(--u) calc(var(--u) * 1.5); background: var(--bg); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+
+  .result {
+    border: 1px solid var(--border); border-left: 4px solid var(--neutral-state);
+    border-radius: 4px; padding: calc(var(--u) * 1.5); font-size: 0.88rem;
+    background: var(--bg); margin-top: calc(var(--u) * 2);
+  }
+  .result.is-yes { border-left-color: var(--favorable); }
+  .result.is-no { border-left-color: var(--unfavorable); }
+  .result.is-solved { border-left-color: var(--gold-ui); box-shadow: 0 0 0 2px var(--gold-ui); }
+  .result strong { display: block; margin-bottom: 4px; }
+  .result.is-solved strong { color: var(--gold-text); }
+  .result .icon { font-family: var(--data-font); font-weight: 700; }
+  .result.is-yes .icon { color: var(--favorable); }
+  .result.is-no .icon { color: var(--unfavorable); }
+
+  .verdict { font-size: 0.9rem; margin: 0 0 var(--u) 0; }
+  .verdict .word { font-weight: 700; }
+  .verdict.is-above .word { color: var(--favorable); }
+  .verdict.is-below .word { color: var(--unfavorable); }
+  .verdict.is-flat .word { color: var(--neutral-state); }
+
+  .meta { font-size: 0.8rem; color: var(--text-2); margin: 0 0 var(--u) 0; }
+
+  .lower { margin-top: calc(var(--u) * 3); }
+  details {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
+    padding: calc(var(--u) * 2); margin-bottom: calc(var(--u) * 2);
+  }
+  summary { cursor: pointer; font-weight: 600; }
+  details > *:not(summary) { margin-top: calc(var(--u) * 1.5); }
+  details p { margin: 0 0 var(--u) 0; max-width: 72ch; }
+  details p:last-child { margin-bottom: 0; }
+  details h3 { font-size: 0.92rem; margin: calc(var(--u) * 2) 0 4px 0; }
+  .data-note { font-size: 0.85rem; color: var(--text-2); }
+  .data-note ul { padding-left: calc(var(--u) * 2.5); }
+  .data-note li { margin-bottom: var(--u); }
+  .worked {
+    font-family: var(--data-font); font-size: 0.85rem; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: calc(var(--u) * 1.5); max-width: 60ch;
+  }
+  code, .num { font-family: var(--data-font); font-variant-numeric: tabular-nums; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+  @media (prefers-reduced-motion: no-preference) {
+    .group-btn, .result, .ival, .pt { transition: background-color 120ms ease, border-color 120ms ease; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>The national Nazi vote, and who voted differently from it</h1>
+    <p class="standfirst">
+      When the votes for the Nazi party rose, they rose almost everywhere at once. King and his co-authors
+      argue that this part is ordinary — most elections in most countries work this way — and that the
+      interesting question is which groups gave the Nazis <em>more</em> or <em>less</em> of their vote than
+      the country as a whole did. This tool separates the national figure from each group's distance above or
+      below it, using the authors' own published estimates. Pick an election, then work through the social
+      groups and find the ones that broke away.
+    </p>
+  </header>
+
+  <div class="topbar">
+    <div>
+      <span class="field-label" id="election-label">Election</span>
+      <div role="tablist" aria-labelledby="election-label" id="tabs"></div>
+    </div>
+    <button class="theme-toggle" id="themeToggle" type="button">Switch to dark mode</button>
+  </div>
+
+  <section class="plot-block">
+    <div class="plot-head">
+      <h2>How far each group sat from the national Nazi vote</h2>
+      <p id="plotSub"></p>
+    </div>
+    <div class="plot" id="plot" aria-hidden="true"></div>
+    <span class="plot-caption" id="plotCaption"></span>
+  </section>
+
+  <div class="board">
+
+    <section class="panel">
+      <h2 id="listHeading">The blocs</h2>
+      <p class="lede" id="listLede"></p>
+      <div class="codekey" id="codeKey">
+        <p><strong>Reading a code.</strong> Three letters, following the article's own convention.</p>
+        <dl>
+          <dt>1st — occupation</dt>
+          <dd><b>S</b> self-employed · <b>D</b> domestic employees and helping family members ·
+              <b>B</b> blue collar · <b>W</b> white collar · <b>U</b> unemployed</dd>
+          <dt>2nd — unemployment where they lived</dt>
+          <dd><b>L</b> low · <b>M</b> medium · <b>H</b> high</dd>
+          <dt>3rd — religion of the area</dt>
+          <dd><b>P</b> mostly Protestant · <b>C</b> mostly Catholic</dd>
+        </dl>
+        <p><b>SHP</b> is the self-employed, living in a high-unemployment, mostly Protestant district.</p>
+      </div>
+      <div class="viewbar" role="group" aria-label="Level of detail">
+        <button class="minor-btn" type="button" data-view="summary" aria-pressed="true">Summary</button>
+        <button class="minor-btn" type="button" data-view="fifteen" aria-pressed="false">The article's fifteen</button>
+        <button class="minor-btn" type="button" data-view="thirty" aria-pressed="false">All thirty groups</button>
+      </div>
+      <div id="groupPanel"></div>
+      <div class="list-actions">
+        <button class="minor-btn" type="button" id="predictBtn" aria-pressed="false">Predict before revealing</button>
+        <button class="minor-btn" type="button" id="revealBtn">Reveal all</button>
+        <button class="minor-btn" type="button" id="resetBtn">Start this election over</button>
+      </div>
+    </section>
+
+    <div class="rightcol">
+
+      <section class="panel">
+        <h2>What the country did</h2>
+        <span class="natl-label" id="natlLabel"></span>
+        <span class="natl-figure" id="natlFigure">—</span>
+        <span class="natl-sub" id="natlSub"></span>
+      </section>
+
+      <section class="panel">
+        <h2 id="pickHeading">The group you picked</h2>
+        <div id="readingPanel"></div>
+      </section>
+
+    </div>
+  </div>
+
+  <div class="lower">
+
+    <details open>
+      <summary>What "disproportionate vote share" means</summary>
+      <p>
+        The vertical axis of the paper's main figure is not the share of a group that voted Nazi. It is the
+        amount by which that group's vote differed from the national figure for that election. A group sitting
+        on the line voted Nazi at about the same rate as the country did. That is not a small result: it is
+        what nearly every group in nearly every election does, which is exactly the authors' point about the
+        catch-all account.
+      </p>
+      <p>
+        Every group in this tool shows the arithmetic. Here is the one the paper works through in its text:
+      </p>
+      <div class="worked">
+        self-employed, high unemployment, Protestant (SHP), 1930<br>
+        national Nazi vote&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 14.9%<br>
+        this group's deviation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= +57.8 points<br>
+        estimated group vote&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 72.7%
+      </div>
+      <p>
+        The article rounds this to "0.60 and 75 percent" when explaining how to read the figure. It also says
+        that the same deviation in July 1932 would put the group at 91 percent — and that turns out to be
+        almost exactly what happened: the estimate for July 1932 is +60.6 points on a national figure of 31.1,
+        giving 91.7 percent. So the deviation is a fixed distance from a moving baseline, and the baseline
+        moves a long way across these six elections.
+      </p>
+      <p>
+        <strong>The bars matter as much as the dots.</strong> Each estimate comes with a 90 percent interval,
+        and many of them are wide. Where an interval crosses the gold line, the group cannot be reliably told
+        apart from the national Nazi vote at all, whatever its dot suggests. The tool treats those groups as
+        undistinguishable rather than as small movements, and you should too.
+      </p>
+    </details>
+
+    <details>
+      <summary>What each account predicted, and what would have proved it wrong</summary>
+      <p>
+        The paper argues against two existing accounts, and it objects to them on different grounds. Keeping
+        the two objections apart is most of the work of reading the article.
+      </p>
+      <h3>Class theory</h3>
+      <p>
+        Holds that a particular social class was the core of Nazi support. The problem the authors identify is
+        that the theory has been claimed to support the middle class, the working class, and the upper class in
+        turn, and it accommodates each. Almost any division of voters into social groups counts as a version of
+        it. That is why the authors call it a framework rather than a theory — not because it is false, but
+        because it is hard to say what would have to appear in the data for it to be wrong.
+      </p>
+      <h3>Catch-all theory</h3>
+      <p>
+        Holds that the Nazis drew from across the social spectrum, with all groups moving in roughly the same
+        direction by roughly the same amount. This one is perfectly falsifiable, and the authors think it is
+        broadly true. Their objection is different: a <strong>near-uniform partisan swing</strong> — every
+        group's vote shifting between elections by about the same amount as the country's — turns up in almost
+        every election in almost every country, so the description does not distinguish Weimar from anywhere
+        else and cannot explain what happened there. A true claim that does no explanatory work.
+      </p>
+      <h3>The three hypotheses in the article</h3>
+      <p>
+        <strong>1.</strong> The unemployed vote disproportionately for the Communists and against the Nazis.
+        <strong>2.</strong> The working poor — the self-employed, domestic employees, and helping family
+        members — vote disproportionately for the Nazis and against the Communists, except where Catholic
+        incentives cut the other way. <strong>3.</strong> No consistent trend for blue- and white-collar
+        workers.
+      </p>
+      <p>
+        The rider on the second one is doing real work, and it has its own section below. It is what turns a
+        claim about economic position into a claim that predicts two economically similar groups voting in
+        opposite directions.
+      </p>
+      <p>
+        All three could have come out otherwise. The unemployed could have gone to the Nazis; the working poor
+        could have sat on the line. The third is the interesting one, because a prediction of "no pattern"
+        usually looks untestable and this one is not: class theory predicts that one of these groups was the
+        core Nazi constituency, so a consistent movement among the blue- or white-collar groups would count
+        against the authors and for their rivals. Turn to July 1932 and look at what the blue- and white-collar
+        groups do.
+      </p>
+      <p>
+        <strong>A question worth having an answer to before you look.</strong> The article puts blue-collar
+        workers in high-unemployment areas in the same at-risk category as the unemployed, and expects them,
+        like the unemployed, to find the Communists' policies more appealing than the Nazis'. It reports that
+        they did. So why does the third hypothesis predict <em>no</em> trend for them rather than a smaller
+        version of the unemployed's move away from the Nazis?
+      </p>
+      <p>
+        Partly because this tool measures the gap, not the level. Every group's Nazi vote rose steeply — the
+        national figure goes from 2.3 percent of eligible voters to 38.7 — and blue-collar workers rose with
+        it. Sitting on the line means moving with the country, not staying home. And partly because the
+        movement to the Communists was small next to that: the article puts the swing to the Far Left at about
+        5 points between 1924 and July 1932, against a Nazi gain of roughly 29 over the same span. A shift
+        that size need not push a group's gap outside its interval, and these intervals are wide.
+      </p>
+      <p>
+        The numbers make the contrast sharper than any of that. Across the three crisis elections the
+        Protestant unemployed sit 23.4, 17.6 and 29.4 points <em>below</em> the national figure, clearly below
+        every time. The Protestant blue-collar workers in high-unemployment areas — the ones the article names
+        as most at risk — come out at +3.0, +0.7 and +2.9 over the same elections, with every interval
+        crossing the line. The sign flips, and it flips differently at different unemployment levels. That is
+        what a prediction of "no consistent trend" looks like when it holds, and it is a different shape from
+        a faint version of the unemployed's pattern. Expand the bloc in any crisis election and you can watch
+        this directly.
+      </p>
+      <h3>Where the evidence is messier than the summary</h3>
+      <p>
+        The article says the Protestant working-poor groups all gave the Nazis disproportionate support. With
+        the intervals in front of you, that holds firmly for four of them and not for two. The self-employed in
+        low-unemployment Protestant areas (SLP) has an interval crossing zero in every crisis election, so it
+        cannot be distinguished from the national figure on its own. The domestic group in high-unemployment Protestant
+        areas (DHP) is the same, and in 1930 it sits <em>below</em> the line. Neither point sinks the argument
+        — the other four are strong and the pattern across elections is consistent — but the blanket sentence
+        in the text is doing more work than the estimates support.
+      </p>
+      <p>
+        <strong>Pooled, though, the claim holds comfortably.</strong> Switch to the summary view and the six
+        groups together sit +33.1 points from the national figure in July 1932, with an interval running from +12.4 to
+        +53.9 — clear of zero, and clear of it in all six elections. So "the working poor in Protestant
+        precincts gave the Nazis disproportionate support" is well supported. What the estimates do not
+        support is the word <em>all</em>, which is a claim about each of the six separately.
+      </p>
+      <p>
+        It is worth seeing where the pooled result comes from. The four strong groups on their own come to
+        +41.9 points in July 1932. The two weak ones on their own come to +11.2, with an interval so wide it
+        spans zero several times over. That is a different situation from the two contradicting the argument:
+        they are simply uninformative on their own, and pooling them with the rest neither rescues nor damages
+        the conclusion. A group whose interval crosses zero is not evidence against a claim. It is an absence
+        of evidence about that group.
+      </p>
+      <p>
+        Two cautions on the pooled figures. The intervals are deliberately too wide, for the reason given in
+        the data note, so the real case is stronger than the numbers above. And pooling is a choice: it works
+        here because the theory expects these six groups to behave alike, and it would not work for the
+        Catholic working poor, where the theory expects the opposite. That is the subject of the next section.
+      </p>
+    </details>
+
+    <details>
+      <summary>The Catholic areas: a second set of incentives</summary>
+      <p>
+        Hypothesis 2 comes with a rider — the working poor moved to the Nazis <em>except where Catholic
+        incentives cut the other way</em> — and the article devotes a long stretch of its argument to what
+        those incentives were. This is not a caveat bolted on afterwards. It is the part that makes the theory
+        do work, because it predicts that two groups with the same economic position should vote differently
+        depending on where they lived.
+      </p>
+      <p>
+        The mechanism has several strands. The Catholic Church backed the Center Party (Zentrum) and the Bavarian People's
+        Party directly, and told voters not to support the Nazis. There were personal links: a clergyman
+        chaired the BVP's Reichstag delegation, and a priest served as labor minister through most of the
+        1920s. Local welfare in Catholic regions ran through parish networks tied to the Center Party, and the Center Party in turn funded parochial schools, so a household's material support and its politics came
+        bundled. And Nazi agricultural policy actively repelled Catholic farmers in the south and west:
+        compulsory undivided inheritance did not suit families subsisting on small intensively worked plots,
+        and the proposal to resettle the disinherited in the east appealed to nobody.
+      </p>
+      <p>
+        The prediction that falls out is specific. Catholic <strong>domestic and peasant workers</strong>
+        should stay with the Center Party, because they were exposed to all of that. Catholic
+        <strong>self-employed</strong> should still go to the Nazis, because they did not benefit from the
+        local welfare programs and because Nazi small-business policy was, in the article's phrase, too
+        tempting.
+      </p>
+      <p>
+        Turn on all thirty groups and check it. In July 1932 the Catholic domestic groups in low and medium
+        unemployment areas sit about 28 points below the national figure; the Catholic self-employed in the
+        same kinds of areas sit about 21 points above. Two groups, the same country, the same depression, opposite
+        directions — predicted in advance from what each had to gain. That is the strongest evidence in the
+        article, and it is easy to miss because it lives in the groups the main figure leaves out.
+      </p>
+      <p>
+        <strong>Where it breaks.</strong> Both exceptions are in Catholic <em>high</em>-unemployment areas.
+        The self-employed there (SHC) went sharply away from the Nazis instead of toward them, and the
+        domestic workers there (DHC) did not move to the Center Party at all. The article names the first of these
+        and says it cannot determine why, offering two possibilities: it may be disconfirming evidence, or it
+        may reflect the difficulty of estimating so many quantities from small samples. That second
+        possibility is checkable, and it is worth checking — Catholic high-unemployment areas are the
+        smallest of the six regions the authors split the country into, with 32 districts against 124 for the
+        Protestant equivalent. Both anomalies sitting in the smallest region is consistent with the
+        methodological explanation. It does not prove it.
+      </p>
+    </details>
+
+    <details>
+      <summary>Why these five blocs, and not others</summary>
+      <p>
+        Pooling groups together makes the evidence easier to read, and for the Protestant precincts it
+        reduces the whole argument to three numbers — one per hypothesis. But pooling is only appropriate where
+        the theory says the groups being pooled should behave alike. Where it predicts they should differ,
+        averaging them destroys the prediction.
+      </p>
+      <p>
+        That is why there is no "working poor, Catholic" bloc here. The self-employed and domestic workers in
+        Catholic areas are precisely the pair the article expects to move in opposite directions, and they do.
+        Averaging them gives about −10 points in July 1932, a number that describes nobody and hides the best
+        evidence in the paper. So the Catholic side is cut by occupation instead, which is the line the theory
+        actually draws.
+      </p>
+      <p>
+        <strong>Why blue- and white-collar workers are one bloc, when they are two occupations.</strong>
+        Because that is how the article groups them. It sorts the fifteen largest groups into the working
+        poor, the unemployed, and the blue- and white-collar workers, and its third hypothesis is a single
+        claim about both at once: no consistent trend in Nazi support from either. Pooling them puts that
+        claim on screen as one number.
+      </p>
+      <p>
+        The two halves reach that result by different routes, which is worth knowing before reading the pooled
+        figure. Blue-collar workers in high-unemployment areas are, in the article's account, at serious risk
+        of losing their jobs — it names them alongside the unemployed — and it expects them to find the
+        Communists' policies appealing rather than the Nazis'. It reports that this is what they did. The
+        white-collar workers are in the argument for a different reason: they are part of the group earlier
+        scholars had cast as core Nazi support, which is the claim the article is disputing. Neither half is
+        predicted to trend consistently toward the Nazis, so the joint claim is a real one and pooling
+        averages away no prediction — but what the two halves share is the absence of a trend, and they arrive
+        at it from opposite directions.
+      </p>
+      <p>
+        The check is worth doing rather than assuming, and it comes out in favor of leaving them pooled. Split
+        this bloc into its blue-collar and white-collar halves and they differ by between 1 and 7 points
+        depending on the election. Split the same six groups by local unemployment instead — the risk of
+        losing work, which is what the account actually runs on — and they separate further, by about 6 points
+        on average against about 3. That is what you would expect if the article is right about which line
+        matters, and it is a reason to keep the bloc whole rather than cut it: the occupational split is the
+        less informative of the two. Neither gap is remotely the size of the working poor's.
+      </p>
+      <p>
+        <strong>The <span class="flag">split</span> marker</strong> appears on a bloc whose own components
+        point in opposite directions in that election. It is an instruction to expand the bloc, not a result
+        to read. The Catholic self-employed carry it through most of the crisis years, because two of the
+        three component groups went to the Nazis and the third went sharply away. The blue- and white-collar
+        bloc carries it in the three elections before the crisis, when one white-collar group sat clearly
+        above the line and one blue-collar group clearly below — small movements, but in opposite directions,
+        so the pooled figure is worth opening in those years rather than read on its own.
+      </p>
+      <p>
+        The blocs are weighted by group size, so larger groups count for more. That is the right weighting for
+        the question being asked — how did this population as a whole vote — and it means a bloc is not simply
+        the average of the dots you see when you expand it.
+      </p>
+      <p>
+        <strong>What the summary leaves out.</strong> The five blocs cover 21 of the 30 groups. The missing
+        nine are the unemployed and the blue- and white-collar workers in Catholic precincts, which the article's
+        headline
+        claims are not about — its unemployment argument is made on the Protestant side, where the SPD and the
+        Communists were the available alternatives. They are real data and they are all in the thirty-group
+        view; pooled, the Catholic unemployed come to about −7 points in July 1932 and the Catholic blue- and
+        white-collar workers to about −21, neither of which the theory predicts or forbids. Summary views are a choice
+        about what to foreground, and it is worth knowing what a given one has set aside.
+      </p>
+    </details>
+
+    <details>
+      <summary>Where these numbers come from</summary>
+      <div class="data-note">
+        <p>
+          The estimates are the authors' own, taken from <code>results.xls</code> in the study's replication
+          archive on the Harvard Dataverse (King, Rosen, Tanner and Wagner, "Replication data for: Ordinary
+          economic voting behavior in the extraordinary election of Adolf Hitler," doi:10.7910/DVN/OMYW0P).
+          That file's <code>Graphdata90</code> sheet holds the values plotted in the article's figures,
+          together with 90 percent bootstrap bounds.
+        </p>
+        <ul>
+          <li>
+            <strong>What the numbers are.</strong> For each group and election: the estimated share of that
+            group voting Nazi, and the amount by which that share differs from the national figure. Both are
+            shown. The bounds are the 2.5 and 97.5 percentiles of 200 bootstrap replications, which the
+            authors label as a 90 percent interval.
+          </li>
+          <li>
+            <strong>Checks run on the file.</strong> Two, both passed. Subtracting the national Nazi vote from each
+            group's absolute estimate reproduces the published deviation to within 0.0003 across all thirty
+            groups and six elections. And the article's worked example — the self-employed in high-unemployment
+            Protestant areas in 1930 — appears in the file at +57.8 points and 72.7 percent, matching the
+            "roughly 0.60, roughly 75 percent" the text uses when explaining how to read the figure.
+          </li>
+          <li>
+            <strong>Which numbers the national figures are.</strong> Shares of <em>eligible voters</em>, the article's
+            convention, taken from the replication file's own totals. Textbook figures are usually shares of
+            <em>valid votes cast</em> and are markedly higher: about 3.0 percent in December 1924, 2.6 in 1928,
+            18.3 in 1930, 37.3 in July 1932, 33.1 in November 1932, and 43.9 in March 1933. Neither denominator
+            is wrong; they answer different questions, and the gap widens as turnout rises. This is the source
+            of the discrepancy your instructor flags on the article's page 957. Both are shown above.
+          </li>
+          <li>
+            <strong>All thirty groups are here.</strong> The article plots only the fifteen largest, and the
+            tool opens on those. The rest are one button away, and they matter more than their absence from
+            the figure suggests: the Catholic self-employed and Catholic domestic groups are where the
+            article's account of religious incentives gets tested, and most of them are outside the fifteen.
+            They include the one result the authors flag against themselves, the self-employed in Catholic
+            high-unemployment areas.
+          </li>
+          <li>
+            <strong>What the article calls this figure.</strong> Usually the <em>national swing</em>. This tool
+            does not, because everywhere else a swing is the <em>change</em> between two elections, and these
+            numbers are levels: the Nazi vote in November 1932 was 26.5 percent of eligible voters, which was a
+            fall of nearly five points from July, not a rise of 26.5. The article uses the word in its ordinary
+            sense too — it describes Nazi support as swinging from under 3 percent in 1924 to 31.1 percent in
+            July 1932 — and the note to its main figure calls this quantity the national vote proportion. The
+            word is kept here for the one job it does properly: the movement between elections that the authors
+            say was near-uniform across groups. If you are reading the article alongside the tool, its
+            "national swing" and this tool's "national Nazi vote" are the same number.
+          </li>
+          <li>
+            <strong>What "domestic" covers.</strong> Domestic employees and helping family members — people
+            working in and around a household or family business who rarely appeared in the unemployment
+            figures. Earlier studies usually filed them under "other," and the replication file still labels
+            them that way. Treating them as a group in their own right is part of what the article contributes.
+          </li>
+          <li>
+            <strong>Measurement timing.</strong> Occupation comes from the 1933 census and religion from the
+            1925 census, used for every election year. The authors say they would have preferred data collected
+            at each election and could not find any. Unemployment in 1933 stands in for unemployment in the
+            earlier years.
+          </li>
+          <li>
+            <strong>March 1933.</strong> Included because the article includes it, but that election was held
+            after the Reichstag fire decree and is not generally treated as free or fair.
+          </li>
+          <li>
+            <strong>The bloc figures.</strong> Blocs are size-weighted averages of their component groups.
+            Because deviation is a share minus a constant, the weighted average of the component deviations is
+            exactly the bloc's own deviation — no approximation there. The intervals are approximate, and
+            deliberately too wide: the archive stores summary statistics rather than the bootstrap draws, so
+            the correlation between groups estimated from the same regional table cannot be recovered. The
+            tool therefore assumes those errors are perfectly correlated, which is the arrangement that
+            maximizes a bloc's uncertainty. Real intervals are narrower, probably by around half. Every bloc
+            result that clears zero here would clear it under any weaker assumption.
+          </li>
+          <li>
+            <strong>Estimates, not counts.</strong> Weimar had a secret ballot, so nobody recorded which kinds
+            of people voted for which party. Every number here is the output of a statistical model that
+            reconstructs group behavior from district-level totals. The authors are explicit that this cannot
+            give definitive answers, which is what the intervals are for.
+          </li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="sr-only" role="status" aria-live="polite" id="liveRegion"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var GROUPS = [
+    { code:"SHP", cat:"wp", size:1791966, fig3:true, desc:"self-employed, high unemployment, Protestant", e:[[0.0425,0.0147,0.0803,0.0658],[0.0591,0.0284,0.1025,0.0787],[0.5779,0.3745,0.7391,0.7266],[0.6055,0.5544,0.6360,0.9167],[0.5850,0.4217,0.6625,0.8498],[0.5143,0.4115,0.5556,0.9012]] },
+    { code:"SMP", cat:"wp", size:1047095, fig3:true, desc:"self-employed, medium unemployment, Protestant", e:[[0.0227,0.0092,0.0399,0.0459],[0.0396,0.0244,0.0570,0.0593],[0.1733,-0.0219,0.4045,0.3221],[0.4084,0.1030,0.6004,0.7195],[0.3692,0.0376,0.6301,0.6340],[0.3023,0.0483,0.5109,0.6892]] },
+    { code:"DLP", cat:"wp", size:1165511, fig3:true, desc:"domestic employees and helping family members, low unemployment, Protestant", e:[[0.0274,0.0111,0.0455,0.0506],[0.0151,0.0070,0.0246,0.0348],[0.0800,-0.0035,0.1541,0.2287],[0.3976,0.1265,0.5558,0.7087],[0.3691,0.0827,0.5696,0.6339],[0.4441,0.2198,0.5735,0.8309]] },
+    { code:"SLC", cat:"wp", size:670071, fig3:false, desc:"self-employed, low unemployment, Catholic", e:[[0.0024,0.0004,0.0047,0.0257],[0.0073,0.0049,0.0099,0.0270],[-0.0168,-0.0675,0.0408,0.1319],[0.2112,0.0795,0.3178,0.5224],[0.2167,0.1020,0.3231,0.4814],[0.5662,0.5439,0.5802,0.9531]] },
+    { code:"DMP", cat:"wp", size:1420788, fig3:true, desc:"domestic employees and helping family members, medium unemployment, Protestant", e:[[0.0011,-0.0062,0.0108,0.0244],[0.0041,-0.0022,0.0113,0.0238],[0.0152,-0.0833,0.1231,0.1640],[0.2073,0.0822,0.3587,0.5184],[0.2342,0.0836,0.4118,0.4990],[0.2804,0.1588,0.4205,0.6672]] },
+    { code:"SMC", cat:"wp", size:472523, fig3:false, desc:"self-employed, medium unemployment, Catholic", e:[[0.0064,0.0022,0.0116,0.0297],[0.0127,0.0090,0.0184,0.0324],[0.0062,-0.0595,0.1036,0.1550],[0.2050,-0.0200,0.4477,0.5161],[0.1783,-0.0520,0.4105,0.4431],[0.5127,0.4013,0.5595,0.8996]] },
+    { code:"SLP", cat:"wp", size:757089, fig3:true, desc:"self-employed, low unemployment, Protestant", e:[[0.0275,0.0175,0.0399,0.0508],[0.0366,0.0240,0.0522,0.0563],[-0.0559,-0.1036,0.0462,0.0929],[0.1274,-0.1967,0.5570,0.4385],[0.0968,-0.1940,0.6164,0.3616],[0.0689,-0.2104,0.4412,0.4558]] },
+    { code:"DHP", cat:"wp", size:1400560, fig3:true, desc:"domestic employees and helping family members, high unemployment, Protestant", e:[[0.0093,-0.0017,0.0223,0.0326],[0.0173,0.0024,0.0340,0.0369],[-0.0754,-0.1160,-0.0003,0.0733],[0.1031,-0.1019,0.3163,0.4142],[0.0354,-0.1485,0.2574,0.3002],[0.0521,-0.1653,0.2581,0.4390]] },
+    { code:"ULC", cat:"un", size:174623, fig3:false, desc:"unemployed, low unemployment, Catholic", e:[[-0.0133,-0.0188,0.0031,0.0100],[-0.0062,-0.0125,0.0035,0.0135],[0.2208,-0.0845,0.5153,0.3695],[0.0694,-0.2790,0.4763,0.3805],[-0.0048,-0.2330,0.3440,0.2599],[-0.2802,-0.3726,-0.0066,0.1067]] },
+    { code:"DHC", cat:"wp", size:515645, fig3:false, desc:"domestic employees and helping family members, high unemployment, Catholic", e:[[0.0093,-0.0068,0.0214,0.0326],[0.0220,0.0079,0.0330,0.0417],[0.0038,-0.0677,0.0828,0.1526],[0.0391,-0.1333,0.1940,0.3503],[0.0687,-0.0861,0.2237,0.3335],[0.1259,-0.1184,0.3238,0.5128]] },
+    { code:"BHP", cat:"co", size:4236807, fig3:true, desc:"blue collar, high unemployment, Protestant", e:[[-0.0057,-0.0096,-0.0016,0.0176],[-0.0027,-0.0072,0.0017,0.0169],[-0.0922,-0.1235,-0.0373,0.0565],[0.0297,-0.0749,0.1293,0.3408],[0.0072,-0.0921,0.0995,0.2720],[0.0290,-0.0869,0.1318,0.4159]] },
+    { code:"WHC", cat:"co", size:713701, fig3:false, desc:"white collar, high unemployment, Catholic", e:[[0.0212,0.0103,0.0326,0.0444],[0.0275,0.0141,0.0473,0.0471],[0.1010,-0.0500,0.2321,0.2498],[0.0278,-0.1059,0.1756,0.3390],[-0.0043,-0.1142,0.1342,0.2605],[0.0463,-0.1650,0.2389,0.4332]] },
+    { code:"BLP", cat:"co", size:1168018, fig3:true, desc:"blue collar, low unemployment, Protestant", e:[[0.0074,-0.0075,0.0246,0.0306],[-0.0109,-0.0139,-0.0071,0.0088],[0.0425,-0.0345,0.1168,0.1912],[-0.0032,-0.1088,0.0863,0.3079],[-0.1156,-0.2061,-0.0179,0.1491],[-0.0095,-0.1014,0.0742,0.3774]] },
+    { code:"WMC", cat:"co", size:272565, fig3:false, desc:"white collar, medium unemployment, Catholic", e:[[0.0597,0.0250,0.1037,0.0830],[0.0441,0.0188,0.0783,0.0637],[0.1526,0.0193,0.2929,0.3014],[-0.0122,-0.1534,0.1448,0.2989],[-0.0096,-0.1110,0.0911,0.2552],[0.0077,-0.1669,0.1754,0.3946]] },
+    { code:"WHP", cat:"co", size:2518424, fig3:true, desc:"white collar, high unemployment, Protestant", e:[[0.0108,-0.0076,0.0394,0.0341],[-0.0033,-0.0103,0.0065,0.0163],[0.0113,-0.0872,0.1030,0.1601],[-0.0182,-0.1209,0.0857,0.2929],[-0.0446,-0.1517,0.0645,0.2201],[0.0120,-0.0997,0.1244,0.3989]] },
+    { code:"BMP", cat:"co", size:1964455, fig3:true, desc:"blue collar, medium unemployment, Protestant", e:[[0.0031,-0.0051,0.0133,0.0263],[-0.0000,-0.0051,0.0063,0.0196],[0.0126,-0.0446,0.0687,0.1613],[-0.0258,-0.0979,0.0428,0.2854],[-0.0773,-0.1495,-0.0065,0.1875],[0.0023,-0.0648,0.0631,0.3891]] },
+    { code:"WMP", cat:"co", size:646183, fig3:false, desc:"white collar, medium unemployment, Protestant", e:[[0.0669,0.0337,0.1034,0.0902],[0.0328,0.0107,0.0617,0.0525],[0.1044,0.0135,0.1909,0.2532],[-0.0261,-0.1644,0.0984,0.2850],[-0.1059,-0.2104,0.0164,0.1588],[-0.0407,-0.1646,0.0665,0.3462]] },
+    { code:"UHC", cat:"un", size:1000015, fig3:true, desc:"unemployed, high unemployment, Catholic", e:[[0.0021,-0.0020,0.0063,0.0254],[0.0079,0.0029,0.0129,0.0275],[-0.0513,-0.1004,0.0336,0.0975],[-0.0344,-0.1233,0.0687,0.2767],[-0.0699,-0.1599,0.0191,0.1948],[-0.0190,-0.2013,0.1428,0.3679]] },
+    { code:"UMP", cat:"un", size:741286, fig3:true, desc:"unemployed, medium unemployment, Protestant", e:[[-0.0037,-0.0114,0.0079,0.0196],[-0.0004,-0.0096,0.0111,0.0193],[-0.1044,-0.1335,-0.0436,0.0444],[-0.1148,-0.2774,0.1191,0.1963],[0.0280,-0.1737,0.2640,0.2927],[-0.2601,-0.3608,-0.0737,0.1268]] },
+    { code:"WLC", cat:"co", size:193743, fig3:false, desc:"white collar, low unemployment, Catholic", e:[[-0.0184,-0.0203,-0.0148,0.0049],[-0.0089,-0.0134,0.0006,0.0108],[-0.0889,-0.1371,0.0810,0.0599],[-0.1204,-0.2958,0.2746,0.1907],[-0.1291,-0.2492,0.1779,0.1357],[-0.2077,-0.3692,0.1460,0.1792]] },
+    { code:"BMC", cat:"co", size:687785, fig3:false, desc:"blue collar, medium unemployment, Catholic", e:[[-0.0039,-0.0130,0.0029,0.0194],[0.0001,-0.0050,0.0047,0.0197],[-0.0751,-0.1117,-0.0240,0.0736],[-0.1218,-0.2611,0.0351,0.1893],[-0.1109,-0.2268,0.0241,0.1539],[-0.1593,-0.2679,-0.0597,0.2275]] },
+    { code:"ULP", cat:"un", size:237836, fig3:false, desc:"unemployed, low unemployment, Protestant", e:[[0.0011,-0.0105,0.0182,0.0244],[0.0004,-0.0086,0.0135,0.0200],[0.1181,-0.1144,0.4948,0.2669],[-0.2076,-0.2776,-0.0101,0.1036],[0.1773,-0.2124,0.5994,0.4420],[-0.0567,-0.3514,0.3793,0.3302]] },
+    { code:"WLP", cat:"co", size:269722, fig3:false, desc:"white collar, low unemployment, Protestant", e:[[0.0123,-0.0034,0.0393,0.0356],[0.0028,-0.0044,0.0121,0.0225],[0.0085,-0.1213,0.3100,0.1572],[-0.2096,-0.2861,-0.0818,0.1015],[-0.0996,-0.2348,0.2460,0.1652],[-0.1399,-0.3457,0.2455,0.2469]] },
+    { code:"BLC", cat:"co", size:717883, fig3:false, desc:"blue collar, low unemployment, Catholic", e:[[-0.0009,-0.0042,0.0017,0.0224],[0.0043,0.0009,0.0082,0.0240],[-0.0718,-0.1132,-0.0110,0.0769],[-0.2189,-0.2848,-0.1050,0.0923],[-0.1923,-0.2417,-0.1074,0.0725],[-0.1036,-0.2059,-0.0047,0.2832]] },
+    { code:"UHP", cat:"un", size:3359581, fig3:true, desc:"unemployed, high unemployment, Protestant", e:[[0.0103,-0.0043,0.0331,0.0335],[0.0103,-0.0039,0.0362,0.0299],[-0.0758,-0.1266,0.0316,0.0729],[-0.2340,-0.2906,-0.1147,0.0772],[-0.1764,-0.2400,-0.0461,0.0884],[-0.2937,-0.3638,-0.1538,0.0931]] },
+    { code:"UMC", cat:"un", size:310161, fig3:false, desc:"unemployed, medium unemployment, Catholic", e:[[-0.0016,-0.0162,0.0141,0.0216],[0.0004,-0.0104,0.0186,0.0201],[-0.0403,-0.1115,0.0578,0.1085],[-0.2404,-0.2900,-0.1440,0.0707],[-0.1868,-0.2409,-0.1043,0.0779],[-0.2859,-0.3689,-0.1032,0.1010]] },
+    { code:"BHC", cat:"co", size:1295607, fig3:true, desc:"blue collar, high unemployment, Catholic", e:[[-0.0076,-0.0128,-0.0018,0.0157],[-0.0001,-0.0050,0.0050,0.0196],[-0.1026,-0.1205,-0.0761,0.0461],[-0.2530,-0.2857,-0.1975,0.0581],[-0.1943,-0.2387,-0.0878,0.0704],[-0.2515,-0.3566,-0.0554,0.1354]] },
+    { code:"SHC", cat:"wp", size:512120, fig3:false, desc:"self-employed, high unemployment, Catholic", e:[[0.0124,-0.0085,0.0374,0.0357],[0.0076,-0.0025,0.0251,0.0273],[-0.0640,-0.1202,0.0895,0.0847],[-0.2731,-0.2920,-0.2386,0.0380],[-0.2146,-0.2390,-0.1615,0.0502],[-0.3284,-0.3655,-0.2387,0.0585]] },
+    { code:"DLC", cat:"wp", size:1091418, fig3:true, desc:"domestic employees and helping family members, low unemployment, Catholic", e:[[-0.0076,-0.0094,-0.0055,0.0157],[-0.0047,-0.0066,-0.0028,0.0150],[-0.1170,-0.1292,-0.1031,0.0318],[-0.2833,-0.2956,-0.2633,0.0278],[-0.2304,-0.2446,-0.2047,0.0343],[-0.3061,-0.3560,-0.2488,0.0807]] },
+    { code:"DMC", cat:"wp", size:692541, fig3:false, desc:"domestic employees and helping family members, medium unemployment, Catholic", e:[[-0.0074,-0.0154,-0.0022,0.0158],[-0.0038,-0.0101,0.0011,0.0159],[-0.1201,-0.1314,-0.1085,0.0286],[-0.2907,-0.3006,-0.2800,0.0204],[-0.2390,-0.2509,-0.2234,0.0258],[-0.3461,-0.3701,-0.2961,0.0408]] }
+  ];
+
+  var BLOCS = [
+    { code:"WPP", label:"The working poor", desc:"self-employed, domestic employees and helping family members", section:"P", cat:"wp", size:7583009, comps:["SHP", "SMP", "SLP", "DHP", "DMP", "DLP"], e:[[0.0221,0.0044,0.0397,0.0453,0],[0.0294,0.0111,0.0476,0.0490,0],[0.1561,0.0308,0.2815,0.3049,1],[0.3312,0.1236,0.5388,0.6423,0],[0.3060,0.0836,0.5285,0.5708,0],[0.3006,0.1214,0.4798,0.6875,0]] },
+    { code:"UNP", label:"The unemployed", desc:"people out of work", section:"P", cat:"un", size:4338703, comps:["UHP", "UMP", "ULP"], e:[[0.0074,-0.0106,0.0254,0.0306,0],[0.0079,-0.0105,0.0263,0.0276,0],[-0.0701,-0.1614,0.0212,0.0787,0],[-0.2122,-0.3317,-0.0926,0.0990,0],[-0.1221,-0.2630,0.0188,0.1427,0],[-0.2750,-0.4093,-0.1407,0.1119,0]] },
+    { code:"COP", label:"Blue- and white-collar workers", desc:"people in work, at varying risk of losing it", section:"P", cat:"co", size:10803609, comps:["BHP", "BMP", "BLP", "WHP", "WMP", "WLP"], e:[[0.0060,-0.0072,0.0191,0.0292,1],[-0.0010,-0.0079,0.0059,0.0187,1],[-0.0202,-0.0886,0.0482,0.1286,1],[-0.0044,-0.1065,0.0976,0.3067,0],[-0.0429,-0.1428,0.0569,0.2218,0],[0.0076,-0.0977,0.1130,0.3945,0]] },
+    { code:"SEC", label:"The self-employed", desc:"shopkeepers, artisans, small farmers and professionals", section:"C", cat:"wp", size:1654714, comps:["SLC", "SMC", "SHC"], e:[[0.0066,-0.0033,0.0166,0.0299,0],[0.0090,0.0023,0.0156,0.0286,0],[-0.0249,-0.1088,0.0591,0.1239,0],[0.0596,-0.0777,0.1968,0.3707,1],[0.0722,-0.0537,0.1982,0.3370,1],[0.2741,0.1883,0.3599,0.6610,1]] },
+    { code:"DOC", label:"Domestic employees", desc:"domestic employees and helping family members", section:"C", cat:"wp", size:2299604, comps:["DLC", "DMC", "DHC"], e:[[-0.0038,-0.0101,0.0026,0.0195,0],[0.0016,-0.0038,0.0070,0.0212,1],[-0.0908,-0.1180,-0.0637,0.0579,0],[-0.2132,-0.2669,-0.1596,0.0979,0],[-0.1659,-0.2171,-0.1148,0.0988,0],[-0.2213,-0.3088,-0.1338,0.1656,0]] }
+  ];
+
+  var CATS = [
+    { key: "wp", name: "The working poor", note: "— hurt by the depression, but at little risk of losing a job (hypothesis 2)" },
+    { key: "un", name: "The unemployed", note: "— hurt by the depression and out of work (hypothesis 1)" },
+    { key: "co", name: "Blue- and white-collar workers", note: "— in work, at varying risk (hypothesis 3)" }
+  ];
+
+  var SECTIONS = [
+    { key: "P", name: "Protestant precincts", note: "— where the three hypotheses are tested" },
+    { key: "C", name: "Catholic precincts", note: "— where the theory predicts the working poor split in two" }
+  ];
+
+  var HYP = {
+    wp: "hypothesis 2 — the working poor move to the Nazis",
+    un: "hypothesis 1 — the unemployed move to the Communists, not the Nazis",
+    co: "hypothesis 3 — no consistent trend among blue- and white-collar workers"
+  };
+
+  var ELECTIONS = [
+    { id: "1924", label: "December 1924", naziVote: 2.33, cast: 3.0,
+      sub: "The Nazis take 2.3 percent of eligible voters. The differences between groups are already detectable — but they are fractions of a point, because there is barely any Nazi vote to divide up." },
+    { id: "1928", label: "May 1928", naziVote: 1.97, cast: 2.6,
+      sub: "Still about 2 percent, at the end of the recovery years. Same picture: real differences, all of them tiny." },
+    { id: "1930", label: "September 1930", naziVote: 14.88, cast: 18.3,
+      sub: "The depression has arrived and the Nazi vote jumps to about 15 percent. The working poor pull away from it; nothing else has separated yet." },
+    { id: "jul1932", label: "July 1932", naziVote: 31.11, cast: 37.3,
+      sub: "31 percent, and the clearest test of the argument: the working poor well above the line, the unemployed below it, the blue- and white-collar groups sitting on it." },
+    { id: "nov1932", label: "November 1932", naziVote: 26.48, cast: 33.1,
+      sub: "The Nazi vote falls nationally, and many observers concluded the party had peaked. The pattern between groups does not change — which is the point, since deviations are measured against whatever the national figure happens to be." },
+    { id: "mar1933", label: "March 1933", naziVote: 38.69, cast: 43.9,
+      sub: "38.7 percent, in an election held after the Reichstag fire decree and not generally counted as free or fair. The same groups are in the same places." }
+  ];
+
+  var LEDES = {
+    summary: "Each bloc pools its groups, weighted by size. The Protestant blocs are one per hypothesis. The Catholic blocs are cut by occupation instead, because that is where the theory predicts a split. Use the arrow to open a bloc and see what is inside it.",
+    fifteen: "Each group is one occupation, in one kind of place. The three letters give the occupation, the local unemployment level, and whether the area was mostly Protestant or mostly Catholic. These are the fifteen the article plots.",
+    thirty: "All thirty groups, including the fifteen the article leaves out of its figure. The Catholic groups are here, and so is the one result the authors flag against themselves."
+  };
+
+  /* Blocs are this tool's own groupings, not the article's, so they get plain-language
+     labels rather than invented acronyms. Group codes keep the article's convention. */
+  var BLOC_SHORT = {
+    WPP: "Working poor", UNP: "Unemployed", COP: "Blue/white collar",
+    SEC: "Self-employed", DOC: "Domestic employees"
+  };
+
+  var DOM_LO = -0.45, DOM_HI = 0.80;
+
+  var current = 3;
+  var view = "summary";
+  var predictMode = false;
+  var currentItem = null;
+  var expanded = {};
+
+  var byCode = {};
+  GROUPS.forEach(function (g) { g.kind = "group"; byCode[g.code] = g; });
+  BLOCS.forEach(function (b) { b.kind = "bloc"; byCode[b.code] = b; });
+
+  var state = {};
+  ELECTIONS.forEach(function (e) { state[e.id] = { revealed: {}, guesses: {} }; });
+  function revealAll(id) {
+    GROUPS.concat(BLOCS).forEach(function (o) { state[id].revealed[o.code] = true; });
+  }
+  function hideUnguessed(id) {
+    GROUPS.concat(BLOCS).forEach(function (o) {
+      if (!state[id].guesses[o.code]) { delete state[id].revealed[o.code]; }
+    });
+  }
+  ELECTIONS.forEach(function (e) { revealAll(e.id); });
+
+  var tabsEl = document.getElementById("tabs");
+  var plotEl = document.getElementById("plot");
+  var groupPanel = document.getElementById("groupPanel");
+  var readingEl = document.getElementById("readingPanel");
+  var liveEl = document.getElementById("liveRegion");
+
+  function el() { return ELECTIONS[current]; }
+  function st() { return state[el().id]; }
+  function est(o) { return o.e[current]; }
+  function verdict(o) {
+    var v = est(o);
+    return v[1] > 0 ? "above" : v[2] < 0 ? "below" : "flat";
+  }
+  function isSplit(o) { return o.kind === "bloc" && est(o)[4] === 1; }
+  function nameOf(o) { return o.kind === "bloc" ? o.label : o.code; }
+  function pp(x) { return (x >= 0 ? "+" : "\u2212") + Math.abs(x * 100).toFixed(1); }
+  function pct(x) { return (x * 100).toFixed(1) + "%"; }
+  function say(msg) { liveEl.textContent = msg; }
+
+  function verdictSentence(o) {
+    var v = est(o), k = verdict(o);
+    if (k === "above") return "Above the national Nazi vote, by " + Math.abs(v[0] * 100).toFixed(1) + " points.";
+    if (k === "below") return "Below the national Nazi vote, by " + Math.abs(v[0] * 100).toFixed(1) + " points.";
+    return "Not distinguishable from the national Nazi vote — the interval crosses zero.";
+  }
+
+  /* Ordered list of what the current view shows. */
+  function items() {
+    var out = [];
+    if (view === "summary") {
+      SECTIONS.forEach(function (s) {
+        BLOCS.filter(function (b) { return b.section === s.key; }).forEach(function (b) {
+          out.push({ obj: b, section: s.key, comp: false });
+          if (expanded[b.code]) {
+            b.comps.forEach(function (c) { out.push({ obj: byCode[c], section: s.key, comp: true }); });
+          }
+        });
+      });
+    } else {
+      CATS.forEach(function (c) {
+        GROUPS.filter(function (g) {
+          return g.cat === c.key && (view === "thirty" || g.fig3);
+        }).forEach(function (g) { out.push({ obj: g, section: c.key, comp: false }); });
+      });
+    }
+    return out;
+  }
+  function scored() { return items().filter(function (it) { return !it.comp; }); }
+
+  /* ---------- tabs ---------- */
+
+  function buildTabs() {
+    ELECTIONS.forEach(function (e, i) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("role", "tab");
+      b.id = "tab-" + e.id;
+      b.textContent = e.label;
+      b.setAttribute("aria-selected", i === current ? "true" : "false");
+      b.tabIndex = i === current ? 0 : -1;
+      b.addEventListener("click", function () { selectElection(i, true); });
+      b.addEventListener("keydown", function (ev) {
+        var d = 0;
+        if (ev.key === "ArrowRight") d = 1;
+        else if (ev.key === "ArrowLeft") d = -1;
+        else if (ev.key === "Home") d = -ELECTIONS.length;
+        else if (ev.key === "End") d = ELECTIONS.length;
+        else return;
+        ev.preventDefault();
+        var n = Math.min(ELECTIONS.length - 1, Math.max(0, i + d));
+        selectElection(n, true);
+        tabsEl.children[n].focus();
+      });
+      tabsEl.appendChild(b);
+    });
+  }
+
+  function selectElection(i, announce) {
+    current = i;
+    currentItem = null;
+    if (predictMode) { hideUnguessed(el().id); }
+    Array.prototype.forEach.call(tabsEl.children, function (b, n) {
+      b.setAttribute("aria-selected", n === i ? "true" : "false");
+      b.tabIndex = n === i ? 0 : -1;
+    });
+    render();
+    if (announce) {
+      say(el().label + " selected. The Nazis took " + el().naziVote.toFixed(1) +
+          " percent of eligible voters nationally.");
+    }
+  }
+
+  /* ---------- list ---------- */
+
+  function makeItemButton(o, isComp) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "group-btn";
+    b.id = "item-" + o.code;
+    b.setAttribute("aria-pressed", currentItem === o.code ? "true" : "false");
+
+    var revealed = !!st().revealed[o.code];
+    var k = verdict(o);
+
+    var mark = document.createElement("span");
+    mark.className = "mark";
+    mark.setAttribute("aria-hidden", "true");
+    mark.textContent = revealed ? (k === "above" ? "\u2713" : k === "below" ? "\u2717" : "\u2013") : "?";
+
+    var code = document.createElement("span");
+    code.className = "code";
+    code.textContent = o.kind === "bloc" ? "" : o.code;
+    if (o.kind === "bloc") { code.style.display = "none"; }
+
+    var desc = document.createElement("span");
+    desc.className = "desc";
+    if (o.kind === "bloc") {
+      desc.style.fontSize = "0.86rem";
+      desc.style.color = "var(--text)";
+      desc.style.fontWeight = "600";
+      desc.textContent = o.label;
+      if (revealed && isSplit(o)) {
+        var fl = document.createElement("span");
+        fl.className = "flag";
+        fl.textContent = "split";
+        desc.appendChild(fl);
+      }
+    } else {
+      desc.textContent = o.desc;
+    }
+
+    var val = document.createElement("span");
+    val.className = "val";
+    val.textContent = revealed ? pp(est(o)[0]) : "";
+
+    if (revealed) { b.classList.add("is-" + k); }
+    b.appendChild(mark);
+    if (o.kind !== "bloc") { b.appendChild(code); }
+    b.appendChild(desc);
+    b.appendChild(val);
+
+    b.setAttribute("aria-label",
+      (o.kind === "bloc" ? o.label + " in " + (o.section === "P" ? "Protestant" : "Catholic") + " precincts"
+                         : o.code + ", " + o.desc) + ". " +
+      (revealed ? verdictSentence(o) +
+        (isSplit(o) ? " Components of this bloc point in opposite directions." : "")
+        : "Not yet revealed.") +
+      (revealed && st().guesses[o.code]
+        ? " Your answer was " + (st().guesses[o.code] === k ? "correct." : "incorrect.") : ""));
+
+    b.addEventListener("click", function () { pick(o.code); });
+    return b;
+  }
+
+  function buildList() {
+    groupPanel.innerHTML = "";
+    document.getElementById("listHeading").textContent =
+      view === "summary" ? "The blocs" : "The groups";
+    document.getElementById("listLede").textContent = LEDES[view];
+    document.getElementById("codeKey").style.display =
+      (view === "summary" && !Object.keys(expanded).some(function (k) { return expanded[k]; }))
+        ? "none" : "";
+
+    var groupsBy = view === "summary" ? SECTIONS : CATS;
+    groupsBy.forEach(function (sec) {
+      var list = items().filter(function (it) { return it.section === sec.key && !it.comp; });
+      if (!list.length) return;
+
+      var wrap = document.createElement("div");
+      wrap.className = "cat";
+      var h = document.createElement("p");
+      h.className = "cat-head";
+      h.appendChild(document.createTextNode(sec.name + " "));
+      var note = document.createElement("span");
+      note.className = "cat-note";
+      note.textContent = sec.note;
+      h.appendChild(note);
+      wrap.appendChild(h);
+
+      var ul = document.createElement("ul");
+      ul.className = "group-list";
+      list.forEach(function (it) {
+        var li = document.createElement("li");
+        if (it.obj.kind === "bloc") {
+          var row = document.createElement("div");
+          row.className = "bloc-row";
+          row.appendChild(makeItemButton(it.obj, false));
+          var ex = document.createElement("button");
+          ex.type = "button";
+          ex.className = "expand-btn";
+          ex.id = "exp-" + it.obj.code;
+          ex.setAttribute("aria-expanded", expanded[it.obj.code] ? "true" : "false");
+          ex.setAttribute("aria-label",
+            (expanded[it.obj.code] ? "Hide" : "Show") + " the " + it.obj.comps.length +
+            " groups inside " + it.obj.label + ", " +
+            (it.obj.section === "P" ? "Protestant" : "Catholic") + " precincts");
+          ex.textContent = expanded[it.obj.code] ? "\u2212" : "+";
+          ex.addEventListener("click", function () {
+            expanded[it.obj.code] = !expanded[it.obj.code];
+            pendingFocus = "exp-" + it.obj.code;
+            render();
+            say((expanded[it.obj.code] ? "Expanded " : "Collapsed ") + it.obj.label + ".");
+          });
+          row.appendChild(ex);
+          li.appendChild(row);
+
+          if (expanded[it.obj.code]) {
+            var cl = document.createElement("ul");
+            cl.className = "comp-list";
+            it.obj.comps.forEach(function (c) {
+              var cli = document.createElement("li");
+              cli.appendChild(makeItemButton(byCode[c], true));
+              cl.appendChild(cli);
+            });
+            li.appendChild(cl);
+          }
+        } else {
+          li.appendChild(makeItemButton(it.obj, false));
+        }
+        ul.appendChild(li);
+      });
+      wrap.appendChild(ul);
+      groupPanel.appendChild(wrap);
+    });
+  }
+
+  function pick(code) {
+    currentItem = code;
+    if (!predictMode) { st().revealed[code] = true; }
+    render();
+    var o = byCode[code];
+    say(nameOf(o) + ". " + (st().revealed[code] ? verdictSentence(o) : "Choose where you think this sits."));
+  }
+
+  /* ---------- plot ---------- */
+
+  function xpos(v) { return 100 * (v - DOM_LO) / (DOM_HI - DOM_LO); }
+
+  function buildPlot() {
+    plotEl.innerHTML = "";
+    var rowsWrap = document.createElement("div");
+    rowsWrap.className = "plot-rows" + (view === "summary" ? " is-summary" : "");
+    plotEl.className = "plot" + (view === "summary" ? " is-summary" : "");
+
+    var groupsBy = view === "summary" ? SECTIONS : CATS;
+    groupsBy.forEach(function (sec) {
+      var list = items().filter(function (it) { return it.section === sec.key; });
+      if (!list.length) return;
+      var h = document.createElement("div");
+      h.className = "plot-cat";
+      h.textContent = sec.name;
+      rowsWrap.appendChild(h);
+
+      list.forEach(function (it) {
+        var o = it.obj;
+        var row = document.createElement("div");
+        row.className = "prow" +
+          (o.kind === "bloc" ? " is-bloc" : "") +
+          (it.comp ? " is-comp" : "") +
+          (currentItem === o.code ? " is-current" : "");
+        var lab = document.createElement("span");
+        lab.className = "prow-label";
+        lab.textContent = o.kind === "bloc" ? BLOC_SHORT[o.code] : o.code;
+        row.appendChild(lab);
+
+        var track = document.createElement("div");
+        track.className = "track";
+        if (st().revealed[o.code]) {
+          var v = est(o), k = verdict(o);
+          var bar = document.createElement("div");
+          bar.className = "ival is-" + k;
+          bar.style.left = xpos(v[1]) + "%";
+          bar.style.width = Math.max(0.4, xpos(v[2]) - xpos(v[1])) + "%";
+          track.appendChild(bar);
+          var dot = document.createElement("div");
+          dot.className = "pt is-" + k;
+          dot.style.left = xpos(v[0]) + "%";
+          track.appendChild(dot);
+        }
+        row.appendChild(track);
+        rowsWrap.appendChild(row);
+      });
+    });
+
+    var zw = document.createElement("div");
+    zw.className = "zero-wrap";
+    var z = document.createElement("div");
+    z.className = "zero";
+    z.style.left = xpos(0) + "%";
+    zw.appendChild(z);
+    rowsWrap.appendChild(zw);
+    plotEl.appendChild(rowsWrap);
+
+    var axis = document.createElement("div");
+    axis.className = "axis";
+    [-40, -20, 0, 20, 40, 60].forEach(function (t) {
+      var s = document.createElement("span");
+      s.className = "tick";
+      s.style.left = xpos(t / 100) + "%";
+      s.textContent = (t > 0 ? "+" : "") + t;
+      axis.appendChild(s);
+    });
+    plotEl.appendChild(axis);
+
+    var title = document.createElement("span");
+    title.className = "axis-title";
+    title.textContent = "percentage points above or below the national Nazi vote";
+    plotEl.appendChild(title);
+  }
+
+  /* ---------- reading ---------- */
+
+  function buildReading() {
+    readingEl.innerHTML = "";
+    if (!currentItem) {
+      var p = document.createElement("p");
+      p.className = "lede";
+      p.style.margin = "0";
+      p.textContent = view === "summary"
+        ? "Nothing picked yet. Choose a bloc from the list on the left to see how far above or below the " +
+          "national figure it sat, and how firm that estimate is."
+        : "Nothing picked yet. Choose a group from the list on the left to see how far above or below the " +
+          "national figure it sat, and how firm that estimate is.";
+      readingEl.appendChild(p);
+      return;
+    }
+
+    var o = byCode[currentItem];
+    var revealed = !!st().revealed[currentItem];
+
+    if (!revealed && predictMode) {
+      var q = document.createElement("p");
+      q.className = "predict-q";
+      q.appendChild(document.createTextNode("Where did "));
+      var strong = document.createElement("strong");
+      strong.textContent = nameOf(o);
+      q.appendChild(strong);
+      q.appendChild(document.createTextNode(
+        (o.kind === "bloc" ? " in " + (o.section === "P" ? "Protestant" : "Catholic") + " precincts"
+                           : " — " + o.desc) + " — sit in " + el().label + "?"));
+      readingEl.appendChild(q);
+
+      var opts = document.createElement("div");
+      opts.className = "predict-opts";
+      [
+        ["above", "Clearly above the line — more than the country gave"],
+        ["flat", "Not distinguishable from the line"],
+        ["below", "Clearly below the line — less than the country gave"]
+      ].forEach(function (opt) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.textContent = opt[1];
+        b.addEventListener("click", function () { guess(currentItem, opt[0]); });
+        opts.appendChild(b);
+      });
+      readingEl.appendChild(opts);
+      return;
+    }
+
+    var v = est(o), k = verdict(o);
+
+    var vd = document.createElement("p");
+    vd.className = "verdict is-" + k;
+    var w = document.createElement("span");
+    w.className = "word";
+    w.textContent = k === "above" ? "\u2713 Above the national vote"
+      : k === "below" ? "\u2717 Below the national vote" : "\u2013 Not distinguishable";
+    vd.appendChild(w);
+    vd.appendChild(document.createTextNode(" — " +
+      (o.kind === "bloc"
+        ? o.label + ", " + (o.section === "P" ? "Protestant" : "Catholic") + " precincts."
+        : o.code + ", " + o.desc + ".")));
+    readingEl.appendChild(vd);
+
+    if (o.kind === "bloc" && isSplit(o)) {
+      var wn = document.createElement("p");
+      wn.className = "warn";
+      wn.textContent = "Split bloc. The groups inside this one point in opposite directions in " +
+        el().label + ", so the pooled figure describes none of them well. Open it and read the components " +
+        "instead.";
+      readingEl.appendChild(wn);
+    }
+
+    var sum = document.createElement("div");
+    sum.className = "sum";
+    function line(lbl, val, cls) {
+      var d = document.createElement("div");
+      var a = document.createElement("span"); a.className = "lbl"; a.textContent = lbl;
+      var b = document.createElement("span"); if (cls) { b.className = cls; } b.textContent = val;
+      d.appendChild(a); d.appendChild(b); sum.appendChild(d);
+    }
+    line("national Nazi vote", pct(el().naziVote / 100));
+    line(o.kind === "bloc" ? "this bloc's deviation" : "this group's deviation", pp(v[0]) + " points");
+    var rule = document.createElement("div"); rule.className = "rule"; sum.appendChild(rule);
+    line(o.kind === "bloc" ? "estimated bloc vote" : "estimated group vote", pct(v[3]), "tot");
+    readingEl.appendChild(sum);
+
+    var meta = document.createElement("p");
+    meta.className = "meta";
+    meta.textContent = "90% interval on the deviation: " + pp(v[1]) + " to " + pp(v[2]) + " points. " +
+      (o.kind === "bloc" ? "Bloc size: " : "Group size: ") + o.size.toLocaleString("en-US") + " people." +
+      (k === "flat" ? " Because the interval crosses zero, this cannot be told apart from the national Nazi vote." : "") +
+      (o.kind === "bloc" ? " Bloc intervals are deliberately conservative — see the data note." : "");
+    readingEl.appendChild(meta);
+
+    if (o.kind === "bloc") {
+      var cs = document.createElement("ul");
+      cs.className = "comp-strip";
+      o.comps.forEach(function (c) {
+        var g = byCode[c], kk = verdict(g);
+        var li = document.createElement("li");
+        var a = document.createElement("span"); a.className = "c"; a.textContent = g.code;
+        var b = document.createElement("span"); b.className = "n"; b.textContent = pp(est(g)[0]);
+        var d = document.createElement("span"); d.className = "v is-" + kk;
+        d.textContent = kk === "above" ? "above" : kk === "below" ? "below" : "not distinguishable";
+        li.appendChild(a); li.appendChild(b); li.appendChild(d);
+        cs.appendChild(li);
+      });
+      readingEl.appendChild(cs);
+    } else {
+      var hy = document.createElement("p");
+      hy.className = "meta";
+      hy.textContent = "Bears on " + HYP[o.cat] + ".";
+      readingEl.appendChild(hy);
+    }
+
+    if (o.code === "SHC" || o.code === "DHC") {
+      var an = document.createElement("p");
+      an.className = "meta";
+      an.textContent = o.code === "SHC"
+        ? "One of the article's two exceptions. Its account of Catholic areas predicts the self-employed went to the Nazis even there — and in low and medium unemployment Catholic areas they did. Here they moved sharply the other way. The authors name this result, say they cannot determine why, and offer two possibilities: disconfirming evidence, or small-sample limits in the smallest of their six regions."
+        : "The article predicts Catholic domestic workers stayed with the Center Party, and in low and medium unemployment Catholic areas they clearly did. Here they did not move either way. This is the second of the two exceptions, and like the first it sits in the smallest of the six regions.";
+      readingEl.appendChild(an);
+    }
+
+    var guessed = st().guesses[currentItem];
+    if (guessed) {
+      var correct = guessed === k;
+      var box = document.createElement("div");
+      box.className = "result " + (correct ? "is-yes" : "is-no");
+      var s2 = document.createElement("strong");
+      var icon = document.createElement("span");
+      icon.className = "icon";
+      icon.setAttribute("aria-hidden", "true");
+      icon.textContent = correct ? "\u2713 " : "\u2717 ";
+      s2.appendChild(icon);
+      s2.appendChild(document.createTextNode(correct ? "You had this one" : "Not this one"));
+      box.appendChild(s2);
+      box.appendChild(document.createTextNode(
+        correct ? verdictSentence(o) : "You said " + labelFor(guessed) + ". " + verdictSentence(o)));
+      readingEl.appendChild(box);
+    }
+  }
+
+  function labelFor(k) {
+    return k === "above" ? "clearly above the line"
+      : k === "below" ? "clearly below the line" : "not distinguishable from the line";
+  }
+
+  function guess(code, choice) {
+    st().guesses[code] = choice;
+    st().revealed[code] = true;
+    pendingFocus = "item-" + code;
+    render();
+    var o = byCode[code];
+    say((choice === verdict(o) ? "Correct. " : "Not quite. ") + verdictSentence(o));
+  }
+
+  function maybeSummary() {
+    var sc = scored();
+    if (!sc.every(function (it) { return st().revealed[it.obj.code]; })) return;
+    var guessedAll = sc.every(function (it) { return st().guesses[it.obj.code]; });
+    var allRight = guessedAll && sc.every(function (it) {
+      return st().guesses[it.obj.code] === verdict(it.obj);
+    });
+    var c = { above: 0, below: 0, flat: 0 };
+    sc.forEach(function (it) { c[verdict(it.obj)]++; });
+
+    var box = document.createElement("div");
+    box.className = "result" + (allRight ? " is-solved" : "");
+    var s = document.createElement("strong");
+    s.textContent = allRight ? "Every one placed correctly"
+      : guessedAll ? "All " + sc.length + " placed"
+      : "Across the " + sc.length + (view === "summary" ? " blocs, " : " groups, ") + el().label;
+    box.appendChild(s);
+
+    var body;
+    if (view === "summary") {
+      var wpp = BLOCS[0], unp = BLOCS[1], cop = BLOCS[2];
+      body = "In Protestant precincts the working poor sit " + pp(est(wpp)[0]) +
+        " points from the national vote, the unemployed " + pp(est(unp)[0]) +
+        ", and the blue- and white-collar groups " + pp(est(cop)[0]) + ". " +
+        (verdict(wpp) === "above" && verdict(unp) === "below"
+          ? "Two sets of people the depression hurt badly, moving in opposite directions, with everyone else sitting still. That divergence is the article's central claim, and it is what neither the class nor the catch-all account predicts."
+          : "At this point the blocs are barely separated, because there is almost no Nazi vote to divide up. Move forward an election or two and watch them come apart.");
+    } else {
+      body = c.above + " clearly above the national vote, " + c.flat + " not distinguishable from it, " +
+        c.below + " clearly below. " +
+        (c.above && c.below
+          ? "The groups above are the working poor and the groups below include the unemployed — two sets of people the depression hurt badly, moving in opposite directions."
+          : "At this point the groups are barely separated, because there is almost no Nazi vote to divide up.");
+    }
+    box.appendChild(document.createTextNode(" " + body));
+    readingEl.appendChild(box);
+  }
+
+  /* ---------- render ---------- */
+
+  /* buildList() replaces every button in the panel, which destroys the element the person
+     is standing on. Remember where focus was and put it back. */
+  var pendingFocus = null;
+
+  function render() {
+    var prev = document.activeElement;
+    var restoreId = pendingFocus ||
+      (prev && prev.id && groupPanel.contains(prev) ? prev.id : null);
+    pendingFocus = null;
+
+    var sw = el().naziVote.toFixed(1);
+    document.getElementById("plotSub").textContent = el().sub;
+    document.getElementById("plotCaption").textContent =
+      "Gold line: the national Nazi vote in " + el().label + ", at " + sw +
+      "% of eligible voters. Bars are 90% intervals; a bar crossing the line means it cannot be told apart from the country as a whole.";
+    document.getElementById("natlLabel").textContent =
+      "Nazi vote nationally, " + el().label;
+    document.getElementById("natlFigure").textContent = sw + "%";
+    document.getElementById("natlSub").textContent =
+      "The article counts Nazi voters as a share of everyone eligible to vote, and that is the figure every " +
+      "group in the list is compared against. Counted instead as a share of the votes actually cast, the " +
+      "same result is " + el().cast + "% — the number you are more likely to meet in a textbook.";
+    document.getElementById("pickHeading").textContent =
+      view === "summary" ? "The bloc you picked" : "The group you picked";
+
+    buildPlot();
+    buildList();
+    buildReading();
+    maybeSummary();
+
+    if (restoreId) {
+      var again = document.getElementById(restoreId);
+      if (again) { again.focus(); }
+    }
+  }
+
+  /* ---------- controls ---------- */
+
+  Array.prototype.forEach.call(document.querySelectorAll("[data-view]"), function (btn) {
+    btn.addEventListener("click", function () {
+      view = btn.getAttribute("data-view");
+      currentItem = null;
+      Array.prototype.forEach.call(document.querySelectorAll("[data-view]"), function (b) {
+        b.setAttribute("aria-pressed", b === btn ? "true" : "false");
+      });
+      render();
+      say(view === "summary" ? "Summary view: five pooled blocs."
+        : view === "fifteen" ? "Showing the fifteen groups the article plots."
+        : "Showing all thirty groups.");
+    });
+  });
+
+  document.getElementById("predictBtn").addEventListener("click", function () {
+    predictMode = !predictMode;
+    this.setAttribute("aria-pressed", predictMode ? "true" : "false");
+    currentItem = null;
+    if (predictMode) { hideUnguessed(el().id); } else { revealAll(el().id); }
+    render();
+    say(predictMode
+      ? "Predict mode on. The estimates for " + el().label +
+        " are hidden. Select one to place it before revealing the answer."
+      : "Predict mode off. All estimates shown.");
+  });
+
+  document.getElementById("revealBtn").addEventListener("click", function () {
+    revealAll(el().id);
+    render();
+    say("All estimates revealed for " + el().label + ".");
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", function () {
+    state[el().id] = { revealed: {}, guesses: {} };
+    if (!predictMode) { revealAll(el().id); }
+    currentItem = null;
+    render();
+    say(el().label + " reset." + (predictMode ? " No estimates shown." : ""));
+  });
+
+  var themeBtn = document.getElementById("themeToggle");
+  function applyTheme(mode) {
+    document.documentElement.setAttribute("data-theme", mode);
+    themeBtn.textContent = mode === "dark" ? "Switch to light mode" : "Switch to dark mode";
+  }
+  applyTheme(window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  themeBtn.addEventListener("click", function () {
+    applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  });
+
+  buildTabs();
+  selectElection(3, false);
+
+})();
+</script>
+</body>
+</html>

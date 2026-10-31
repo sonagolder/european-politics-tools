@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Would you take part? Collective action and the free-rider problem</title>
+<style>
+  :root {
+    --bg: #FAFAFA;
+    --panel: #FFFFFF;
+    --border: #D0D0D0;
+    --text: #111111;
+    --text-2: #555555;
+    --hint: #999999;
+    --deemph: #707070;
+    --accent: #0072B2;
+    --favorable: #0072B2;
+    --unfavorable: #B33E00;
+    --neutral-state: #5F5E5A;
+    --gold-ui: #B8860B;
+    --gold-text: #946B09;
+    --measure-lead: 68ch;
+    --measure: 72ch;
+    --measure-mono: 62ch;
+    --body-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --data-font: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --u: 8px;
+  }
+
+  html[data-theme="dark"] {
+    --bg: #1A1A1A;
+    --panel: #2A2A2A;
+    --border: #3A3A3A;
+    --text: #F2F2F2;
+    --text-2: #B3B3B3;
+    --hint: #7A7A7A;
+    --deemph: #8F8F8F;
+    --accent: #7FC7EE;
+    --favorable: #7FC7EE;
+    --unfavorable: #F08A4B;
+    --neutral-state: #A8A6A0;
+    --gold-ui: #E0B23D;
+    --gold-text: #E0B23D;
+  }
+
+  * { box-sizing: border-box; }
+
+  /* Author rules that set `display` outrank the browser's [hidden] rule, so anything
+     given a display value here would stay visible when hidden. Enforce it globally. */
+  [hidden] { display: none !important; }
+
+  body {
+    margin: 0;
+    padding: calc(var(--u) * 3);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body-font);
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  code, .num { font-family: var(--data-font); font-variant-numeric: tabular-nums; }
+
+  header { margin-bottom: calc(var(--u) * 3); }
+  h1 { font-size: 1.65rem; font-weight: 600; margin: 0 0 var(--u) 0; line-height: 1.25; }
+  .standfirst { margin: 0; color: var(--text-2); max-width: var(--measure-lead); }
+
+  .topbar {
+    display: flex; flex-wrap: wrap; gap: calc(var(--u) * 2);
+    align-items: flex-end; justify-content: space-between;
+    margin-bottom: calc(var(--u) * 3);
+  }
+
+  .field-label { display: block; font-size: 0.8rem; color: var(--text-2); margin-bottom: var(--u); }
+
+  [role="tablist"] { display: flex; flex-wrap: wrap; gap: var(--u); }
+
+  [role="tab"] {
+    font: inherit; font-size: 0.95rem;
+    padding: var(--u) calc(var(--u) * 2);
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+
+  [role="tab"][aria-selected="true"] {
+    border-color: var(--accent);
+    box-shadow: inset 0 -3px 0 var(--accent);
+    font-weight: 600;
+  }
+
+  .theme-toggle {
+    font: inherit; font-size: 0.85rem;
+    padding: var(--u) calc(var(--u) * 2);
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+
+  button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible,
+  input:focus-visible, h2[tabindex="-1"]:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* ---------- the scenario, stated before any table appears ---------- */
+
+  .scenario-block {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: 6px;
+    padding: calc(var(--u) * 2);
+    margin-bottom: calc(var(--u) * 3);
+  }
+
+  .scenario-block h2 { font-size: 1.05rem; font-weight: 600; margin: 0 0 var(--u) 0; }
+
+  .scenario {
+    margin: 0 0 calc(var(--u) * 1.5) 0;
+    font-size: 1.05rem;
+    line-height: 1.65;
+    max-width: var(--measure);
+  }
+
+  .scenario .n {
+    font-family: var(--data-font);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-size: 1.02em;
+  }
+
+  .scenario-q {
+    margin: 0 0 calc(var(--u) * 1.5) 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    max-width: var(--measure);
+  }
+
+  .scenario-map {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-2);
+    max-width: var(--measure);
+  }
+
+  /* ---------- the model block: table and strip together ---------- */
+
+  .model-block {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 6px; padding: calc(var(--u) * 2);
+    margin-bottom: calc(var(--u) * 3);
+  }
+
+  .model-block h2 { font-size: 1.05rem; font-weight: 600; margin: 0 0 var(--u) 0; }
+
+  .model-block h3 {
+    font-size: 0.95rem; font-weight: 600;
+    margin: calc(var(--u) * 3) 0 var(--u) 0;
+    padding-top: calc(var(--u) * 2);
+    border-top: 1px solid var(--border);
+  }
+
+  .lede { margin: 0 0 calc(var(--u) * 2) 0; color: var(--text-2); max-width: var(--measure); }
+
+  .table-scroll { overflow-x: auto; }
+
+  table.payoff { border-collapse: collapse; width: 100%; min-width: 620px; }
+
+  table.payoff caption { text-align: left; font-size: 0.8rem; color: var(--text-2); padding-bottom: var(--u); }
+
+  table.payoff th, table.payoff td {
+    border: 1px solid var(--border);
+    padding: calc(var(--u) * 1.5);
+    text-align: center; vertical-align: middle;
+  }
+
+  table.payoff thead th { font-size: 0.85rem; font-weight: 600; line-height: 1.35; background: var(--bg); }
+
+  table.payoff thead th .colrange {
+    display: block; font-family: var(--data-font); font-size: 0.78rem;
+    font-weight: 400; color: var(--text-2); margin-top: 2px;
+  }
+
+  table.payoff tbody th {
+    text-align: left; font-size: 0.9rem; font-weight: 600;
+    white-space: nowrap; background: var(--bg);
+  }
+
+  .cell-sym { display: block; font-family: var(--data-font); font-size: 0.8rem; color: var(--text-2); }
+
+  .cell-val {
+    display: block; font-family: var(--data-font); font-variant-numeric: tabular-nums;
+    font-size: 1.15rem; font-weight: 600; margin-top: 2px;
+  }
+
+  table.payoff td.is-live, table.payoff thead th.is-live {
+    background: color-mix(in srgb, var(--gold-ui) 14%, var(--panel));
+    border-color: var(--gold-ui);
+  }
+  table.payoff thead th.is-live { border-bottom-width: 3px; }
+
+  .live-tag {
+    display: inline-block; font-family: var(--data-font); font-size: 0.7rem;
+    color: var(--gold-text); border: 1px solid var(--gold-ui);
+    border-radius: 3px; padding: 0 4px; margin-top: 4px;
+  }
+
+  table.payoff td.is-void, table.payoff thead th.is-void {
+    color: var(--deemph);
+    background:
+      repeating-linear-gradient(45deg, transparent, transparent 5px,
+        color-mix(in srgb, var(--border) 70%, transparent) 5px,
+        color-mix(in srgb, var(--border) 70%, transparent) 6px),
+      var(--panel);
+  }
+  table.payoff td.is-void .cell-val { font-size: 0.85rem; font-weight: 400; }
+
+  .best-mark {
+    display: inline-block; font-family: var(--data-font); font-size: 0.72rem;
+    margin-top: 4px; padding: 0 4px; border-radius: 3px;
+    border: 1px solid var(--favorable); color: var(--favorable);
+  }
+  .best-mark.tie { border-color: var(--neutral-state); color: var(--neutral-state); }
+
+  .table-caption { margin: calc(var(--u) * 2) 0 0 0; font-size: 0.88rem; color: var(--text-2); max-width: var(--measure); }
+
+  .ext-banner {
+    margin: calc(var(--u) * 2) 0 0 0;
+    border: 1px solid var(--gold-ui); border-left-width: 4px;
+    border-radius: 4px; padding: var(--u) calc(var(--u) * 1.5);
+    font-size: 0.88rem; max-width: var(--measure);
+  }
+  .ext-banner strong { color: var(--gold-text); }
+
+  /* ---------- the situations strip ---------- */
+
+  .strip { display: flex; width: 100%; gap: 2px; height: 34px; margin-bottom: var(--u); }
+
+  .st { flex: 1 1 0; min-width: 2px; border: 1px solid var(--border); border-radius: 2px; background: var(--bg); }
+
+  .st.too-few {
+    background:
+      repeating-linear-gradient(45deg, transparent, transparent 4px,
+        color-mix(in srgb, var(--text-2) 45%, transparent) 4px,
+        color-mix(in srgb, var(--text-2) 45%, transparent) 5px),
+      var(--bg);
+  }
+  .st.pivotal { background: var(--gold-ui); border-color: var(--gold-ui); min-width: 6px; }
+  .st.enough { background: var(--bg); }
+  .st.is-here { outline: 3px solid var(--accent); outline-offset: 1px; min-width: 6px; }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: calc(var(--u) * 2);
+    margin: 0 0 calc(var(--u) * 2) 0; padding: 0; list-style: none; font-size: 0.85rem;
+  }
+  .legend li { display: flex; align-items: center; gap: var(--u); }
+
+  .swatch {
+    width: 20px; height: 20px; flex: 0 0 auto;
+    border: 1px solid var(--border); border-radius: 2px; background: var(--bg);
+  }
+  .swatch.too-few {
+    background:
+      repeating-linear-gradient(45deg, transparent, transparent 4px,
+        color-mix(in srgb, var(--text-2) 45%, transparent) 4px,
+        color-mix(in srgb, var(--text-2) 45%, transparent) 5px),
+      var(--bg);
+  }
+  .swatch.pivotal { background: var(--gold-ui); border-color: var(--gold-ui); }
+  .swatch.here { outline: 3px solid var(--accent); outline-offset: -1px; }
+
+  .legend .lg-count { font-family: var(--data-font); font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  .strip-note { margin: 0; max-width: var(--measure); font-size: 0.9rem; }
+
+  .assume-note {
+    border-left: 3px solid var(--accent);
+    padding-left: calc(var(--u) * 1.5);
+    margin: 0 0 calc(var(--u) * 2) 0;
+    max-width: var(--measure);
+    font-size: 0.9rem;
+  }
+
+  /* ---------- two-column board ---------- */
+
+  .board {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: calc(var(--u) * 3);
+    margin-bottom: calc(var(--u) * 3);
+  }
+
+  @media (max-width: 820px) { .board { grid-template-columns: minmax(0, 1fr); } }
+
+  .panel {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 6px; padding: calc(var(--u) * 2);
+  }
+
+  .panel h2 { font-size: 1.05rem; font-weight: 600; margin: 0 0 var(--u) 0; }
+  .panel h3 { font-size: 0.92rem; font-weight: 600; margin: calc(var(--u) * 2.5) 0 var(--u) 0; }
+
+  /* ---------- control groups ---------- */
+
+  .cgroup {
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: calc(var(--u) * 1.5); margin-bottom: calc(var(--u) * 2);
+  }
+  .cgroup:last-child { margin-bottom: 0; }
+  .cgroup.is-extension { border-color: var(--gold-ui); border-left-width: 4px; }
+  .cgroup > h3 { margin: 0 0 var(--u) 0; font-size: 0.9rem; font-weight: 600; }
+  details.cgroup > summary {
+    font-size: 0.9rem; font-weight: 600; color: var(--gold-text);
+    cursor: pointer; list-style-position: outside;
+  }
+  details.cgroup[open] > summary { margin-bottom: calc(var(--u) * 1.5); }
+  .cgroup-note { margin: var(--u) 0 0 0; font-size: 0.82rem; color: var(--text-2); }
+
+  .ctrl { margin-bottom: calc(var(--u) * 2); }
+  .ctrl:last-child { margin-bottom: 0; }
+
+  .ctrl-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    gap: var(--u); margin-bottom: 2px;
+  }
+  .ctrl-head label { font-size: 0.9rem; font-weight: 600; }
+
+  .ctrl-val { font-family: var(--data-font); font-variant-numeric: tabular-nums; font-size: 1rem; font-weight: 600; }
+
+  .ctrl-help { margin: 0 0 var(--u) 0; font-size: 0.82rem; color: var(--text-2); }
+
+  input[type="range"] { width: 100%; accent-color: var(--accent); margin: 0; }
+
+  .scale {
+    display: flex; justify-content: space-between;
+    font-family: var(--data-font); font-size: 0.72rem; color: var(--text-2); margin-top: 2px;
+  }
+
+  /* ---------- reading panel ---------- */
+
+  .verdict {
+    display: flex; align-items: baseline; gap: var(--u);
+    font-size: 1.1rem; font-weight: 600; margin: 0 0 var(--u) 0;
+  }
+  .verdict .glyph { font-family: var(--data-font); font-size: 1rem; }
+  .verdict.is-yes { color: var(--favorable); }
+  .verdict.is-no { color: var(--unfavorable); }
+  .verdict.is-flat { color: var(--neutral-state); }
+
+  .compare {
+    list-style: none; padding: 0; margin: 0 0 calc(var(--u) * 1.5) 0;
+    border: 1px solid var(--border); border-radius: 4px;
+  }
+  .compare li {
+    display: flex; justify-content: space-between; align-items: baseline;
+    gap: var(--u); padding: var(--u) calc(var(--u) * 1.5);
+    border-bottom: 1px solid var(--border); font-size: 0.9rem;
+  }
+  .compare li:last-child { border-bottom: 0; }
+  .compare .cmp-name { display: flex; align-items: baseline; gap: var(--u); }
+  .compare .cmp-sym { font-family: var(--data-font); font-size: 0.78rem; color: var(--text-2); }
+  .compare .cmp-num { font-family: var(--data-font); font-variant-numeric: tabular-nums; font-weight: 600; }
+  .compare li.wins { background: color-mix(in srgb, var(--favorable) 10%, var(--panel)); }
+  .compare li.wins .cmp-num { color: var(--favorable); }
+
+  .why { margin: 0 0 var(--u) 0; font-size: 0.92rem; }
+  .why:last-child { margin-bottom: 0; }
+
+  .claim {
+    border-left: 3px solid var(--border);
+    padding-left: calc(var(--u) * 1.5);
+    margin: 0 0 calc(var(--u) * 2) 0;
+  }
+  .claim:last-child { margin-bottom: 0; }
+  .claim.is-extension { border-left-color: var(--gold-ui); }
+  .claim h4 { margin: 0 0 4px 0; font-size: 0.85rem; font-weight: 600; color: var(--text-2); }
+  .claim p { margin: 0; font-size: 0.9rem; }
+  .claim .fig { font-family: var(--data-font); font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  /* ---------- practice ---------- */
+
+  .problem {
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: calc(var(--u) * 1.5); margin-bottom: calc(var(--u) * 2);
+  }
+  .problem dl { display: grid; grid-template-columns: auto 1fr; gap: 4px calc(var(--u) * 1.5); margin: 0; font-size: 0.9rem; }
+  .problem dt { font-family: var(--data-font); font-weight: 600; }
+  .problem dd { margin: 0; color: var(--text-2); }
+
+  .ask { font-weight: 600; margin: calc(var(--u) * 2) 0 var(--u) 0; }
+
+  .answers { display: flex; flex-wrap: wrap; gap: var(--u); margin-bottom: var(--u); }
+
+  .answer-btn {
+    font: inherit; font-size: 0.95rem;
+    padding: calc(var(--u) * 1.25) calc(var(--u) * 2);
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+  .answer-btn:hover { border-color: var(--accent); }
+  .answer-btn[aria-disabled="true"] { cursor: default; color: var(--deemph); }
+  .answer-btn[aria-disabled="true"]:hover { border-color: var(--border); }
+  .answer-btn.picked[aria-disabled="true"] { color: var(--text); border-style: dashed; border-color: var(--deemph); }
+
+  .primary-btn {
+    font: inherit; font-size: 0.95rem;
+    padding: calc(var(--u) * 1.25) calc(var(--u) * 2);
+    background: var(--accent); color: var(--panel);
+    border: 1px solid var(--accent); border-radius: 4px; cursor: pointer; font-weight: 600;
+  }
+  html[data-theme="dark"] .primary-btn { color: var(--bg); }
+
+  .minor-btn {
+    font: inherit; font-size: 0.85rem; padding: var(--u) calc(var(--u) * 1.5);
+    background: none; color: var(--accent);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+
+  .result {
+    border: 1px solid var(--border); border-left-width: 4px;
+    border-radius: 4px; padding: calc(var(--u) * 1.5); margin-bottom: calc(var(--u) * 2);
+  }
+  .result.is-right { border-left-color: var(--favorable); }
+  .result.is-wrong { border-left-color: var(--unfavorable); }
+  .result-head { display: flex; align-items: baseline; gap: var(--u); font-weight: 600; margin-bottom: var(--u); }
+  .result.is-right .result-head { color: var(--favorable); }
+  .result.is-wrong .result-head { color: var(--unfavorable); }
+  .result-head .glyph { font-family: var(--data-font); }
+
+  .score { font-family: var(--data-font); font-size: 0.85rem; color: var(--text-2); margin: 0 0 calc(var(--u) * 2) 0; }
+
+  .coverage { list-style: none; padding: 0; margin: 0; }
+  .coverage li {
+    display: flex; align-items: baseline; gap: var(--u);
+    padding: var(--u) 0; border-bottom: 1px solid var(--border); font-size: 0.88rem;
+  }
+  .coverage li:last-child { border-bottom: 0; }
+  .coverage .glyph { font-family: var(--data-font); width: 1.4em; flex: 0 0 auto; text-align: center; }
+  .coverage li.done { color: var(--text); }
+  .coverage li.done .glyph { color: var(--favorable); }
+  .coverage li.todo { color: var(--text-2); }
+  .coverage li.todo .glyph { color: var(--hint); }
+  .coverage .cov-when {
+    font-family: var(--data-font); font-size: 0.78rem; color: var(--text-2);
+    margin-left: auto; padding-left: var(--u);
+  }
+
+  .all-done {
+    margin-top: calc(var(--u) * 2); border: 2px solid var(--gold-ui);
+    border-radius: 4px; padding: calc(var(--u) * 1.5); font-size: 0.9rem;
+  }
+  .all-done strong { color: var(--gold-text); }
+
+  /* ---------- lower details ---------- */
+
+  .lower { display: grid; gap: calc(var(--u) * 1.5); }
+
+  details {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 6px; padding: calc(var(--u) * 1.5) calc(var(--u) * 2);
+  }
+  summary { cursor: pointer; font-weight: 600; font-size: 0.95rem; }
+  details p, details li { max-width: var(--measure); font-size: 0.92rem; }
+  details > p:first-of-type { margin-top: var(--u); }
+  details ul { padding-left: calc(var(--u) * 2.5); }
+
+  .worked {
+    font-family: var(--data-font); font-size: 0.85rem;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+    padding: calc(var(--u) * 1.5); white-space: pre-wrap; max-width: var(--measure-mono);
+  }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+  @media (prefers-reduced-motion: no-preference) {
+    td, .st, .answer-btn { transition: background-color 120ms ease, border-color 120ms ease; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Would you take part?</h1>
+    <p class="standfirst">
+      Some good things cannot be kept from anyone once they exist — a government that listens, clean air, a
+      road, a lighthouse, and so on. They arrive only if enough people do something to bring them about, and
+      whoever does that thing pays for it while everyone else gets it anyway. That is the collective action
+      problem. The cost of participating in pro-democracy protests increases in repressive regimes. In the
+      examples below, though, we assume that the benefit always outweighs the cost.
+    </p>
+  </header>
+
+  <div class="topbar">
+    <div>
+      <span class="field-label" id="mode-label">Two ways to use this</span>
+      <div role="tablist" aria-labelledby="mode-label" id="tabs">
+        <button role="tab" id="tab-explore" aria-selected="true" aria-controls="exploreBoard" type="button">Explore the model</button>
+        <button role="tab" id="tab-practice" aria-selected="false" aria-controls="practiceBoard" tabindex="-1" type="button">Practice problems</button>
+      </div>
+    </div>
+    <button class="theme-toggle" id="themeToggle" type="button">Switch to dark mode</button>
+  </div>
+
+  <section class="scenario-block" id="scenarioBlock" aria-labelledby="scenarioTitle">
+    <h2 id="scenarioTitle">The situation</h2>
+    <p class="scenario" id="scenarioText"></p>
+    <p class="scenario-q" id="scenarioQ"></p>
+    <p class="scenario-map" id="scenarioMap"></p>
+  </section>
+
+  <section class="model-block" aria-labelledby="tableTitle">
+    <h2 id="tableTitle">The payoff table</h2>
+    <p class="lede" id="tableLede"></p>
+
+    <div class="table-scroll">
+      <table class="payoff" id="payoffTable">
+        <caption id="tableCap"></caption>
+        <thead>
+          <tr>
+            <td></td>
+            <th scope="col" id="h1c" class="colhead"></th>
+            <th scope="col" id="h2c" class="colhead"></th>
+            <th scope="col" id="h3c" class="colhead"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">You take part</th>
+            <td id="c-yes-1"></td>
+            <td id="c-yes-2"></td>
+            <td id="c-yes-3"></td>
+          </tr>
+          <tr>
+            <th scope="row">You stay home</th>
+            <td id="c-no-1"></td>
+            <td id="c-no-2"></td>
+            <td id="c-no-3"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="table-caption" id="tableCaption"></p>
+    <p class="ext-banner" id="extBanner" hidden></p>
+
+    <div id="statesSection">
+      <h3 id="statesTitle">The same three columns, unrolled</h3>
+
+      <p class="assume-note">
+        A different question. The table above answers &ldquo;what should I do, given what I expect everybody
+        else to do?&rdquo; &mdash; and it leaves entirely open where that expectation comes from. This panel is
+        about what the table leaves open: of all the counts you could be facing, how many would make your
+        turning up matter at all?
+      </p>
+      <p class="lede" id="statesLede"></p>
+
+      <div class="strip" id="strip" aria-hidden="true"></div>
+
+      <ul class="legend" aria-hidden="true">
+        <li><span class="swatch too-few"></span><span>Too few &mdash; <span class="lg-count" id="lgFew"></span></span></li>
+        <li><span class="swatch pivotal"></span><span>You are critical &mdash; <span class="lg-count" id="lgPiv"></span></span></li>
+        <li><span class="swatch"></span><span>Enough without you &mdash; <span class="lg-count" id="lgEnough"></span></span></li>
+        <li id="lgHereItem"><span class="swatch here"></span><span>Where you are now</span></li>
+      </ul>
+
+      <p class="strip-note" id="stripNote"></p>
+    </div>
+  </section>
+
+  <!-- ============ EXPLORE ============ -->
+  <div class="board" id="exploreBoard" role="tabpanel" aria-labelledby="tab-explore">
+
+    <section class="panel">
+      <h2 id="exploreTitle" tabindex="-1">Change the situation</h2>
+
+      <div class="cgroup">
+        <h3>Where you are standing</h3>
+        <div class="ctrl">
+          <div class="ctrl-head">
+            <label for="sX">Others already taking part</label>
+            <span class="ctrl-val num" id="vX"></span>
+          </div>
+          <p class="ctrl-help">How many of the other N&nbsp;&minus;&nbsp;1 people are out there when you decide.</p>
+          <input type="range" id="sX" min="0" max="39" step="1" value="11">
+          <div class="scale"><span>0</span><span id="xMaxLabel">39</span></div>
+        </div>
+        <p class="cgroup-note">This is the only one of these sliders that moves you between the table's columns.</p>
+      </div>
+
+      <div class="cgroup">
+        <h3>The group</h3>
+        <div class="ctrl">
+          <div class="ctrl-head">
+            <label for="sN">N — people in the group</label>
+            <span class="ctrl-val num" id="vN"></span>
+          </div>
+          <p class="ctrl-help">Everyone who would benefit if the protest succeeds.</p>
+          <input type="range" id="sN" min="2" max="100" step="1" value="40">
+          <div class="scale"><span>2</span><span>100</span></div>
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-head">
+            <label for="sK">K — people needed</label>
+            <span class="ctrl-val num" id="vK"></span>
+          </div>
+          <p class="ctrl-help">If this many take part, the protest succeeds. Fewer, and it fails.</p>
+          <input type="range" id="sK" min="1" max="40" step="1" value="12">
+          <div class="scale"><span>1</span><span id="kMaxLabel">40</span></div>
+        </div>
+        <p class="cgroup-note" id="gapNote"></p>
+      </div>
+
+      <div class="cgroup">
+        <h3>The stakes</h3>
+        <div class="ctrl">
+          <div class="ctrl-head">
+            <label for="sB">B — benefit if it succeeds</label>
+            <span class="ctrl-val num" id="vB"></span>
+          </div>
+          <p class="ctrl-help">What success is worth to each person, whether or not they took part.</p>
+          <input type="range" id="sB" min="2" max="20" step="1" value="10">
+          <div class="scale"><span>2</span><span>20</span></div>
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-head">
+            <label for="sC">C — cost of taking part</label>
+            <span class="ctrl-val num" id="vC"></span>
+          </div>
+          <p class="ctrl-help">What it costs you to take part: an afternoon, a day's pay, a job, a prison term.</p>
+          <input type="range" id="sC" min="1" max="19" step="1" value="2">
+          <div class="scale"><span>1</span><span id="cMaxLabel">9</span></div>
+        </div>
+        <p class="cgroup-note" id="stakesNote"></p>
+      </div>
+
+      <details class="cgroup is-extension">
+        <summary>An extension: what if staying home were punished?</summary>
+        <div class="ctrl">
+          <div class="ctrl-head">
+            <label for="sP">P — penalty for not taking part</label>
+            <span class="ctrl-val num" id="vP"></span>
+          </div>
+          <p class="ctrl-help">
+            Something the group can do to people who did not turn out, and only to them: a fine, a shunning,
+            a lost job, expulsion from the union. At 0 the table above is exactly the lecture's.
+          </p>
+          <input type="range" id="sP" min="0" max="20" step="1" value="0">
+          <div class="scale"><span>0</span><span>20</span></div>
+        </div>
+        <p class="cgroup-note" id="penNote"></p>
+      </details>
+    </section>
+
+    <section class="panel" aria-labelledby="readTitle">
+      <h2 id="readTitle">What you should do</h2>
+
+      <p class="verdict" id="verdict"><span class="glyph" id="verdictGlyph"></span><span id="verdictText"></span></p>
+
+      <ul class="compare" id="compare">
+        <li id="cmpYes">
+          <span class="cmp-name">Take part<span class="cmp-sym" id="cmpYesSym"></span></span>
+          <span class="cmp-num" id="cmpYesNum"></span>
+        </li>
+        <li id="cmpNo">
+          <span class="cmp-name">Stay home<span class="cmp-sym" id="cmpNoSym"></span></span>
+          <span class="cmp-num" id="cmpNoNum"></span>
+        </li>
+      </ul>
+
+      <p class="why" id="whyText"></p>
+
+      <h3>What the group is doing to the answer</h3>
+
+      <div class="claim">
+        <h4>The gap between K and N</h4>
+        <p id="claimGap"></p>
+      </div>
+
+      <div class="claim">
+        <h4>The size of N</h4>
+        <p id="claimN"></p>
+      </div>
+
+      <div class="claim is-extension" id="claimPenBox" hidden>
+        <h4>Whether the group can punish you</h4>
+        <p id="claimPen"></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ PRACTICE ============ -->
+  <div class="board" id="practiceBoard" role="tabpanel" aria-labelledby="tab-practice" hidden>
+
+    <section class="panel">
+      <h2 id="practiceTitle" tabindex="-1">Problem</h2>
+
+      <div class="problem"><dl id="problemList"></dl></div>
+
+      <p class="ask" id="askText"></p>
+
+      <div class="answers">
+        <button class="answer-btn" type="button" id="btnYes">Take part</button>
+        <button class="answer-btn" type="button" id="btnNo">Stay home</button>
+      </div>
+
+      <div class="result" id="pResult" hidden>
+        <p class="result-head"><span class="glyph" id="pGlyph"></span><span id="pHead"></span></p>
+        <ul class="compare" id="pCompare">
+          <li id="pCmpYes">
+            <span class="cmp-name">Take part<span class="cmp-sym" id="pCmpYesSym"></span></span>
+            <span class="cmp-num" id="pCmpYesNum"></span>
+          </li>
+          <li id="pCmpNo">
+            <span class="cmp-name">Stay home<span class="cmp-sym" id="pCmpNoSym"></span></span>
+            <span class="cmp-num" id="pCmpNoNum"></span>
+          </li>
+        </ul>
+        <p class="why" id="pWhy"></p>
+      </div>
+
+      <button class="primary-btn" type="button" id="btnNext" hidden>Next problem</button>
+
+      <p class="cgroup-note" style="margin-top: calc(var(--u) * 2);">
+        Every problem tells you how many others are taking part. That is not a courtesy. Somebody deciding
+        whether to join a real protest would have to guess at that number; here you are handed it, and being
+        handed it is what makes the question answerable at all.
+        These problems use the model exactly as the lecture puts it on the board, which is the version the
+        homework and the midterm ask about. The other tab lets you add a penalty for staying home, as an
+        extension beyond the lecture's model; that never appears here.
+      </p>
+    </section>
+
+    <section class="panel" aria-labelledby="covTitle">
+      <h2 id="covTitle">Your progress</h2>
+      <p class="score" id="scoreLine"></p>
+
+      <h3>The five situations you can be in</h3>
+      <p class="why" style="color: var(--text-2); font-size: 0.85rem;">
+        Problems land more often on the three in the middle, because those are where the answer changes and
+        where the mistakes are. Until you have all five, they also lean toward whichever are still missing, so
+        you should not have to wait long for the last one. Each is checked off once you have answered it
+        correctly.
+      </p>
+      <ul class="coverage" id="coverage"></ul>
+
+      <div class="all-done" id="allDone" hidden>
+        <strong>All five covered.</strong>
+        <span id="allDoneText"></span>
+      </div>
+
+      <p style="margin-top: calc(var(--u) * 2);">
+        <button class="minor-btn" type="button" id="btnReset">Start over</button>
+      </p>
+    </section>
+  </div>
+
+  <div class="lower">
+
+    <details>
+      <summary>How to read the table, worked through once</summary>
+      <p>
+        The table has two rows because you have two choices, and three columns because only three things can
+        be true about everybody else: too few of them for the protest to succeed even with you, exactly enough
+        that you make the difference, or already enough without you.
+      </p>
+      <p>
+        Take a group of N&nbsp;=&nbsp;40 where K&nbsp;=&nbsp;12 are needed, success is worth B&nbsp;=&nbsp;10
+        to each person, turning up costs C&nbsp;=&nbsp;2, and nobody is punished for staying home. Suppose 11
+        others are already out there.
+      </p>
+      <div class="worked">others = 11
+K &minus; 1 = 11, so you are in the middle column
+
+take part  &rarr; 11 + 1 = 12 = K &rarr; it succeeds
+             you get B and you paid C
+             B &minus; C = 10 &minus; 2 = 8
+
+stay home  &rarr; 11 &lt; 12 = K &rarr; it fails
+             nobody gets anything
+             0
+
+8 &gt; 0, so you take part.</div>
+      <p>
+        Now move one person. If 12 others are already out, the protest succeeds without you: staying home pays
+        B&nbsp;=&nbsp;10 and taking part pays B&nbsp;&minus;&nbsp;C&nbsp;=&nbsp;8, so you stay home and let
+        them do it. If only 10 others are out, it fails either way: staying home pays 0 and taking part pays
+        &minus;C&nbsp;=&nbsp;&minus;2, so you stay home again. One person in either direction flips the answer.
+      </p>
+      <p>
+        Notice what does the work in the middle column. It is not that you care more, or that the cause is more
+        urgent. It is that the count came out so that you personally are the difference between success and
+        failure.
+      </p>
+    </details>
+
+    <details>
+      <summary>What you are assumed to know</summary>
+      <p>
+        Worth separating what this model gives you from what it leaves open, because the two claims about
+        group size sit exactly on the seam between them.
+      </p>
+      <p>
+        <strong>Everybody knows how the situation is built</strong> — how many people are in the group, how
+        many are needed, what success is worth, what taking part costs. This is called
+        <em>complete information</em>. It holds everywhere in this tool, including under the penalty
+        extension, and nothing here relaxes it.
+      </p>
+      <p>
+        <strong>Nobody is assumed to know what everyone else will do.</strong> This is the part that is easy
+        to get backwards. The table does not tell you what to do; it tells you what to do <em>given an
+        expectation</em> about how many others will take part. Everyone in the group is deciding at the same
+        time, so nobody gets to look first and then choose. Each of the three scenarios is therefore something
+        you <em>expect</em> or conjecture, not something you have watched happen.
+      </p>
+      <p>
+        So the table is a complete answer to a conditional question, and it is silent about where your
+        expectation comes from or whether it is any good.
+      </p>
+      <p>
+        <strong>The problems hand you the number, which is stronger than the model requires.</strong> "11 of
+        the other 39 are already taking part" converts a conjecture into a fact, and that is what makes the
+        question answerable and gradeable. The practice tab does the same. It is worth noticing that you are
+        being handed something a person at the edge of a square does not have.
+      </p>
+      <p>
+        <strong>And this is where the group-size claims live.</strong> They are not further facts about the
+        table. They are about the thing the table leaves open — what you can reasonably expect. In a group of
+        40 you might form some view about whether the count will land on you. In a group of millions you have
+        almost no basis for one, and hardly anybody will conclude they are the critical person. The
+        strip beneath the table is what that looks like counted out: every situation you could be facing, only
+        one of which makes your turning up matter.
+      </p>
+      <p>
+        To go further and ask how <em>likely</em> each situation is, you would need a model of where
+        expectations come from and how they shift — genuinely different machinery, and what the course reaches
+        for when it asks why 1989 happened when it did rather than a decade earlier.
+      </p>
+      <p>
+        <strong>A third question about information.</strong> The claim above is about what <em>you</em> expect
+        of everybody else. Monitoring and punishment, which the penalty slider represents, is its mirror
+        image: what everybody else can find out about <em>you</em>. A group small enough to see who stayed
+        away can act on it; a country of millions cannot. None of the three is about how much anyone wants the
+        good.
+      </p>
+    </details>
+
+    <details>
+      <summary>Why the group matters: two claims, and a third thing behind them</summary>
+      <p>
+        The table tells you what to do once you know how many others are taking part. But that is exactly the
+        thing a person at the edge of a square does not know. The lecture makes two claims about how the shape
+        of the group changes the problem, and the strip under the table is where you can watch both of them.
+      </p>
+
+      <p>
+        <strong>One. The wider the gap between K and N, the stronger the pull to free-ride.</strong>
+        There are N situations you could be in, because the number of others taking part runs from 0 to
+        N&nbsp;&minus;&nbsp;1. Of those, N&nbsp;&minus;&nbsp;K are situations in which enough others are
+        already out that you can stay home and collect the benefit anyway. So the gap between K and N
+        <em>is</em> the count of situations in which free-riding is available. If a protest needs 12 people out
+        of 40, there are 28 of them; if it needs 38 of 40, there are 2. When only a few contributors are
+        needed out of many possible ones, most of the time you will not be one of the few — so why be one of
+        the ones who pays?
+      </p>
+
+      <p>
+        This has a consequence that may seem counterintuitive. If the pull to
+        free-ride grows with the gap between K and N, then anyone trying to organize collective action should
+        want their members to believe that gap is small — that success depends on nearly everybody rather than
+        on a few. Which is exactly what organizers say. Parties tell supporters that every vote is crucial;
+        public radio pledge drives tell listeners the station depends on their contribution. As arithmetic
+        both are usually false. As things to say to somebody deciding whether to bother, both are useful,
+        because what an organizer needs is participation rather than accuracy.
+      </p>
+
+      <p>
+        <strong>Two. The larger N is, the harder it is to know whether you are the critical actor.</strong>
+        Notice first that this claim is not about the table. The table tells you your best response to an
+        expectation; this claim is about how easy it is to arrive at one, which the table leaves open
+        entirely. See "What you are assumed to know" above — the distinction matters, because a student who
+        does not make it will think the two claims contradict each other.
+      </p>
+      <p>
+        Here is the count behind it. Exactly one of the N situations makes you critical,
+        whatever K is: raising K slides the critical situation to the right and never produces a second one.
+        So the larger the group, the thinner that sliver is as a share of everything that could be happening
+        around you — 1 in 12 is a different proposition from 1 in 100 — and the harder it is to work out from
+        inside a crowd whether you are standing in it.
+      </p>
+
+      <p>
+        One warning. It is a count of situations, not a probability: working out how likely each situation is
+        would need beliefs about what everyone else is doing, which this model does not supply.
+      </p>
+
+      <p>
+        <strong>What small groups can do that large ones cannot.</strong>
+        That second reason is about enforcement rather than counting. In a small group it is easy to see who
+        contributed and who did not, and therefore possible to do something about it; in a large one it is
+        not. The penalty slider is where this enters the model. Set it above the cost of taking part and watch
+        the table: taking part becomes the better option in <em>every</em> column, including the ones where
+        the protest succeeds without you, and the collective action problem disappears. Set it below the cost
+        and nothing changes at all — a penalty only bites once it is worse than turning up.
+      </p>
+      <p>
+        That is a sharp result and worth being suspicious of. It says the problem is not really about how much
+        people want the good, nor about group size on its own — it is about whether the group has any way to
+        make not contributing worse than contributing. Group size then matters twice over: once because it
+        sets how likely you are to be the critical one, and again because it sets whether anyone is in a
+        position to notice you were not there.
+      </p>
+      <p>
+        The penalty is an extension. The lecture puts the three-column table on the board without it, and the
+        homework and midterm problems are about that version, which is why the practice tab never uses it. In
+        the wider literature these are called <em>selective incentives</em>: rewards or penalties that reach
+        people according to whether they contributed, and which therefore are not public goods themselves.
+      </p>
+    </details>
+
+    <details>
+      <summary>What this has to do with eastern Europe</summary>
+      <p>
+        For most of the Cold War, people living under Communist governments in eastern Europe had reasons to
+        want a different one and no legal way to ask for one. Yet across four decades the serious challenges
+        to those governments were few, and most of them did not begin in the streets. They began inside the
+        ruling parties, among Communists who wanted a reformed version of the system; crowds came out around
+        those openings rather than creating them. Where crowds eventually came out in numbers — East Berlin in 1953,
+        Budapest in 1956 — the answer was Soviet troops.
+      </p>
+      <p>
+        The model in this tool is one account of why. Not because people were content, and not because they
+        misjudged how bad the government was — the model assumes they are right about B, and B is large. The
+        problem is C, and the arithmetic in the third column. Taking part is dangerous, the benefit arrives
+        whether or not you took part, and the one situation in which your own presence decides the outcome is a
+        single case out of N that you cannot identify from inside the crowd. Everybody reasoning this way stays
+        home, and the government's stability looks like consent.
+      </p>
+      <p>
+        It is worth putting rough numbers on that. Take East Germany, where N is effectively the whole
+        population — millions of people. K, the number of protesters it eventually took to make the government
+        give way, ran to the hundreds of thousands: large in absolute terms, and a small fraction of the
+        population. That is the least favorable shape the model describes, an enormous N against a K a
+        fraction of its size, so that almost nobody had grounds to think of themselves as the critical person.
+        The cost side was not abstract either. The violent suppression of the East Berlin rising of 1953 stood
+        for decades as a reminder of what taking part could cost. On this account the absence of open
+        opposition was not evidence that the government was popular; it is what the free-rider problem looks
+        like from outside.
+      </p>
+      <p>
+        This also gives you something to look for in the exception. The challenge that did begin from below
+        started in a shipyard in Gdańsk in August 1980, where the workers stopped work and occupied the yard,
+        and it produced the independent trade union Solidarity rather than starting from one. Notice the
+        setting: a workforce far smaller than a country, in one enclosed place, where each person could see who
+        had stopped and who had not — which is both of the things the model says are missing elsewhere, since
+        a group that can see who stayed away is also a group that can do something about it. That connection
+        is an interpretation rather than something the lecture or the reading claims, and it is a good thing
+        to argue with.
+      </p>
+      <p>
+        Communist rule across the region came to an end in 1989 — in some countries through negotiations
+        between governments and opposition, in others through demonstrations of a size nobody had managed to
+        assemble in the four decades before. Whatever explains the mass demonstrations, it is not this model.
+        The collective action model which suggests that large protests are rare can't also account for a year
+        in which they were not. That is the question the course turns to next.
+      </p>
+    </details>
+
+    <details>
+      <summary>Where this model comes from, and what it leaves out</summary>
+      <div>
+        <p>
+          The model is the one presented in the week's lecture, in the same notation: N people, K needed, a
+          benefit B that goes to everyone if the protest succeeds, a cost C paid only by those who take part,
+          and the assumption that B is greater than C. None of the numbers in this tool are measurements of
+          anything. They are illustrations, and you should be able to change them and watch the argument still
+          work, which is what the sliders are for.
+        </p>
+        <ul>
+          <li>
+            <strong>The penalty is an addition.</strong> The lecture's table has 0, 0 and B along the bottom
+            row, which is what this tool shows when the penalty sits at 0 — its starting value. Everything the
+            penalty does is an extension, added so that the lecture's claim about monitoring and punishment in
+            small groups has somewhere to live in the model rather than only in a sentence. If you are
+            revising for an exam, revise the version with the penalty at 0.
+          </li>
+          <li>
+            <strong>Where the penalty comes from is not modeled.</strong> Somebody has to notice you were
+            absent and be willing to act on it, and acting costs them something too — which is a second
+            collective action problem sitting underneath the first. This tool treats the penalty as simply
+            given. Whether a group can generate one is most of the interesting question and not one this
+            model can answer.
+          </li>
+          <li>
+            <strong>The assumption that B is greater than C.</strong> The tool enforces it: the cost slider
+            cannot be pushed to or past the benefit. If C were larger than B, nobody would take part in any
+            situation and there would be nothing to explain. It fails at both ends. For many people under the
+            governments in this week's cases, the honest comparison was between a distant political benefit and
+            a near-certain personal catastrophe. And in a great many ordinary collective action problems C is
+            tiny — the price of a stamp, twenty minutes — which does not rescue anything, because a tiny cost
+            still loses to no cost at all in the third column.
+          </li>
+          <li>
+            <strong>The stakes are inert in the table, and that is not the same as irrelevant.</strong>
+            Nothing in the table's answer depends on B or C, and the tool says so where the sliders are. It
+            would still be reasonable to think that people are less willing to take part as the cost rises,
+            and more willing as the benefit grows, holding everything else fixed — but that is an intuition
+            sitting alongside the model rather than something the table implies, and telling those two apart
+            is a large part of what working with a model involves. If you want costs and benefits to change
+            the answer, you have to build a model in which they do; the penalty slider is a small example of
+            what that takes.
+          </li>
+          <li>
+            <strong>What is known, and what is only expected.</strong> N, K, B and C are known to everybody
+            throughout. What nobody is assumed to know is how many others will take part: the table gives your
+            best response to an <em>expectation</em> about that, and says nothing about where the expectation
+            comes from. The claims about group size are about precisely that gap, and the practice problems
+            paper over it by handing you a number. Each of these is labeled where it applies, and there is a
+            panel above on the whole question.
+          </li>
+          <li>
+            <strong>K is treated as known and sharp.</strong> Real protests do not have a number at which they
+            succeed. Support ebbs, governments split over whether to shoot, and the same crowd that changes
+            nothing on Tuesday brings the government down on Thursday. A single K is a large simplification,
+            and it is the one that makes the middle column exist at all.
+          </li>
+          <li>
+            <strong>Everybody is identical.</strong> One B and one C for the whole group, and now one P as
+            well. In reality the cost of turning up is far higher for some people than others, and so is the
+            benefit. Some people would go whatever the count was.
+          </li>
+          <li>
+            <strong>Everybody decides once, alone, and at the same time.</strong> There is no way in this model
+            for a person to watch the square fill up and then decide, and no way for anyone to promise anything
+            to anyone else. Both of those change the answer, and both are things real protests are full of.
+          </li>
+          <li>
+            <strong>Nothing here explains what happens when the model breaks.</strong> Collective action theory
+            is good at explaining why large protests are rare. It is much less good at explaining the moments
+            when they suddenly are not, which is a question this course comes back to.
+          </li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary>Collective action in political science</summary>
+      <p>
+        A <strong>public good</strong> is a good with two properties. It is <em>non-excludable</em>: once it
+        exists, nobody can be kept from enjoying it. And it is <em>non-rivalrous</em>: one person enjoying it
+        does not leave less for anyone else. A more democratic government is a public good in this sense. So is
+        national defense, or clean air, and so are most of the things protests are about.
+      </p>
+      <p>
+        Those two properties are what create the problem. If the good arrives whether or not you helped, and
+        your helping does not usually change whether it arrives, then the individually sensible thing is to let
+        other people bear the cost. This is called <strong>free-riding</strong>, and a
+        <strong>collective action problem</strong> is any situation where each person reasoning sensibly for
+        themselves produces an outcome worse for everyone than if they had all acted together.
+      </p>
+      <p>
+        It is worth being clear about what this does <em>not</em> depend on, because the week's cases can leave
+        a misleading impression. Nothing above mentions danger, police, or a government that punishes anyone.
+        The problem comes from the structure of the good, not from the size of the cost: as long as taking part
+        costs you something and the good arrives without you, staying home wins. That is why the same logic
+        turns up in places where nobody is threatening anybody — why unions struggle to sign up members who
+        already benefit from the contract, why public radio has to hold fundraising drives, why turnout in
+        free elections is a puzzle rather than an obvious duty, and why countries find climate agreements hard
+        to keep. Repression is one setting of C. It makes protest a severe case of a general problem; it is not
+        what makes the problem a problem.
+      </p>
+      <p>
+        The argument in its modern form comes from the economist Mancur Olson, whose 1965 book
+        <em>The Logic of Collective Action</em> made the case that a shared interest does not by itself produce
+        collective action, and that large groups are worse at it than small ones — not because their members
+        care less, but because in a large group no single contribution is noticed and nobody can be held to
+        account for withholding one. His account of how groups manage it anyway is what the penalty slider
+        stands for: <strong>selective incentives</strong>, meaning benefits or punishments that reach people
+        according to whether they contributed. A union hiring hall, a professional body's license, a
+        congregation's good standing, a village's willingness to speak to you — each of these can be withheld
+        from one person in a way the public good itself cannot.
+      </p>
+      <p>
+        The consequences run well past protest. It is a standard explanation in the literature for why small,
+        concentrated
+        interests routinely beat large, diffuse ones in democratic politics: a few hundred producers who each
+        gain a great deal from a subsidy will organize, and the millions of consumers who each lose a little
+        will not. You will meet the same logic again in this course when it turns to interest groups, to
+        voting, and to bargaining between European Union member states.
+      </p>
+    </details>
+  </div>
+
+  <div class="sr-only" role="status" aria-live="polite" id="liveRegion"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- shared state ---------- */
+
+  var explore = { n: 40, k: 12, b: 10, c: 2, p: 0, x: 11 };
+  var mode = "explore";
+
+  var problem = null;
+  var answered = false;
+  var stats = { asked: 0, right: 0 };
+  var covered = { farBelow: false, justBelow: false, pivotal: false, justAbove: false, farAbove: false };
+  var goldAnnounced = false;
+
+  var SITUATIONS = [
+    { key: "farBelow",  label: "Well short of the number needed", when: "others < K \u2212 2" },
+    { key: "justBelow", label: "One short of critical",            when: "others = K \u2212 2" },
+    { key: "pivotal",   label: "Exactly critical",                 when: "others = K \u2212 1" },
+    { key: "justAbove", label: "One past critical",                when: "others = K" },
+    { key: "farAbove",  label: "Well past the number needed",      when: "others > K" }
+  ];
+
+  var DRAW_WEIGHTS = { farBelow: 1, justBelow: 3, pivotal: 3, justAbove: 3, farAbove: 1 };
+
+  /* Situations not yet answered correctly are drawn more often, so that a student reaches
+     all five without a long wait for one of the two rare ones. 4 is the largest boost that
+     still leaves the three boundary situations a majority of draws in the worst case — the
+     one where those three are covered and only the two far ones are outstanding. Once
+     everything is covered no situation is boosted, so the weights revert to the line above. */
+  var UNCOVERED_BOOST = 4;
+
+  var liveEl = document.getElementById("liveRegion");
+  function say(msg) { liveEl.textContent = msg; }
+
+  var MINUS = "\u2212";
+  function signed(v) { return v < 0 ? MINUS + Math.abs(v) : String(v); }
+  function plural(n, one, many) { return n + " " + (n === 1 ? one : many); }
+
+  /* ---------- the model ---------- */
+
+  function column(k, x) {
+    if (x < k - 1) return 1;
+    if (x === k - 1) return 2;
+    return 3;
+  }
+
+  function situation(k, x) {
+    if (x < k - 2) return "farBelow";
+    if (x === k - 2) return "justBelow";
+    if (x === k - 1) return "pivotal";
+    if (x === k) return "justAbove";
+    return "farAbove";
+  }
+
+  /* The penalty falls only on people who did not take part. */
+  function payTakePart(col, b, c) { return col === 1 ? -c : b - c; }
+  function payStayHome(col, b, p) { return (col === 3 ? b : 0) - p; }
+
+  /* "take", "stay" or "equal". At p = 0 this reduces to x === k - 1. */
+  function best(k, x, b, c, p) {
+    var col = column(k, x);
+    var t = payTakePart(col, b, c);
+    var s = payStayHome(col, b, p);
+    return t > s ? "take" : (s > t ? "stay" : "equal");
+  }
+
+  /* ---------- the payoff table ---------- */
+
+  var cells = {
+    yes: [null, document.getElementById("c-yes-1"), document.getElementById("c-yes-2"), document.getElementById("c-yes-3")],
+    no:  [null, document.getElementById("c-no-1"),  document.getElementById("c-no-2"),  document.getElementById("c-no-3")]
+  };
+  var heads = [null, document.getElementById("h1c"), document.getElementById("h2c"), document.getElementById("h3c")];
+
+  function colRange(n, k, i) {
+    if (i === 1) {
+      if (k === 1) return null;
+      return k === 2 ? "0 others" : "0 to " + (k - 2) + " others";
+    }
+    if (i === 2) return plural(k - 1, "other", "others");
+    if (k === n) return null;
+    return k === n - 1 ? plural(n - 1, "other", "others") : k + " to " + (n - 1) + " others";
+  }
+
+  function setCell(el, sym, val, void_, mark) {
+    el.className = "";
+    el.innerHTML = "";
+    var s = document.createElement("span");
+    s.className = "cell-sym";
+    var v = document.createElement("span");
+    v.className = "cell-val";
+    if (void_) {
+      el.classList.add("is-void");
+      s.textContent = "\u2014";
+      v.textContent = "cannot arise";
+    } else {
+      s.textContent = sym;
+      v.textContent = signed(val);
+    }
+    el.appendChild(s);
+    el.appendChild(v);
+    if (!void_ && mark) {
+      var m = document.createElement("span");
+      m.className = "best-mark" + (mark === "tie" ? " tie" : "");
+      m.textContent = mark === "tie" ? "= equal here" : "\u2713 better here";
+      el.appendChild(m);
+    }
+  }
+
+  function stayHomeSymbol(col, p) {
+    if (p === 0) return col === 3 ? "B" : "0";
+    return col === 3 ? "B " + MINUS + " P" : MINUS + "P";
+  }
+
+  function renderTable(n, k, b, c, p, x, markLive) {
+    var liveCol = markLive ? column(k, x) : 0;
+
+    for (var i = 1; i <= 3; i++) {
+      var range = colRange(n, k, i);
+      var void_ = range === null;
+
+      var titles = [null, "Fewer than K " + MINUS + " 1 others take part",
+                          "Exactly K " + MINUS + " 1 others take part",
+                          "K or more others take part"];
+
+      heads[i].className = "colhead";
+      heads[i].innerHTML = "";
+      var t = document.createElement("span");
+      t.textContent = titles[i];
+      heads[i].appendChild(t);
+      var r = document.createElement("span");
+      r.className = "colrange";
+      r.textContent = void_ ? "cannot arise" : range;
+      heads[i].appendChild(r);
+      if (void_) heads[i].classList.add("is-void");
+
+      var pYes = payTakePart(i, b, c);
+      var pNo = payStayHome(i, b, p);
+      /* Mark the better payoff only in the column that applies. Marking all three
+         pre-solves the table, which leaves an explore-mode reader nothing to work out
+         and, in practice mode, hands over the answer to anyone who matches their count
+         against a column heading. */
+      var marked = (i === liveCol && !void_);
+      var markYes = marked ? (pYes > pNo ? "best" : (pYes === pNo ? "tie" : null)) : null;
+      var markNo = marked ? (pNo > pYes ? "best" : (pYes === pNo ? "tie" : null)) : null;
+
+      setCell(cells.yes[i], i === 1 ? MINUS + "C" : "B " + MINUS + " C", pYes, void_, markYes);
+      setCell(cells.no[i], stayHomeSymbol(i, p), pNo, void_, markNo);
+
+      if (i === liveCol && !void_) {
+        heads[i].classList.add("is-live");
+        cells.yes[i].classList.add("is-live");
+        cells.no[i].classList.add("is-live");
+        var tag = document.createElement("span");
+        tag.className = "live-tag";
+        tag.textContent = "you are here";
+        heads[i].appendChild(tag);
+      }
+    }
+
+    document.getElementById("tableCap").textContent =
+      "What you get, for each of your two choices, in each of the three things that could be true about " +
+      "everybody else.";
+
+    var notes = [];
+    if (k === 1) {
+      notes.push("With K = 1 you are the only person needed, so there is no situation in which too few " +
+                 "others have turned out for your presence to matter: the first column cannot arise.");
+    }
+    if (k === n) {
+      notes.push("With K = N every single person is needed, so the protest can never succeed without you " +
+                 "and the third column cannot arise. This is the one setting in which free-riding is not " +
+                 "available to anybody.");
+    }
+    if (!notes.length) {
+      notes.push("Every entry is your payoff, not the group's. Read across a row to see how the same choice " +
+                 "pays differently depending on what everyone else does, and down a column to compare your " +
+                 "two options in a fixed situation.");
+    }
+    document.getElementById("tableCaption").textContent = notes.join(" ");
+
+    var banner = document.getElementById("extBanner");
+    if (p > 0) {
+      banner.innerHTML = "";
+      var strong = document.createElement("strong");
+      strong.textContent = "Extended model. ";
+      banner.appendChild(strong);
+      banner.appendChild(document.createTextNode(
+        "The bottom row now subtracts a penalty of " + p + " from staying home. The lecture's table is this " +
+        "one with the penalty back at 0, and that is the version the homework asks about."));
+      banner.hidden = false;
+    } else {
+      banner.hidden = true;
+    }
+  }
+
+  /* ---------- the situations strip ---------- */
+
+  function showStates(visible) {
+    document.getElementById("statesSection").hidden = !visible;
+  }
+
+  function renderStates(n, k, x, showHere) {
+    var stripEl = document.getElementById("strip");
+    stripEl.innerHTML = "";
+    for (var i = 0; i < n; i++) {
+      var d = document.createElement("div");
+      var col = column(k, i);
+      d.className = "st " + (col === 1 ? "too-few" : col === 2 ? "pivotal" : "enough");
+      if (showHere && i === x) d.className += " is-here";
+      stripEl.appendChild(d);
+    }
+
+    var few = k - 1, enough = n - k;
+
+    document.getElementById("lgFew").textContent = few;
+    document.getElementById("lgPiv").textContent = "1";
+    document.getElementById("lgEnough").textContent = enough;
+    document.getElementById("lgHereItem").hidden = !showHere;
+
+    document.getElementById("statesLede").textContent =
+      "Each block is one count of other participants — 0, then 1, up to " + (n - 1) + ". The three regions " +
+      "are the table's three columns, spread out. The first column is " + few + " " +
+      (few === 1 ? "block" : "blocks") + " wide, the middle column is always exactly 1, and the third is " +
+      enough + ".";
+
+    document.getElementById("stripNote").textContent =
+      "Both things the lecture says matter are lengths on this strip. The gap between K and N is the width " +
+      "of the region on the right, where enough others are out and you can stay home and still collect: " +
+      enough + (enough === 1 ? " situation" : " situations") + " here. And the size of N is the width of the " +
+      "whole strip, against which the single gold block is what you would have to identify from inside a " +
+      "crowd: 1 in " + n + ". The outlined block is the count you have set with the slider \u2014 the thing " +
+      "somebody actually deciding would have to guess at.";
+  }
+
+  /* ---------- explore mode ---------- */
+
+  var sN = document.getElementById("sN"), sK = document.getElementById("sK"),
+      sB = document.getElementById("sB"), sC = document.getElementById("sC"),
+      sP = document.getElementById("sP"), sX = document.getElementById("sX");
+
+  function syncSliderBounds() {
+    sK.max = String(explore.n);
+    document.getElementById("kMaxLabel").textContent = explore.n;
+    if (explore.k > explore.n) explore.k = explore.n;
+
+    sC.max = String(explore.b - 1);
+    document.getElementById("cMaxLabel").textContent = explore.b - 1;
+    if (explore.c > explore.b - 1) explore.c = explore.b - 1;
+
+    sX.max = String(explore.n - 1);
+    document.getElementById("xMaxLabel").textContent = explore.n - 1;
+    if (explore.x > explore.n - 1) explore.x = explore.n - 1;
+
+    sN.value = String(explore.n);
+    sK.value = String(explore.k);
+    sB.value = String(explore.b);
+    sC.value = String(explore.c);
+    sP.value = String(explore.p);
+    sX.value = String(explore.x);
+  }
+
+  function num(v) { return "<span class='n'>" + v + "</span>"; }
+
+  /* The scenario in plain words, before any table. The numbers used to appear only in the
+     table's caption, in small type, as "N = 40  K = 12  B = 10  C = 2" — which states the
+     settings without ever saying what situation they describe. */
+  function renderScenario(n, k, b, c, p, x) {
+    var others = n - 1;
+    var parts = [
+      "There are " + num(n) + " people in the group. If " + num(k) + " of them take part, the protest " +
+      "succeeds \u2014 and then everyone in the group gains " + num(b) + ", including the people who stayed " +
+      "home. Taking part costs you " + num(c) + ", whether it succeeds or not."
+    ];
+    if (p > 0) {
+      parts.push("On top of that, anyone who does not take part is penalized " + num(p) + ".");
+    }
+    parts.push("Right now " + num(x) + " of the other " + num(others) +
+               (others === 1 ? " person is taking part." : " people are taking part."));
+
+    document.getElementById("scenarioText").innerHTML = parts.join(" ");
+    document.getElementById("scenarioQ").textContent = "So \u2014 do you take part, or stay home?";
+    document.getElementById("scenarioMap").textContent =
+      "Those numbers are the model's N, K, B and C" + (p > 0 ? ", plus the penalty P" : "") +
+      ". The sliders further down change them, and the table below turns them into what each of your two " +
+      "choices is worth to you.";
+  }
+
+  function setValueText(el, out, text, val) {
+    out.textContent = val;
+    el.setAttribute("aria-valuetext", text);
+  }
+
+  function renderExplore() {
+    syncSliderBounds();
+
+    var n = explore.n, k = explore.k, b = explore.b, c = explore.c, p = explore.p, x = explore.x;
+    var gap = n - k;
+
+    setValueText(sX, document.getElementById("vX"), x + " of the other " + (n - 1) + " already taking part", x);
+    setValueText(sN, document.getElementById("vN"), n + " people in the group", n);
+    setValueText(sK, document.getElementById("vK"), k + " of " + n + " needed for the protest to succeed", k);
+    setValueText(sB, document.getElementById("vB"), "benefit of " + b + " to everyone if it succeeds", b);
+    setValueText(sC, document.getElementById("vC"), "cost of " + c + " to each person who takes part", c);
+    setValueText(sP, document.getElementById("vP"),
+      p === 0 ? "no penalty for staying home" : "penalty of " + p + " for staying home", p);
+
+    document.getElementById("gapNote").textContent =
+      "K is " + k + " of " + n + ", a gap of " + gap + ". That gap is the number of situations in which the " +
+      "protest succeeds without you.";
+
+    document.getElementById("stakesNote").textContent = p === 0
+      ? "Move these two and watch the numbers in the table change while the answer does not. With no " +
+        "penalty, what you should do depends only on K and the count of others — never on how much is at " +
+        "stake or how costly turning up is. That is a result of the model, not a gap in it — though it is " +
+        "not the last word on the stakes; see the notes below."
+      : "With a penalty in play C stops being inert: in the outer columns the comparison is now the penalty " +
+        "of " + p + " against the cost of " + c + ".";
+
+    document.getElementById("penNote").textContent = p === 0
+      ? "At 0 this changes nothing and the table above is the lecture's. The lecture's other reason why N " +
+        "matters is that a small group can see who contributed and act on it, while a large one cannot; this " +
+        "is where that lives. Raise it past C = " + c + " and watch the whole bottom row lose."
+      : "A penalty of " + p + " against a cost of " + c + ": " +
+        (p > c ? "staying home is now worse than taking part in every column."
+               : p < c ? "still cheaper to take the penalty than to turn up, so nothing has changed."
+                       : "exactly equal — the knife-edge, where the two options tie outside the middle column.");
+
+    renderScenario(n, k, b, c, p, x);
+    renderTable(n, k, b, c, p, x, true);
+    renderStates(n, k, x, true);
+    showStates(true);
+
+    var col = column(k, x);
+    var take = payTakePart(col, b, c);
+    var stay = payStayHome(col, b, p);
+    var verdict = best(k, x, b, c, p);
+
+    var vEl = document.getElementById("verdict");
+    vEl.className = "verdict " + (verdict === "take" ? "is-yes" : verdict === "stay" ? "is-no" : "is-flat");
+    document.getElementById("verdictGlyph").textContent =
+      verdict === "take" ? "\u2713" : verdict === "stay" ? "\u2715" : "=";
+    document.getElementById("verdictText").textContent =
+      verdict === "take" ? "Take part" : verdict === "stay" ? "Stay home" : "Exactly equal — either will do";
+
+    document.getElementById("cmpYesSym").textContent = col === 1 ? "(" + MINUS + "C)" : "(B " + MINUS + " C)";
+    document.getElementById("cmpNoSym").textContent = "(" + stayHomeSymbol(col, p) + ")";
+    document.getElementById("cmpYesNum").textContent = signed(take);
+    document.getElementById("cmpNoNum").textContent = signed(stay);
+    document.getElementById("cmpYes").className = take > stay ? "wins" : "";
+    document.getElementById("cmpNo").className = stay > take ? "wins" : "";
+
+    var w = document.getElementById("whyText");
+    if (col === 1) {
+      w.textContent = "With you, " + (x + 1) + " people take part, and " + k + " are needed. The protest " +
+        "fails either way, so the benefit never arrives. " +
+        (p === 0
+          ? "Taking part costs you " + c + " and buys nothing. You would need " +
+            plural(k - 1 - x, "more person", "more people") +
+            " to turn out before your own turning out would change the outcome."
+          : "The only thing being compared here is the cost of " + c + " against the penalty of " + p + ".");
+    } else if (col === 2) {
+      w.textContent = "You are the " + k + "th person. Take part and the protest succeeds: you get the " +
+        "benefit of " + b + " and pay the cost of " + c + ". Stay home and it fails" +
+        (p === 0 ? " and you get nothing" : ", and you are penalized " + p + " on top") +
+        ". This is the only situation in which what you do changes what happens, and the one column where " +
+        "taking part wins whatever else is set.";
+    } else {
+      w.textContent = "There are already " + x + " others taking part and only " + k + " are needed, so the " +
+        "protest succeeds whether or not you go. " +
+        (p === 0
+          ? "Staying home pays the full benefit of " + b + "; going pays the same benefit minus the cost of " +
+            c + ". This is free-riding — and notice that the size of the cost did not come into it. Any cost " +
+            "above zero loses this comparison, so making it safe to take part does not remove the reason to " +
+            "stay home."
+          : "Staying home pays " + b + " minus the penalty of " + p + "; going pays " + b + " minus the cost " +
+            "of " + c + ". Free-riding survives here only while the penalty stays below the cost.");
+    }
+
+    document.getElementById("claimGap").innerHTML =
+      "The wider the gap, the more places there are to hide. Here K = " + k + " out of N = " + n +
+      ", so in <span class='fig'>" + gap + "</span> of the " + n + " situations enough others are out " +
+      "without you. Narrow the gap and those go: at K = N there are none, and free-riding is not available " +
+      "to anybody.";
+
+    document.getElementById("claimN").innerHTML =
+      "Exactly <span class='fig'>1</span> of the " + n + " situations makes you the critical person, a share " +
+      "of <span class='fig'>1 in " + n + "</span>. Raising K moves that situation along the strip but never " +
+      "adds a second one, so the bigger the group, the smaller the target you are trying to hit — and the " +
+      "less anyone can tell from inside a crowd whether they are standing on it.";
+
+    document.getElementById("claimPenBox").hidden = (p === 0);
+    document.getElementById("claimPen").innerHTML = p === 0
+      ? ""
+      : "A penalty of <span class='fig'>" + p + "</span> against a cost of <span class='fig'>" + c +
+        "</span>. " +
+        (p > c
+          ? "Taking part is now better in every column, including the ones where the protest succeeds without " +
+            "you. The collective action problem is gone — not because anybody wants the good more, but " +
+            "because staying home stopped being free. That is what a group small enough to watch its members " +
+            "can do and a country cannot."
+          : p < c
+            ? "Still below the cost, so nothing has changed: a penalty only bites once it is worse than " +
+              "turning up. Try raising it above " + c + "."
+            : "Exactly equal to the cost. Outside the middle column the two options tie precisely — one step " +
+              "further and the whole table flips.");
+  }
+
+  function bindSlider(el, key, extra) {
+    el.addEventListener("input", function () {
+      explore[key] = parseInt(el.value, 10);
+      renderExplore();
+      if (extra) say(extra());
+    });
+  }
+
+  bindSlider(sX, "x", function () {
+    var v = best(explore.k, explore.x, explore.b, explore.c, explore.p);
+    return explore.x + " others taking part. " +
+      (v === "take" ? "Take part." : v === "stay" ? "Stay home." : "Both options are exactly equal.");
+  });
+  bindSlider(sN, "n", function () {
+    return "N is now " + explore.n + ", with K at " + explore.k + ", a gap of " + (explore.n - explore.k) +
+           ". One situation in " + explore.n + " makes you critical.";
+  });
+  bindSlider(sK, "k", function () {
+    return "K is now " + explore.k + ", a gap of " + (explore.n - explore.k) +
+           " from N. You are critical when exactly " + (explore.k - 1) + " others take part.";
+  });
+  bindSlider(sB, "b", function () { return "B is now " + explore.b + ", against a cost of " + explore.c + "."; });
+  bindSlider(sC, "c", function () { return "C is now " + explore.c + ", against a benefit of " + explore.b + "."; });
+  bindSlider(sP, "p", function () {
+    return explore.p === 0
+      ? "Penalty removed. This is the lecture's table."
+      : "Penalty is now " + explore.p + " against a cost of " + explore.c + ". " +
+        (explore.p > explore.c ? "Taking part now wins in every column."
+                               : "Not above the cost, so the answer is unchanged.");
+  });
+
+  /* ---------- practice mode ---------- */
+
+  var btnYes = document.getElementById("btnYes"),
+      btnNo = document.getElementById("btnNo"),
+      btnNext = document.getElementById("btnNext"),
+      pResult = document.getElementById("pResult");
+
+  function randInt(lo, hi) { return lo + Math.floor(Math.random() * (hi - lo + 1)); }
+
+  function drawWeight(key) {
+    return DRAW_WEIGHTS[key] * (covered[key] ? 1 : UNCOVERED_BOOST);
+  }
+
+  function drawSituation() {
+    var total = 0, i;
+    for (i = 0; i < SITUATIONS.length; i++) total += drawWeight(SITUATIONS[i].key);
+    var r = Math.random() * total;
+    for (i = 0; i < SITUATIONS.length; i++) {
+      r -= drawWeight(SITUATIONS[i].key);
+      if (r < 0) return SITUATIONS[i].key;
+    }
+    return SITUATIONS[SITUATIONS.length - 1].key;
+  }
+
+  function newProblem() {
+    var n = randInt(8, 60);
+    var k = randInt(3, n - 2);
+    var c = randInt(1, 5);
+    var b = c + randInt(2, 9);
+
+    var want = drawSituation();
+    var x;
+    if (want === "farBelow") x = randInt(0, k - 3);
+    else if (want === "justBelow") x = k - 2;
+    else if (want === "pivotal") x = k - 1;
+    else if (want === "justAbove") x = k;
+    else x = randInt(k + 1, n - 1);
+
+    /* Practice always uses the lecture's model: no penalty. */
+    problem = { n: n, k: k, b: b, c: c, x: x, situation: want };
+    answered = false;
+
+    var dl = document.getElementById("problemList");
+    dl.innerHTML = "";
+    [["N", n + " people in the group"],
+     ["K", k + " of them must take part for the protest to succeed"],
+     ["B", b + " — what success is worth to each person in the group"],
+     ["C", c + " — what it costs each person who takes part"]].forEach(function (r) {
+      var dt = document.createElement("dt");
+      dt.textContent = r[0];
+      var dd = document.createElement("dd");
+      dd.textContent = r[1];
+      dl.appendChild(dt);
+      dl.appendChild(dd);
+    });
+
+    document.getElementById("askText").textContent =
+      x + " of the other " + (n - 1) + " people are already taking part. Do you take part?";
+
+    btnYes.removeAttribute("aria-disabled");
+    btnNo.removeAttribute("aria-disabled");
+    btnYes.classList.remove("picked");
+    btnNo.classList.remove("picked");
+    btnYes.setAttribute("aria-label", "Take part");
+    btnNo.setAttribute("aria-label", "Stay home");
+    pResult.hidden = true;
+    btnNext.hidden = true;
+
+    renderTable(n, k, b, c, 0, x, false);
+    renderStates(n, k, x, false);
+    showStates(false);
+
+    document.getElementById("tableLede").textContent =
+      "The table for the problem below, with its numbers filled in. Which column you are standing in is for " +
+      "you to work out — it is marked, with the better payoff in it, once you have answered.";
+
+    renderCoverage();
+  }
+
+  function answer(tookPart) {
+    if (answered) { say("You have already answered this one. Choose Next problem to continue."); return; }
+    answered = true;
+
+    var q = problem;
+    var correct = best(q.k, q.x, q.b, q.c, 0) === "take";
+    var right = (tookPart === correct);
+
+    stats.asked++;
+    if (right) { stats.right++; covered[q.situation] = true; }
+
+    (tookPart ? btnYes : btnNo).classList.add("picked");
+    btnYes.setAttribute("aria-disabled", "true");
+    btnNo.setAttribute("aria-disabled", "true");
+    btnYes.setAttribute("aria-label", "Take part" + (tookPart ? ", your answer" : "") + ", already answered");
+    btnNo.setAttribute("aria-label", "Stay home" + (!tookPart ? ", your answer" : "") + ", already answered");
+
+    var col = column(q.k, q.x);
+    var take = payTakePart(col, q.b, q.c);
+    var stay = payStayHome(col, q.b, 0);
+
+    pResult.className = "result " + (right ? "is-right" : "is-wrong");
+    document.getElementById("pGlyph").textContent = right ? "\u2713" : "\u2715";
+    document.getElementById("pHead").textContent = right
+      ? "Correct — " + (correct ? "take part." : "stay home.")
+      : "Not quite — the answer is " + (correct ? "take part." : "stay home.");
+
+    document.getElementById("pCmpYesSym").textContent = col === 1 ? "(" + MINUS + "C)" : "(B " + MINUS + " C)";
+    document.getElementById("pCmpNoSym").textContent = "(" + stayHomeSymbol(col, 0) + ")";
+    document.getElementById("pCmpYesNum").textContent = signed(take);
+    document.getElementById("pCmpNoNum").textContent = signed(stay);
+    document.getElementById("pCmpYes").className = take > stay ? "wins" : "";
+    document.getElementById("pCmpNo").className = stay > take ? "wins" : "";
+
+    var why;
+    if (col === 1) {
+      why = "With " + q.x + " others and you that is " + (q.x + 1) + " people, and " + q.k +
+            " are needed, so the protest fails either way. You are in the first column: taking part costs " +
+            q.c + " and changes nothing. You would need " +
+            plural(q.k - 1 - q.x, "more person", "more people") + " out before your own decision mattered.";
+    } else if (col === 2) {
+      why = "K " + MINUS + " 1 is " + (q.k - 1) + ", and " + q.x + " others are taking part, so you are the " +
+            q.k + "th person and the middle column applies. Taking part turns a failure into a success, " +
+            "worth " + q.b + " minus the cost of " + q.c + ". This is the one situation where you should go.";
+    } else {
+      why = q.x + " others are already out and only " + q.k + " are needed, so it succeeds without you. " +
+            "You are in the third column: staying home pays the full " + q.b + " and taking part pays " +
+            q.b + " minus " + q.c + ". Free-riding is the better answer here, which is exactly the problem " +
+            "the model is about.";
+    }
+    document.getElementById("pWhy").textContent = why;
+    pResult.hidden = false;
+
+    renderTable(q.n, q.k, q.b, q.c, 0, q.x, true);
+    renderStates(q.n, q.k, q.x, true);
+    showStates(true);
+    document.getElementById("tableLede").textContent =
+      "The table for the problem below. The column you were standing in is now marked.";
+
+    renderCoverage();
+
+    btnNext.hidden = false;
+    btnNext.focus();
+
+    say((right ? "Correct. " : "Not quite. ") + why + " " + scoreText());
+  }
+
+  function scoreText() {
+    if (!stats.asked) return "No problems answered yet.";
+    return stats.asked + (stats.asked === 1 ? " problem" : " problems") + " answered, " +
+           stats.right + " correct.";
+  }
+
+  function renderCoverage() {
+    document.getElementById("scoreLine").textContent = scoreText();
+
+    var ul = document.getElementById("coverage");
+    ul.innerHTML = "";
+    var done = 0;
+    SITUATIONS.forEach(function (s) {
+      var got = covered[s.key];
+      if (got) done++;
+      var li = document.createElement("li");
+      li.className = got ? "done" : "todo";
+      var g = document.createElement("span");
+      g.className = "glyph";
+      g.textContent = got ? "\u2713" : "\u25CB";
+      var t = document.createElement("span");
+      t.textContent = s.label;
+      var wq = document.createElement("span");
+      wq.className = "cov-when";
+      wq.textContent = s.when;
+      li.appendChild(g); li.appendChild(t); li.appendChild(wq);
+      li.setAttribute("aria-label",
+        s.label + ", " + s.when + ", " + (got ? "answered correctly" : "not yet answered correctly"));
+      ul.appendChild(li);
+    });
+
+    var all = document.getElementById("allDone");
+    if (done === SITUATIONS.length) {
+      document.getElementById("allDoneText").textContent =
+        "You have now answered correctly in every kind of case there is, including the three around the " +
+        "boundary where the answer changes: one step below critical, critical, one step past. Those three " +
+        "are the whole of the model. Keep going for as long as you like — the problems do not run out — but " +
+        "from here they are arithmetic practice on cases you have already met rather than anything new.";
+      all.hidden = false;
+      if (!goldAnnounced) {
+        goldAnnounced = true;
+        say("All five situations now covered. You can keep going as long as you like, though the problems " +
+            "from here are practice on cases you have already met.");
+      }
+    } else {
+      all.hidden = true;
+    }
+  }
+
+  btnYes.addEventListener("click", function () { answer(true); });
+  btnNo.addEventListener("click", function () { answer(false); });
+  btnNext.addEventListener("click", function () {
+    newProblem();
+    document.getElementById("practiceTitle").focus();
+    say("New problem. " + document.getElementById("askText").textContent);
+  });
+  document.getElementById("btnReset").addEventListener("click", function () {
+    stats = { asked: 0, right: 0 };
+    covered = { farBelow: false, justBelow: false, pivotal: false, justAbove: false, farAbove: false };
+    goldAnnounced = false;
+    newProblem();
+    document.getElementById("practiceTitle").focus();
+    say("Progress cleared. New problem. " + document.getElementById("askText").textContent);
+  });
+
+  /* ---------- mode tabs ---------- */
+
+  var tabExplore = document.getElementById("tab-explore"),
+      tabPractice = document.getElementById("tab-practice"),
+      boardExplore = document.getElementById("exploreBoard"),
+      boardPractice = document.getElementById("practiceBoard");
+
+  var EXPLORE_LEDE =
+    "Here is that situation as a table. Your two choices are taking part or not taking part. The three " +
+    "columns show the three scenarios that could occur given the size of N. The highlighted one is where the " +
+    "count of the other participants mentioned above puts you. Move the sliders (below) and watch which " +
+    "column you land in.";
+
+  function selectMode(next, moveFocus) {
+    mode = next;
+    var isExplore = next === "explore";
+
+    tabExplore.setAttribute("aria-selected", isExplore ? "true" : "false");
+    tabPractice.setAttribute("aria-selected", isExplore ? "false" : "true");
+    tabExplore.tabIndex = isExplore ? 0 : -1;
+    tabPractice.tabIndex = isExplore ? -1 : 0;
+
+    boardExplore.hidden = !isExplore;
+    boardPractice.hidden = isExplore;
+    document.getElementById("scenarioBlock").hidden = !isExplore;
+
+    if (isExplore) {
+      document.getElementById("tableLede").textContent = EXPLORE_LEDE;
+      renderExplore();
+      if (moveFocus) document.getElementById("exploreTitle").focus();
+      say("Exploring the model. The sliders drive the table and the strip beneath it.");
+    } else {
+      if (!problem) {
+        newProblem();
+      } else {
+        renderTable(problem.n, problem.k, problem.b, problem.c, 0, problem.x, answered);
+        renderStates(problem.n, problem.k, problem.x, answered);
+        showStates(answered);
+        renderCoverage();
+      }
+      if (moveFocus) document.getElementById("practiceTitle").focus();
+      say("Practice problems. " + document.getElementById("askText").textContent);
+    }
+  }
+
+  tabExplore.addEventListener("click", function () { selectMode("explore", true); });
+  tabPractice.addEventListener("click", function () { selectMode("practice", true); });
+
+  document.getElementById("tabs").addEventListener("keydown", function (e) {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight" && e.key !== "Home" && e.key !== "End") return;
+    e.preventDefault();
+    var next = (e.key === "Home") ? "explore"
+             : (e.key === "End") ? "practice"
+             : (mode === "explore" ? "practice" : "explore");
+    selectMode(next, false);
+    (next === "explore" ? tabExplore : tabPractice).focus();
+  });
+
+  /* ---------- theme ---------- */
+
+  var themeBtn = document.getElementById("themeToggle");
+  function applyTheme(m) {
+    document.documentElement.setAttribute("data-theme", m);
+    themeBtn.textContent = m === "dark" ? "Switch to light mode" : "Switch to dark mode";
+  }
+  applyTheme(window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  themeBtn.addEventListener("click", function () {
+    applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  });
+
+  /* ---------- start ---------- */
+
+  document.getElementById("tableLede").textContent = EXPLORE_LEDE;
+  renderExplore();
+  renderCoverage();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forming a government in the Weimar Reichstag</title>
+<style>
+  :root {
+    --bg: #FAFAFA;
+    --panel: #FFFFFF;
+    --border: #D0D0D0;
+    --text: #111111;
+    --text-2: #555555;
+    --hint: #999999;
+    --deemph: #707070;
+    --accent: #0072B2;
+    --favorable: #0072B2;
+    --unfavorable: #B33E00;
+    --neutral-state: #5F5E5A;
+    --gold-ui: #B8860B;
+    --gold-text: #946B09;
+    --body-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --data-font: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --u: 8px;
+  }
+
+  html[data-theme="dark"] {
+    --bg: #1A1A1A;
+    --panel: #2A2A2A;
+    --border: #3A3A3A;
+    --text: #F2F2F2;
+    --text-2: #B3B3B3;
+    --hint: #7A7A7A;
+    --deemph: #8F8F8F;
+    --accent: #7FC7EE;
+    --favorable: #7FC7EE;
+    --unfavorable: #F08A4B;
+    --neutral-state: #A8A6A0;
+    --gold-ui: #E0B23D;
+    --gold-text: #E0B23D;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: calc(var(--u) * 3);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body-font);
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  /* ---------- header ---------- */
+
+  header { margin-bottom: calc(var(--u) * 3); }
+
+  h1 {
+    font-size: 1.65rem;
+    font-weight: 600;
+    margin: 0 0 var(--u) 0;
+    line-height: 1.25;
+  }
+
+  .standfirst {
+    margin: 0;
+    color: var(--text-2);
+    max-width: 68ch;
+  }
+
+  /* ---------- top bar ---------- */
+
+  .topbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--u) * 2);
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: calc(var(--u) * 3);
+  }
+
+  .field-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-2);
+    margin-bottom: var(--u);
+  }
+
+  [role="tablist"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--u);
+  }
+
+  [role="tab"] {
+    font: inherit;
+    font-size: 0.95rem;
+    padding: var(--u) calc(var(--u) * 2);
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  [role="tab"][aria-selected="true"] {
+    border-color: var(--accent);
+    box-shadow: inset 0 -3px 0 var(--accent);
+    font-weight: 600;
+  }
+
+  .theme-toggle {
+    font: inherit;
+    font-size: 0.85rem;
+    padding: var(--u) calc(var(--u) * 2);
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* ---------- chamber strip (signature element) ---------- */
+
+  .chamber-block {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: calc(var(--u) * 2);
+    margin-bottom: calc(var(--u) * 3);
+  }
+
+  .chamber-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--u);
+    margin-bottom: calc(var(--u) * 2);
+  }
+
+  .chamber-head h2 { font-size: 1rem; font-weight: 600; margin: 0; }
+  .chamber-head p { margin: 0; font-size: 0.85rem; color: var(--text-2); }
+
+  .axis-ends {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-2);
+    margin-bottom: var(--u);
+  }
+
+  .strip {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 56px;
+    gap: 2px;
+  }
+
+  .seg {
+    position: relative;
+    min-width: 2px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-family: var(--data-font);
+    font-size: 0.7rem;
+    color: var(--deemph);
+  }
+
+  .seg.is-selected {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--panel);
+  }
+  html[data-theme="dark"] .seg.is-selected { color: var(--bg); }
+
+  .seg.is-antisystem {
+    background: repeating-linear-gradient(
+      45deg,
+      transparent, transparent 4px,
+      var(--border) 4px, var(--border) 6px
+    );
+  }
+
+  .threshold {
+    position: absolute;
+    top: -6px;
+    bottom: -6px;
+    width: 3px;
+    background: var(--gold-ui);
+    pointer-events: none;
+  }
+
+  .threshold-label {
+    display: block;
+    margin-top: var(--u);
+    font-size: 0.75rem;
+    color: var(--gold-text);
+    font-weight: 600;
+  }
+
+  /* ---------- two-column board ---------- */
+
+  .board {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: calc(var(--u) * 3);
+    align-items: start;
+  }
+
+  @media (max-width: 820px) {
+    .board { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: calc(var(--u) * 2);
+  }
+
+  .panel h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 var(--u) 0;
+  }
+
+  .panel .lede {
+    margin: 0 0 calc(var(--u) * 2) 0;
+    font-size: 0.85rem;
+    color: var(--text-2);
+  }
+
+  /* ---------- party buttons ---------- */
+
+  .party-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--u);
+  }
+
+  .party-btn {
+    width: 100%;
+    font: inherit;
+    text-align: left;
+    display: flex;
+    align-items: baseline;
+    gap: calc(var(--u) * 1.5);
+    padding: calc(var(--u) * 1.5);
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .party-btn[aria-pressed="true"] {
+    border-color: var(--accent);
+    border-left-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, var(--panel));
+  }
+
+  .party-btn .mark {
+    font-family: var(--data-font);
+    width: 1.2em;
+    flex: none;
+    color: var(--accent);
+  }
+  .party-btn[aria-pressed="false"] .mark { color: var(--hint); }
+
+  .party-btn .names { flex: 1; min-width: 0; }
+  .party-btn .abbr { font-weight: 600; }
+  .party-btn .full {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-2);
+    font-weight: 400;
+  }
+
+  .party-btn .seats {
+    font-family: var(--data-font);
+    font-variant-numeric: tabular-nums;
+    font-size: 1rem;
+    flex: none;
+  }
+
+  .status-tag {
+    display: inline-block;
+    margin-top: var(--u);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--unfavorable);
+    border: 1px solid var(--unfavorable);
+    border-radius: 3px;
+    padding: 0 6px;
+  }
+
+  .list-actions {
+    display: flex;
+    gap: var(--u);
+    margin-top: calc(var(--u) * 2);
+    flex-wrap: wrap;
+  }
+
+  .minor-btn {
+    font: inherit;
+    font-size: 0.85rem;
+    padding: var(--u) calc(var(--u) * 1.5);
+    background: var(--panel);
+    color: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  /* ---------- tally ---------- */
+
+  .tally-figure {
+    font-family: var(--data-font);
+    font-variant-numeric: tabular-nums;
+    font-size: 2.4rem;
+    line-height: 1.1;
+    display: block;
+  }
+
+  .tally-sub {
+    font-size: 0.85rem;
+    color: var(--text-2);
+    display: block;
+    margin-bottom: calc(var(--u) * 2);
+  }
+
+  .checks { list-style: none; margin: 0 0 calc(var(--u) * 2) 0; padding: 0; }
+
+  .checks li {
+    display: flex;
+    gap: var(--u);
+    align-items: baseline;
+    padding: var(--u) 0;
+    border-top: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+
+  .checks .icon {
+    font-family: var(--data-font);
+    font-weight: 700;
+    flex: none;
+    width: 1.2em;
+  }
+
+  .st-yes .icon, .st-yes .st-word { color: var(--favorable); }
+  .st-no .icon, .st-no .st-word { color: var(--unfavorable); }
+  .st-idle .icon, .st-idle .st-word { color: var(--neutral-state); }
+
+  .st-word { font-weight: 600; }
+
+  .result {
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--neutral-state);
+    border-radius: 4px;
+    padding: calc(var(--u) * 1.5);
+    font-size: 0.9rem;
+    background: var(--bg);
+  }
+  .result.is-yes { border-left-color: var(--favorable); }
+  .result.is-no { border-left-color: var(--unfavorable); }
+  .result.is-solved {
+    border-left-color: var(--gold-ui);
+    box-shadow: 0 0 0 2px var(--gold-ui);
+  }
+  .result strong { display: block; margin-bottom: var(--u); }
+  .result.is-solved strong { color: var(--gold-text); }
+
+  /* ---------- lower sections ---------- */
+
+  .lower { margin-top: calc(var(--u) * 3); }
+
+  details {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: calc(var(--u) * 2);
+    margin-bottom: calc(var(--u) * 2);
+  }
+
+  summary { cursor: pointer; font-weight: 600; }
+  details > *:not(summary) { margin-top: calc(var(--u) * 1.5); }
+  details p { margin: 0 0 var(--u) 0; max-width: 72ch; }
+  details p:last-child { margin-bottom: 0; }
+
+  .data-note {
+    font-size: 0.85rem;
+    color: var(--text-2);
+  }
+  .data-note ul { padding-left: calc(var(--u) * 2.5); }
+  .data-note li { margin-bottom: var(--u); }
+
+  code, .num {
+    font-family: var(--data-font);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .seg, .party-btn, .result { transition: background-color 120ms ease, border-color 120ms ease; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Forming a government in the Weimar Reichstag</h1>
+    <p class="standfirst">
+      Germany elected its parliament by proportional representation, which produced a chamber with many
+      parties and no natural majority. Your job is the one every German chancellor faced between 1928 and
+      1933: assemble a cabinet that can command more than half the seats. Work through the four elections
+      in order and watch what happens to the range of possible answers.
+    </p>
+  </header>
+
+  <div class="topbar">
+    <div>
+      <span class="field-label" id="election-label">Election</span>
+      <div role="tablist" aria-labelledby="election-label" id="tabs"></div>
+    </div>
+    <button class="theme-toggle" id="themeToggle" type="button">Switch to dark mode</button>
+  </div>
+
+  <section class="chamber-block">
+    <div class="chamber-head">
+      <div>
+        <h2 id="chamberTitle">The chamber, seated left to right</h2>
+        <p id="chamberSub"></p>
+      </div>
+    </div>
+    <div class="axis-ends" aria-hidden="true">
+      <span>Left</span><span>Right</span>
+    </div>
+    <div class="strip" id="strip" aria-hidden="true"></div>
+    <span class="threshold-label" id="thresholdLabel"></span>
+  </section>
+
+  <div class="board">
+
+    <section class="panel">
+      <h2>Choose your coalition partners</h2>
+      <p class="lede">
+        Each party is placed at its position on the left–right ordering. Select any combination.
+        Seat counts are shown for the election you picked above.
+      </p>
+      <ul class="party-list" id="partyList"></ul>
+      <div class="list-actions">
+        <button class="minor-btn" type="button" id="clearBtn">Clear selection</button>
+        <button class="minor-btn" type="button" id="hintBtn">Show the smallest pro-republic majority</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Your cabinet</h2>
+      <span class="tally-figure" id="tallyFigure">0</span>
+      <span class="tally-sub" id="tallySub"></span>
+
+      <ul class="checks" id="checks">
+        <li class="st-idle" id="check-majority">
+          <span class="icon" aria-hidden="true">–</span>
+          <span><span class="st-word">Majority</span> — does the cabinet control more than half the seats?</span>
+        </li>
+        <li class="st-idle" id="check-willing">
+          <span class="icon" aria-hidden="true">–</span>
+          <span><span class="st-word">Pro-republic only</span> — is every party in it committed to keeping the constitutional order?</span>
+        </li>
+        <li class="st-idle" id="check-connected">
+          <span class="icon" aria-hidden="true">–</span>
+          <span><span class="st-word">Connected</span> — are the parties neighbors on the left–right ordering, with no gaps?</span>
+        </li>
+      </ul>
+
+      <div class="result" id="result">
+        <strong>No parties selected</strong>
+        Pick parties from the list to start building a cabinet.
+      </div>
+    </section>
+  </div>
+
+  <div class="lower">
+    <details id="historyDetails">
+      <summary>What actually happened</summary>
+      <div id="historyBody"></div>
+    </details>
+
+    <details>
+      <summary>How to read the three tests</summary>
+      <p>
+        <strong>Majority</strong> is pure arithmetic. A cabinet that cannot win a vote in the Reichstag can be
+        removed by one, so more than half the seats is the minimum condition for governing normally.
+      </p>
+      <p>
+        <strong>Pro-republic only</strong> is a classification, not a claim about who was willing to govern. The
+        Communists (KPD) and the National Socialists (NSDAP, the Nazi party) both rejected the constitutional
+        order and wanted to replace it. That is why a majority resting on either of them would not have preserved the republic, even
+        though it would have been a majority.
+      </p>
+      <p>
+        It would be wrong to say these parties refused to enter government. The Nazis wanted power badly and
+        negotiated for it repeatedly; what Hitler refused was any role below the
+        chancellorship. In August 1932 he was offered the deputy post under the sitting chancellor Franz von
+        Papen and turned it down. In November, President Paul von Hindenburg offered him the chancellorship on
+        condition that he assemble a parliamentary majority, and he refused that too, holding out for the power
+        to rule by decree. The exclusion ran in both directions and it was about terms.
+      </p>
+      <p>
+        The Communists are a different case again. Following the line set by the Soviet-led
+        international organization of communist parties, which treated Social Democrats as the main enemy, the
+        KPD rejected an SPD proposal to work together in November 1931 and called instead for
+        intensifying the fight against social democracy. Here the estrangement was mutual and ideological rather
+        than a bargaining failure over posts.
+      </p>
+      <p>
+        So the tool does not stop you selecting them. It tells you what kind of majority you have built, and
+        leaves the question of why it did not happen to the historical note for that election — which is where
+        the interesting answer lives.
+      </p>
+      <p>
+        <strong>Connected</strong> asks whether your parties sit next to each other on the left–right ordering.
+        Coalition theorists expect governments to be connected, because a party that is ideologically closer to
+        the cabinet than one of its actual members is a cheaper partner and a likelier one. A coalition with a
+        gap in the middle — skipping over a party to reach one further away — is a signal of strain. You will
+        meet this idea again when the course turns to government formation.
+      </p>
+    </details>
+
+    <details>
+      <summary>Where these numbers come from</summary>
+      <div class="data-note">
+        <p>
+          Seat totals follow the published results for each Reichstag election. The four chambers were different
+          sizes because Weimar's electoral law awarded one seat per 60,000 votes rather than fixing the number of
+          seats, so the chamber grew and shrank with turnout.
+        </p>
+        <ul>
+          <li>
+            <strong>Grouping.</strong> Eight parties are named individually. Everything else is pooled into
+            <em>other small parties</em>, which was in reality a scatter of separate special-interest and regional
+            parties — the business and middle-class Wirtschaftspartei, agrarian lists, regional parties, and
+            several Protestant and conservative splinters. Pooling them makes coalition-building
+            <em>easier</em> than it was, since it treats them as a single bloc that would join or refuse together.
+            When a majority is still out of reach, that result holds all the more strongly for the real chamber.
+          </li>
+          <li>
+            <strong>The DNVP.</strong> The nationalist DNVP is counted here as an available partner, since it had
+            served in Weimar cabinets in the 1920s. Under Alfred Hugenberg after 1928 it grew openly hostile to
+            the republic. Counting it as available is therefore the generous assumption.
+          </li>
+          <li>
+            <strong>The liberal center.</strong> The German Democratic Party (DDP) reorganized itself as the German
+            State Party (DStP) in 1930, so the same slot changes name between the first and second elections here.
+          </li>
+          <li>
+            <strong>Small discrepancies.</strong> Published sources differ by a seat or two on some of the minor
+            parties. Totals here are reconciled so that the parties always sum exactly to the official size of
+            each chamber.
+          </li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="sr-only" role="status" aria-live="polite" id="liveRegion"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // Left-to-right ordering is fixed across all four elections.
+  // index 0 is furthest left.
+  var SLOTS = [
+    { key: "kpd",     abbr: "KPD",     full: "Communist Party",        antiSystem: true },
+    { key: "spd",     abbr: "SPD",     full: "Social Democratic Party", antiSystem: false },
+    { key: "lib",     abbr: "DDP",     full: "German Democratic Party", antiSystem: false },
+    { key: "zentrum", abbr: "Zentrum", full: "Centre Party",            antiSystem: false },
+    { key: "bvp",     abbr: "BVP",     full: "Bavarian People's Party", antiSystem: false },
+    { key: "dvp",     abbr: "DVP",     full: "German People's Party",   antiSystem: false },
+    { key: "other",   abbr: "Other",   full: "Other small parties",     antiSystem: false },
+    { key: "dnvp",    abbr: "DNVP",    full: "German National People's Party", antiSystem: false },
+    { key: "nsdap",   abbr: "NSDAP",   full: "National Socialist Party", antiSystem: true }
+  ];
+
+  var ELECTIONS = [
+    {
+      id: "1928",
+      label: "May 1928",
+      total: 491,
+      majority: 246,
+      libAbbr: "DDP",
+      libFull: "German Democratic Party",
+      seats: { kpd: 54, spd: 153, lib: 25, zentrum: 61, bvp: 16, dvp: 45, other: 52, dnvp: 73, nsdap: 12 },
+      sub: "491 seats, 246 needed for a majority. The economy has recovered and the Nazis hold 12 seats.",
+      history: [
+        "The Social Democrat Hermann Müller became chancellor and formed a grand coalition running from his own party across to the DVP: five parties, spanning most of the political spectrum.",
+        "Even with a comfortable arithmetic majority, agreement was hard. It took two weeks to swear in a cabinet, and it was assembled as a set of individuals rather than a formal coalition. A written coalition agreement was not signed until ten months later.",
+        "The Müller cabinet was the last government of the Weimar Republic to rest on a parliamentary majority. It collapsed in March 1930."
+      ]
+    },
+    {
+      id: "1930",
+      label: "September 1930",
+      total: 577,
+      majority: 289,
+      libAbbr: "DStP",
+      libFull: "German State Party",
+      seats: { kpd: 77, spd: 143, lib: 20, zentrum: 68, bvp: 19, dvp: 30, other: 72, dnvp: 41, nsdap: 107 },
+      sub: "577 seats, 289 needed for a majority. The Depression has arrived; the Nazis jump from 12 seats to 107.",
+      history: [
+        "A majority was still arithmetically available, but only by combining almost every party that was willing to govern — and the Social Democrats and the nationalist right would have had to sit in the same cabinet.",
+        "184 seats were now held by parties hostile to the constitutional order. On the left, the possibility of the two workers' parties combining was closed off from within: when the SPD proposed cooperation in November 1931, the Communist party leader Ernst Thälmann rejected it and called for intensifying the fight against social democracy, arguing that Hitler should come to power first because he would fail and drive his voters to the KPD.",
+        "No such coalition was built. Chancellor Heinrich Brüning, of the Centre Party, governed instead using the emergency powers of President Paul von Hindenburg under Article 48 of the constitution, issuing decrees rather than passing laws. The president was elected separately from the Reichstag and appointed the chancellor, so this was a way of governing that did not depend on parliament. It became the norm from this point on."
+      ]
+    },
+    {
+      id: "jul1932",
+      label: "July 1932",
+      total: 608,
+      majority: 305,
+      libAbbr: "DStP",
+      libFull: "German State Party",
+      seats: { kpd: 89, spd: 133, lib: 4, zentrum: 75, bvp: 22, dvp: 7, other: 11, dnvp: 37, nsdap: 230 },
+      sub: "608 seats, 305 needed for a majority. Unemployment is near 30 percent. The Nazis become the largest party.",
+      history: [
+        "The Nazis and Communists together now held more than half the chamber. Every party committed to the republic, combined, held 289 seats — sixteen short of a majority.",
+        "But majorities did still exist. The Nazis and the Centre Party together held exactly 305 seats: a one-seat majority, and a real possibility that was actually pursued. Gregor Strasser, one of the senior Nazi organizers and the leading advocate within the party for taking office by agreement, worked to bring the two parties together. The Nazis stopped obstructing parliamentary business, and in return the Centre voted with them to elect the Nazi Hermann Göring as presiding officer of the Reichstag — the post that ran the chamber's business, not the presidency of the country.",
+        "Those talks came to nothing, and the sticking point was terms rather than participation. Hitler insisted on the chancellorship. On 13 August 1932 President Paul von Hindenburg — the head of state, elected separately from the Reichstag, who appointed chancellors — offered him the deputy post instead, under the sitting chancellor Franz von Papen. Hitler refused it.",
+        "So the deadlock was not produced by arithmetic alone. The arithmetic ruled out any government that would have preserved the republic; what happened to the governments it did permit was a bargaining failure over who would hold power.",
+        "Papen carried on by decree with almost no parliamentary support. In September the Reichstag removed him by 512 votes to 42, and another election was called."
+      ]
+    },
+    {
+      id: "nov1932",
+      label: "November 1932",
+      total: 584,
+      majority: 293,
+      libAbbr: "DStP",
+      libFull: "German State Party",
+      seats: { kpd: 100, spd: 121, lib: 2, zentrum: 70, bvp: 20, dvp: 11, other: 13, dnvp: 51, nsdap: 196 },
+      sub: "584 seats, 293 needed for a majority. The Nazi vote falls by four points and the party loses 34 seats.",
+      history: [
+        "The Nazis lost ground for the first time, and many observers concluded the party had peaked. The deadlock did not move: every party committed to the republic still held only 288 seats, five short of a majority.",
+        "The Nazis had lost enough that the July option closed too. A Nazi–Centre combination now came to 266 seats and was no longer a majority; reaching one from the right would have required the Centre, the Bavarians and the nationalists all at once. President Paul von Hindenburg, the head of state, did offer Hitler the chancellorship that month, on condition that he assemble a parliamentary majority behind it. Hitler refused, holding out for the power to govern by decree instead.",
+        "Two more chancellors tried and failed to assemble support. On 30 January 1933 Hindenburg appointed Hitler anyway, at the head of a cabinet of Nazis and nationalists holding 247 of the 584 seats — a minority government. A new election was called for March almost immediately.",
+        "That appointment was a presidential decision, not a parliamentary one, and it did not rest on a majority. The route out of the deadlock ran around the Reichstag rather than through it, which is why the institutional story and the electoral story have to be told together."
+      ]
+    }
+  ];
+
+  var current = 0;
+  var selected = {};
+
+  var tabsEl = document.getElementById("tabs");
+  var stripEl = document.getElementById("strip");
+  var listEl = document.getElementById("partyList");
+  var liveEl = document.getElementById("liveRegion");
+  var resultEl = document.getElementById("result");
+  var historyBody = document.getElementById("historyBody");
+
+  function election() { return ELECTIONS[current]; }
+  function slotAbbr(slot) { return slot.key === "lib" ? election().libAbbr : slot.abbr; }
+  function slotFull(slot) { return slot.key === "lib" ? election().libFull : slot.full; }
+
+  /* ---------- tabs ---------- */
+
+  function buildTabs() {
+    ELECTIONS.forEach(function (e, i) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("role", "tab");
+      b.id = "tab-" + e.id;
+      b.textContent = e.label;
+      b.setAttribute("aria-selected", i === current ? "true" : "false");
+      b.tabIndex = i === current ? 0 : -1;
+      b.addEventListener("click", function () { selectElection(i, true); });
+      b.addEventListener("keydown", function (ev) {
+        var d = 0;
+        if (ev.key === "ArrowRight") d = 1;
+        else if (ev.key === "ArrowLeft") d = -1;
+        else if (ev.key === "Home") d = -ELECTIONS.length;
+        else if (ev.key === "End") d = ELECTIONS.length;
+        else return;
+        ev.preventDefault();
+        var n = Math.min(ELECTIONS.length - 1, Math.max(0, i + d));
+        selectElection(n, true);
+        tabsEl.children[n].focus();
+      });
+      tabsEl.appendChild(b);
+    });
+  }
+
+  function selectElection(i, announce) {
+    current = i;
+    selected = {};
+    Array.prototype.forEach.call(tabsEl.children, function (b, n) {
+      b.setAttribute("aria-selected", n === i ? "true" : "false");
+      b.tabIndex = n === i ? 0 : -1;
+    });
+    document.getElementById("chamberSub").textContent = election().sub;
+    document.getElementById("thresholdLabel").textContent =
+      "Gold line marks the majority threshold: " + election().majority + " of " + election().total + " seats.";
+    buildHistory();
+    render();
+    if (announce) {
+      say(election().label + " selected. " + election().total + " seats, " +
+          election().majority + " needed for a majority. Selection cleared.");
+    }
+  }
+
+  /* ---------- party list ---------- */
+
+  /* Built once. The set of controls is fixed across elections — only the labels and
+     seat counts change — so render() updates them in place rather than rebuilding,
+     per the house rule on focus surviving a re-render. */
+  function buildPartyList() {
+    listEl.innerHTML = "";
+    SLOTS.forEach(function (slot) {
+      var li = document.createElement("li");
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "party-btn";
+      b.id = "party-" + slot.key;
+      b.setAttribute("aria-pressed", "false");
+
+      var mark = document.createElement("span");
+      mark.className = "mark";
+      mark.setAttribute("aria-hidden", "true");
+      mark.textContent = "+";
+
+      var names = document.createElement("span");
+      names.className = "names";
+      var abbr = document.createElement("span");
+      abbr.className = "abbr";
+      abbr.id = "abbr-" + slot.key;
+      var full = document.createElement("span");
+      full.className = "full";
+      full.id = "full-" + slot.key;
+      names.appendChild(abbr);
+      names.appendChild(full);
+
+      if (slot.antiSystem) {
+        var tag = document.createElement("span");
+        tag.className = "status-tag";
+        tag.textContent = "rejected the constitution";
+        names.appendChild(tag);
+      }
+
+      var seats = document.createElement("span");
+      seats.className = "seats";
+      seats.id = "seats-" + slot.key;
+
+      b.appendChild(mark);
+      b.appendChild(names);
+      b.appendChild(seats);
+
+      b.addEventListener("click", function () { toggle(slot.key); });
+      li.appendChild(b);
+      listEl.appendChild(li);
+    });
+  }
+
+  function toggle(key) {
+    selected[key] = !selected[key];
+    render();
+    var slot = SLOTS.filter(function (s) { return s.key === key; })[0];
+    say(slotAbbr(slot) + (selected[key] ? " added to" : " removed from") + " the cabinet. " + summaryLine());
+  }
+
+  /* ---------- analysis ---------- */
+
+  function selectedIndices() {
+    var out = [];
+    SLOTS.forEach(function (s, i) { if (selected[s.key]) out.push(i); });
+    return out;
+  }
+
+  function seatsOf(indices) {
+    return indices.reduce(function (a, i) { return a + election().seats[SLOTS[i].key]; }, 0);
+  }
+
+  function isConnected(indices) {
+    if (indices.length < 2) return true;
+    return indices[indices.length - 1] - indices[0] === indices.length - 1;
+  }
+
+  function hasAntiSystem(indices) {
+    return indices.some(function (i) { return SLOTS[i].antiSystem; });
+  }
+
+  /* Smallest pro-republic majority: fewest parties, then fewest seats, among
+     coalitions that clear the threshold, exclude anti-system parties, and are connected. */
+  function smallestWorkable() {
+    var willing = [];
+    SLOTS.forEach(function (s, i) { if (!s.antiSystem) willing.push(i); });
+    var best = null;
+    for (var mask = 1; mask < (1 << willing.length); mask++) {
+      var combo = [];
+      for (var b = 0; b < willing.length; b++) {
+        if (mask & (1 << b)) combo.push(willing[b]);
+      }
+      if (!isConnected(combo)) continue;
+      var s = seatsOf(combo);
+      if (s < election().majority) continue;
+      if (best === null ||
+          combo.length < best.combo.length ||
+          (combo.length === best.combo.length && s < best.seats)) {
+        best = { combo: combo, seats: s };
+      }
+    }
+    return best;
+  }
+
+  /* ---------- rendering ---------- */
+
+  function setCheck(id, state, word) {
+    var li = document.getElementById(id);
+    li.className = state === "yes" ? "st-yes" : state === "no" ? "st-no" : "st-idle";
+    li.querySelector(".icon").textContent = state === "yes" ? "\u2713" : state === "no" ? "\u2717" : "\u2013";
+    li.querySelector(".st-word").textContent = word;
+  }
+
+  function summaryLine() {
+    var idx = selectedIndices();
+    var s = seatsOf(idx);
+    return s + " of " + election().total + " seats, " + election().majority + " needed.";
+  }
+
+  function render() {
+    var idx = selectedIndices();
+    var seats = seatsOf(idx);
+    var maj = seats >= election().majority;
+    var antiSystem = hasAntiSystem(idx);
+    var connected = isConnected(idx);
+    var empty = idx.length === 0;
+
+    // strip
+    stripEl.innerHTML = "";
+    SLOTS.forEach(function (slot, i) {
+      var n = election().seats[slot.key];
+      var d = document.createElement("div");
+      d.className = "seg" +
+        (selected[slot.key] ? " is-selected" : "") +
+        (slot.antiSystem ? " is-antisystem" : "");
+      d.style.flexGrow = String(n);
+      d.style.flexBasis = "0";
+      d.textContent = (n / election().total > 0.055) ? slotAbbr(slot) : "";
+      stripEl.appendChild(d);
+    });
+    var t = document.createElement("div");
+    t.className = "threshold";
+    t.style.left = (100 * election().majority / election().total) + "%";
+    stripEl.appendChild(t);
+
+    // party buttons
+    SLOTS.forEach(function (slot) {
+      var b = document.getElementById("party-" + slot.key);
+      var on = !!selected[slot.key];
+      document.getElementById("abbr-" + slot.key).textContent = slotAbbr(slot);
+      document.getElementById("full-" + slot.key).textContent = slotFull(slot);
+      document.getElementById("seats-" + slot.key).textContent = election().seats[slot.key];
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+      b.querySelector(".mark").textContent = on ? "\u2713" : "+";
+      b.setAttribute("aria-label",
+        slotAbbr(slot) + ", " + slotFull(slot) + ", " + election().seats[slot.key] + " seats" +
+        (slot.antiSystem ? ", committed to replacing the constitutional order" : "") +
+        (on ? ". In cabinet." : ". Not in cabinet."));
+    });
+
+    // tally
+    document.getElementById("tallyFigure").textContent = seats;
+    document.getElementById("tallySub").textContent =
+      "of " + election().total + " seats. " + election().majority + " needed for a majority" +
+      (maj ? ", a surplus of " + (seats - election().majority) + "." : ", short by " + (election().majority - seats) + ".");
+
+    setCheck("check-majority", empty ? "idle" : (maj ? "yes" : "no"), "Majority");
+    setCheck("check-willing", empty ? "idle" : (antiSystem ? "no" : "yes"), "Pro-republic only");
+    setCheck("check-connected", empty ? "idle" : (connected ? "yes" : "no"), "Connected");
+
+    // result
+    var head, body, cls;
+    if (empty) {
+      cls = "";
+      head = "No parties selected";
+      body = "Pick parties from the list to start building a cabinet.";
+    } else if (maj && !antiSystem && connected) {
+      cls = " is-yes is-solved";
+      head = "This cabinet could have governed";
+      body = "It holds a majority, every partner was committed to the republic, and the parties sit next " +
+             "to each other on the left\u2013right ordering.";
+    } else if (maj && !antiSystem && !connected) {
+      cls = " is-yes";
+      head = "A majority, but a strained one";
+      body = "The arithmetic works and every partner backed the republic, but the coalition skips over a party " +
+             "to reach one further away. In practice the skipped party would have been the cheaper partner, " +
+             "which is a sign this combination was not the natural one.";
+    } else if (maj && antiSystem) {
+      cls = " is-no";
+      head = "A majority that would not have saved the republic";
+      body = "The arithmetic works, but this cabinet includes a party committed to replacing the " +
+             "constitutional order. Combinations like this were not ruled out by the numbers \u2014 some were " +
+             "actually negotiated over. What blocked them was disagreement about terms, above all who would " +
+             "hold the chancellorship. Read \u201cwhat actually happened\u201d for this election.";
+    } else if (!maj && antiSystem) {
+      cls = " is-no";
+      head = "Not a majority, and not a pro-republic cabinet";
+      body = "You are short of the threshold, and the selection includes a party committed to replacing the " +
+             "constitutional order.";
+    } else {
+      cls = " is-no";
+      head = "Not a majority";
+      body = "Short by " + (election().majority - seats) + " seats. Add partners, or check whether any " +
+             "combination of pro-republic parties can get there at all.";
+    }
+    resultEl.className = "result" + cls;
+    resultEl.innerHTML = "";
+    var strong = document.createElement("strong");
+    strong.textContent = head;
+    resultEl.appendChild(strong);
+    resultEl.appendChild(document.createTextNode(body));
+  }
+
+  function say(msg) { liveEl.textContent = msg; }
+
+  /* ---------- history ---------- */
+
+  function buildHistory() {
+    historyBody.innerHTML = "";
+    election().history.forEach(function (para) {
+      var p = document.createElement("p");
+      p.textContent = para;
+      historyBody.appendChild(p);
+    });
+  }
+
+  /* ---------- controls ---------- */
+
+  document.getElementById("clearBtn").addEventListener("click", function () {
+    selected = {};
+    render();
+    say("Selection cleared.");
+  });
+
+  document.getElementById("hintBtn").addEventListener("click", function () {
+    var best = smallestWorkable();
+    if (!best) {
+      selected = {};
+      render();
+      say("No combination of pro-republic parties reaches a majority in " + election().label + ".");
+      resultEl.className = "result is-no";
+      resultEl.innerHTML = "";
+      var s1 = document.createElement("strong");
+      s1.textContent = "There is no pro-republic majority";
+      resultEl.appendChild(s1);
+      resultEl.appendChild(document.createTextNode(
+        "In " + election().label + ", every party committed to the constitutional order adds up to " +
+        (election().total - election().seats.kpd - election().seats.nsdap) +
+        " seats \u2014 short of the " + election().majority +
+        " needed. Majorities did still exist on these numbers, but every one of them required the " +
+        "Communists or the National Socialists. Try building one and see what the tool says."
+      ));
+      return;
+    }
+    selected = {};
+    best.combo.forEach(function (i) { selected[SLOTS[i].key] = true; });
+    render();
+    var names = best.combo.map(function (i) { return slotAbbr(SLOTS[i]); }).join(", ");
+    say("Smallest pro-republic majority: " + names + ", " + best.seats + " seats.");
+  });
+
+  var themeBtn = document.getElementById("themeToggle");
+  function applyTheme(mode) {
+    document.documentElement.setAttribute("data-theme", mode);
+    themeBtn.textContent = mode === "dark" ? "Switch to light mode" : "Switch to dark mode";
+  }
+  applyTheme(window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  themeBtn.addEventListener("click", function () {
+    applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  });
+
+  buildTabs();
+  buildPartyList();
+  selectElection(0, false);
+})();
+</script>
+</body>
+</html>

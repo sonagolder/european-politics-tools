@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Choosing your ministries: coalition cabinets in postwar Eastern Europe</title>
+<style>
+  :root {
+    --bg: #FAFAFA;
+    --panel: #FFFFFF;
+    --border: #D0D0D0;
+    --text: #111111;
+    --text-2: #555555;
+    --hint: #999999;
+    --deemph: #707070;
+    --accent: #0072B2;
+    --favorable: #0072B2;
+    --unfavorable: #B33E00;
+    --neutral-state: #5F5E5A;
+    --gold-ui: #B8860B;
+    --gold-text: #946B09;
+    --body-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --data-font: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --u: 8px;
+  }
+
+  html[data-theme="dark"] {
+    --bg: #1A1A1A;
+    --panel: #2A2A2A;
+    --border: #3A3A3A;
+    --text: #F2F2F2;
+    --text-2: #B3B3B3;
+    --hint: #7A7A7A;
+    --deemph: #8F8F8F;
+    --accent: #7FC7EE;
+    --favorable: #7FC7EE;
+    --unfavorable: #F08A4B;
+    --neutral-state: #A8A6A0;
+    --gold-ui: #E0B23D;
+    --gold-text: #E0B23D;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: calc(var(--u) * 3);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body-font);
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  /* ---------- header ---------- */
+
+  header { margin-bottom: calc(var(--u) * 3); }
+
+  h1 {
+    font-size: 1.65rem;
+    font-weight: 600;
+    margin: 0 0 var(--u) 0;
+    line-height: 1.25;
+  }
+
+  .standfirst { margin: 0; color: var(--text-2); max-width: 68ch; }
+
+  /* ---------- top bar ---------- */
+
+  .topbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--u) * 2);
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: calc(var(--u) * 3);
+  }
+
+  .field-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-2);
+    margin-bottom: var(--u);
+  }
+
+  [role="tablist"] { display: flex; flex-wrap: wrap; gap: var(--u); }
+
+  [role="tab"] {
+    font: inherit;
+    font-size: 0.95rem;
+    padding: var(--u) calc(var(--u) * 2);
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  [role="tab"][aria-selected="true"] {
+    border-color: var(--accent);
+    box-shadow: inset 0 -3px 0 var(--accent);
+    font-weight: 600;
+  }
+
+  .theme-toggle {
+    font: inherit;
+    font-size: 0.85rem;
+    padding: var(--u) calc(var(--u) * 2);
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible,
+  h2[tabindex="-1"]:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* ---------- briefing ---------- */
+
+  .briefing {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: calc(var(--u) * 2);
+    margin-bottom: calc(var(--u) * 3);
+  }
+
+  .briefing-meta {
+    font-family: var(--data-font);
+    font-size: 0.78rem;
+    color: var(--text-2);
+    text-transform: none;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: var(--u);
+    margin-bottom: calc(var(--u) * 1.5);
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--u) * 2);
+  }
+
+  .briefing h2 { font-size: 1.05rem; font-weight: 600; margin: 0 0 var(--u) 0; }
+  .briefing p { margin: 0 0 var(--u) 0; max-width: 72ch; }
+  .briefing p:last-child { margin-bottom: 0; }
+
+  /* ---------- cabinet table strip ---------- */
+
+  .table-strip-block { margin-top: calc(var(--u) * 2); }
+
+  .strip-caption {
+    font-size: 0.8rem;
+    color: var(--text-2);
+    margin: 0 0 var(--u) 0;
+  }
+
+  .strip { display: flex; width: 100%; gap: 2px; height: 30px; }
+
+  .seat {
+    flex: 1 1 0;
+    min-width: 3px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: var(--bg);
+  }
+  .seat.is-mine { background: var(--accent); border-color: var(--accent); }
+  .seat.is-deputy {
+    border-color: var(--accent);
+    background: repeating-linear-gradient(
+      45deg,
+      transparent, transparent 3px,
+      var(--accent) 3px, var(--accent) 6px
+    );
+  }
+
+  /* ---------- board ---------- */
+
+  .board {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: calc(var(--u) * 3);
+    align-items: start;
+  }
+
+  @media (max-width: 860px) {
+    .board { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: calc(var(--u) * 2);
+  }
+
+  .panel h2 { font-size: 1rem; font-weight: 600; margin: 0 0 var(--u) 0; }
+
+  .panel .lede {
+    margin: 0 0 calc(var(--u) * 2) 0;
+    font-size: 0.85rem;
+    color: var(--text-2);
+  }
+
+  /* ---------- post list ---------- */
+
+  .post-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--u);
+  }
+
+  .post {
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--border);
+    border-radius: 4px;
+    padding: calc(var(--u) * 1.5);
+    background: var(--bg);
+  }
+
+  .post.held {
+    border-color: var(--accent);
+    border-left-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, var(--panel));
+  }
+
+  .post.deputized {
+    border-color: var(--accent);
+    border-left-style: dashed;
+    border-left-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 5%, var(--panel));
+  }
+
+  .post-head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--u);
+    flex-wrap: wrap;
+  }
+
+  .post-name { font-weight: 600; flex: 1 1 auto; min-width: 0; }
+
+  .post.unavailable { border-left-style: dashed; background: var(--bg); }
+
+  .act-cost {
+    font-family: var(--data-font);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.78rem;
+  }
+
+  .post-status.blocked { color: var(--text-2); border-color: var(--border); }
+
+  .post-blocked {
+    margin: var(--u) 0 0 0;
+    font-size: 0.82rem;
+    color: var(--text-2);
+    max-width: 62ch;
+  }
+
+  .post-blurb {
+    margin: 4px 0 0 0;
+    font-size: 0.85rem;
+    color: var(--text-2);
+    max-width: 62ch;
+  }
+
+  .post-status {
+    display: inline-block;
+    margin-top: var(--u);
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-family: var(--data-font);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    padding: 0 6px;
+  }
+
+  .post-actions { display: flex; gap: var(--u); margin-top: var(--u); flex-wrap: wrap; }
+
+  .act {
+    font: inherit;
+    font-size: 0.82rem;
+    padding: 6px calc(var(--u) * 1.5);
+    background: var(--panel);
+    color: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .act[aria-pressed="true"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--panel);
+    font-weight: 600;
+  }
+  html[data-theme="dark"] .act[aria-pressed="true"] { color: var(--bg); }
+  .act[aria-disabled="true"] { color: var(--hint); border-style: dashed; cursor: not-allowed; }
+
+  /* ---------- budget ---------- */
+
+  .capital-figure {
+    font-family: var(--data-font);
+    font-variant-numeric: tabular-nums;
+    font-size: 2.4rem;
+    line-height: 1.1;
+    display: block;
+  }
+
+  .capital-sub {
+    font-size: 0.85rem;
+    color: var(--text-2);
+    display: block;
+    margin-bottom: var(--u);
+  }
+
+  .pips {
+    font-family: var(--data-font);
+    font-size: 1rem;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    margin-bottom: calc(var(--u) * 2);
+    word-break: break-all;
+  }
+  .pips .spent { color: var(--deemph); }
+
+  .chosen { list-style: none; margin: 0 0 calc(var(--u) * 2) 0; padding: 0; font-size: 0.9rem; }
+  .chosen li {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--u);
+    padding: 6px 0;
+    border-top: 1px solid var(--border);
+  }
+  .chosen .role { font-family: var(--data-font); font-size: 0.78rem; color: var(--text-2); flex: none; }
+  .chosen .empty { color: var(--text-2); border: 0; padding-top: 0; }
+
+  .primary-btn {
+    font: inherit;
+    width: 100%;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: calc(var(--u) * 1.25) calc(var(--u) * 2);
+    background: var(--accent);
+    color: var(--panel);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  html[data-theme="dark"] .primary-btn { color: var(--bg); }
+  .primary-btn[aria-disabled="true"] {
+    background: var(--panel);
+    color: var(--hint);
+    border-color: var(--border);
+    border-style: dashed;
+    cursor: not-allowed;
+  }
+
+  .minor-btn {
+    font: inherit;
+    font-size: 0.85rem;
+    padding: var(--u) calc(var(--u) * 1.5);
+    background: var(--panel);
+    color: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: var(--u);
+  }
+
+  .btn-note { font-size: 0.78rem; color: var(--text-2); margin: var(--u) 0 0 0; }
+
+  /* ---------- reveal ---------- */
+
+  .years { margin: 0 0 calc(var(--u) * 2) 0; }
+
+  .year-block { margin-bottom: calc(var(--u) * 2); }
+
+  .year-label {
+    font-family: var(--data-font);
+    font-size: 0.78rem;
+    color: var(--text-2);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+    margin-bottom: var(--u);
+  }
+
+  .year-block p { margin: 0 0 var(--u) 0; font-size: 0.9rem; max-width: 62ch; }
+  .year-block p:last-child { margin-bottom: 0; }
+
+  .fade { opacity: 0; }
+  @media (prefers-reduced-motion: no-preference) {
+    .fade { transition: opacity 420ms ease; }
+  }
+  .fade.shown { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) {
+    .fade { opacity: 1; }
+  }
+
+  .tracks { list-style: none; margin: 0 0 calc(var(--u) * 2) 0; padding: 0; }
+  .tracks li { padding: var(--u) 0; border-top: 1px solid var(--border); }
+
+  .track-head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--u);
+    font-size: 0.9rem;
+  }
+  .track-name { font-weight: 600; flex: 1 1 auto; }
+  .track-num {
+    font-family: var(--data-font);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.82rem;
+    color: var(--text-2);
+    flex: none;
+  }
+  .track-icon { font-family: var(--data-font); font-weight: 700; flex: none; width: 1.2em; }
+
+  .st-yes .track-icon, .st-yes .track-word { color: var(--favorable); }
+  .st-no .track-icon, .st-no .track-word { color: var(--unfavorable); }
+  .st-idle .track-icon, .st-idle .track-word { color: var(--neutral-state); }
+  .track-word { font-weight: 600; font-size: 0.82rem; flex: none; }
+
+  .bar {
+    position: relative;
+    height: 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    margin-top: 6px;
+    overflow: hidden;
+  }
+  .bar .fill { height: 100%; }
+  .st-yes .bar .fill { background: var(--favorable); }
+  .st-no .bar .fill { background: var(--unfavorable); }
+  .st-idle .bar .fill { background: var(--neutral-state); }
+  .bar .tick {
+    position: absolute;
+    top: -2px; bottom: -2px;
+    width: 2px;
+    background: var(--text-2);
+  }
+
+  .track-why { font-size: 0.8rem; color: var(--text-2); margin: 6px 0 0 0; max-width: 60ch; }
+
+  .result {
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--neutral-state);
+    border-radius: 4px;
+    padding: calc(var(--u) * 1.5);
+    font-size: 0.9rem;
+    background: var(--bg);
+    margin-bottom: calc(var(--u) * 2);
+  }
+  .result.is-yes { border-left-color: var(--favorable); }
+  .result.is-no { border-left-color: var(--unfavorable); }
+  .result.is-solved { border-left-color: var(--gold-ui); box-shadow: 0 0 0 2px var(--gold-ui); }
+  .result strong { display: block; margin-bottom: 4px; }
+  .result.is-solved strong { color: var(--gold-text); }
+
+  .ledger { list-style: none; margin: 0; padding: 0; font-size: 0.85rem; }
+  .ledger li { padding: var(--u) 0; border-top: 1px solid var(--border); }
+  .ledger .lname { font-weight: 600; }
+  .ledger .lrole { font-family: var(--data-font); font-size: 0.75rem; color: var(--text-2); }
+  .ledger .lval { display: block; color: var(--text-2); margin-top: 2px; }
+
+  /* ---------- lower ---------- */
+
+  .lower { margin-top: calc(var(--u) * 3); }
+
+  details {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: calc(var(--u) * 2);
+    margin-bottom: calc(var(--u) * 2);
+  }
+
+  summary { cursor: pointer; font-weight: 600; }
+  details > *:not(summary) { margin-top: calc(var(--u) * 1.5); }
+  details p { margin: 0 0 var(--u) 0; max-width: 72ch; }
+  details p:last-child { margin-bottom: 0; }
+  details h3 { font-size: 0.95rem; margin: calc(var(--u) * 2) 0 var(--u) 0; }
+
+  .data-note { font-size: 0.85rem; color: var(--text-2); }
+  .data-note ul { padding-left: calc(var(--u) * 2.5); }
+  .data-note li { margin-bottom: var(--u); }
+
+  code, .num { font-family: var(--data-font); font-variant-numeric: tabular-nums; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .post, .seat, .act, .result { transition: background-color 120ms ease, border-color 120ms ease; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Choosing your ministries</h1>
+    <p class="standfirst">
+      You lead a Communist party in an eastern European country in the first years after the Second World War.
+      You are joining a broad coalition cabinet with parties you do not control, and the posts are being divided
+      now. You cannot have everything you want. Choose what to ask for, then find out where your choices leave
+      you three years later.
+    </p>
+  </header>
+
+  <div class="topbar">
+    <div>
+      <span class="field-label" id="scenario-label">Two negotiations, meant to be played in order</span>
+      <div role="tablist" aria-labelledby="scenario-label" id="tabs"></div>
+    </div>
+    <button class="theme-toggle" id="themeToggle" type="button">Switch to dark mode</button>
+  </div>
+
+  <section class="briefing" aria-labelledby="briefTitle">
+    <div class="briefing-meta" id="briefMeta"></div>
+    <h2 id="briefTitle"></h2>
+    <div id="briefBody"></div>
+
+    <div class="table-strip-block">
+      <p class="strip-caption" id="stripCaption"></p>
+      <div class="strip" id="strip" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <div class="board">
+
+    <section class="panel">
+      <h2>The posts on the table</h2>
+      <p class="lede">
+        Below is a standardized cabinet rather than an exact replica of either country's, listed in the usual
+        order of precedence, most senior first. Take a ministry outright at the price shown, or place one of
+        your people in it as deputy minister for 1 point — worth 40 percent of the ministry, and the minister
+        still belongs to another party. You may place three deputies at most.
+      </p>
+      <ul class="post-list" id="postList"></ul>
+    </section>
+
+    <section class="panel" id="summaryPanel">
+      <div id="chooseView">
+        <h2 id="chooseTitle" tabindex="-1">Your bargaining capital</h2>
+        <span class="capital-figure" id="capitalFigure">0</span>
+        <span class="capital-sub" id="capitalSub"></span>
+        <div class="pips" id="pips" aria-hidden="true"></div>
+
+        <ul class="chosen" id="chosenList"></ul>
+
+        <button class="primary-btn" type="button" id="commitBtn">Table these demands</button>
+        <p class="btn-note" id="commitNote"></p>
+        <button class="minor-btn" type="button" id="clearBtn">Clear all</button>
+      </div>
+
+      <div id="revealView" hidden>
+        <h2 id="revealTitle" tabindex="-1">What happened next</h2>
+        <div class="years" id="years"></div>
+
+        <div class="result" id="result"></div>
+
+        <h2>Where your leverage came from</h2>
+        <ul class="tracks" id="tracks"></ul>
+
+        <h2>What each post bought you</h2>
+        <ul class="ledger" id="ledger"></ul>
+
+        <button class="primary-btn" type="button" id="againBtn">Negotiate again</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="lower">
+    <details id="historyDetails">
+      <summary>What actually happened</summary>
+      <div id="historyBody"></div>
+    </details>
+
+    <details>
+      <summary>How this tool scores your cabinet — open only if you want the answer</summary>
+      <p>
+        The tool converts your cabinet into four measures of leverage over the state, and then asks whether that
+        combination was enough to convert a share of a coalition government into control of the country.
+      </p>
+      <p>
+        <strong>Coercion</strong> — police, security services, and the local officials who decide whether a rally
+        is permitted or a rival's organizer is detained. <strong>Legal instruments</strong> — prosecutors and
+        courts, which turn detentions into convictions and convictions into banned parties.
+        <strong>Patronage</strong> — land, jobs, ration cards, licenses and contracts, which buy loyalty at scale
+        in a country that is hungry. <strong>Information</strong> — newsprint, radio, censorship and press
+        licensing, which decide whose account of events people hear.
+      </p>
+      <p>
+        The rule the tool applies: coercion is <em>necessary</em>, and on its own it is not sufficient. You need
+        it above the threshold, plus at least two of the other three. A cabinet that clears all four is the
+        cleanest version of the strategy, and the tool marks it as such.
+      </p>
+      <p>
+        The thresholds and the point values are a stylization of an argument historians make, not a measurement
+        of anything. They encode a claim — that ministries differ in how much state capacity and coercive
+        leverage they hand over, and that this mattered more than which ministries set policy or carried
+        prestige. You should be able to see the claim in the numbers and argue with it. The section below says
+        where the numbers are soft.
+      </p>
+    </details>
+
+    <details>
+      <summary>Where these numbers come from</summary>
+      <div class="data-note">
+        <p>
+          What each ministry is described as administering is accurate for the period, and the cabinets in the
+          historical notes are real. The list itself is not: it is a composite, standardized across both
+          scenarios, rather than a transcription of either cabinet. The costs, the point values and the
+          thresholds are invented — a way of making an argument playable, not data.
+        </p>
+        <ul>
+          <li>
+            <strong>Bargaining capital.</strong> The budget stands for everything that gave a party weight in the
+            room: its vote share, the presence or absence of Soviet occupation forces, its record in the wartime
+            resistance, and the willingness of its patrons to apply pressure. Compressing all of that into one
+            number is a large simplification. It makes the negotiation look more like a market and less like the
+            coercion it often was, which if anything makes your task in this tool harder than it was in Bucharest
+            or Budapest.
+          </li>
+          <li>
+            <strong>Prices.</strong> A post costs roughly what other parties would fight to keep, which is why
+            foreign affairs and finance are expensive and posts and telegraphs is cheap. The interior ministry is
+            priced as contested but obtainable. In Hungary it was obtainable only because the Soviet-chaired
+            Allied Control Commission insisted on it; a model in which you can simply buy it understates how much
+            that outside pressure was doing.
+          </li>
+          <li>
+            <strong>Deputy ministers.</strong> Placing a deputy is worth 40 percent of the ministry, capped at
+            three placements. That figure is a guess standing in for a real and documented tactic: putting
+            reliable people one level below a minister from another party. Its real value varied enormously with
+            the person and the ministry.
+          </li>
+          <li>
+            <strong>Defense.</strong> The armed forces score low on coercion here. In these years the armies were
+            small, supervised by Allied control machinery, and officered largely by men from the old regimes,
+            which is why the political police mattered more than the army. Where a Communist party did later get
+            the army, it usually got it after it already had the police.
+          </li>
+          <li>
+            <strong>The premiership.</strong> Where it can be taken at all — Czechoslovakia — it scores zero on
+            every measure, and in Hungary it is not on offer, so you never get to test it. That zero is the
+            single most convenient assumption in the tool: it is the assumption that most strengthens the
+            argument the tool is making, and you should treat it with some skepticism. Setting the cabinet's
+            agenda, and controlling who fills a ministry that falls vacant, are ways of shaping what the state
+            does, and in Prague in February 1948 they mattered. The Czechoslovak history note goes into this.
+          </li>
+          <li>
+            <strong>Contested cases.</strong> Whether Czechoslovakia in 1946 belongs in the same story at all is
+            genuinely disputed: the party there won a free election with 38 percent and had a real popular base,
+            so an account resting only on ministry-grabbing is incomplete. The tool includes it anyway, because
+            the pattern of which ministries the party held is the part that looks the same everywhere, and
+            because a case that fits less well is the more useful test of the argument.
+          </li>
+          <li>
+            <strong>Cabinet composition.</strong> The list of posts is a composite of the ministries these
+            cabinets typically contained, standardized across both scenarios so the comparison works. It is not
+            a transcription of either cabinet. Real ones differed in their exact departments, split and merged
+            them over time, and had ministers without portfolio and further deputy premierships beyond the one
+            shown here. The list is ordered by conventional precedence, which is a real convention and not a
+            ranking by importance — noticing the gap between the two is most of the point of the exercise.
+          </li>
+          <li>
+            <strong>The information ministry.</strong> Both countries had one, and in both it is priced cheaply
+            here, which is a modeling choice rather than a fact: these were not departments other parties fought
+            over. In Hungary the ministry was held by the Smallholders throughout, so a student who takes it
+            outright is doing something the Communists did not manage. What they did instead was place their own
+            political state secretary inside it, which the tool represents as a deputy placement.
+          </li>
+          <li>
+            <strong>What the model has no term for.</strong> The budget stands for the weight a party brought
+            into the room, but once the cabinet is settled the tool scores only what those posts give you.
+            Force applied afterward, from outside the cabinet, is not in the model at all. This matters most in
+            Hungary. Build the cabinet the Communists actually took — interior, the deputy premiership,
+            transport, social welfare, and their own man one level below the information minister — and it does
+            not reach the standard the tool sets, because two of the four kinds of leverage stay thin: the party
+            held no part of the courts, and held the press only through somebody else's ministry. That is not an
+            error in the arithmetic. It is what the cabinet list gave them, and the rest came from somewhere the
+            model does not look.
+          </li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary>Coalition bargaining in political science</summary>
+      <p>
+        Political science models of coalition bargaining usually treat ministries as valuable because of the policy they
+        control. On that view a party's ideal portfolio is the set of ministries closest to the issues it cares
+        about, and the prestigious departments — foreign affairs, finance, defense — are prizes worth paying for.
+        Most of the empirical literature on who gets what in coalition cabinets is built on some version of this
+        assumption.
+      </p>
+      <p>
+        This case points at a different conception of what a portfolio is worth. Some ministries are valuable not
+        because they set policy but because they hand over a piece of the state: staff, files, licenses,
+        appointments, the power to permit and to prohibit. A party that holds those can change the rules of the
+        game it is playing rather than just the outcome of one round. That distinction — between portfolios that
+        deliver policy and portfolios that deliver capacity, patronage, or agenda control — is now a standard
+        move in the coalition literature, and you will meet it again when the course reaches government formation
+        and portfolio allocation.
+      </p>
+      <p>
+        The other lesson is about inference. If you knew only the published cabinet lists from 1945, and you
+        scored them the conventional way, you would have concluded that the Communist parties came out of these
+        negotiations badly. They did not have the top jobs. Reading those lists correctly requires a theory of
+        what the jobs were for.
+      </p>
+    </details>
+  </div>
+
+  <div class="sr-only" role="status" aria-live="polite" id="liveRegion"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var DEPUTY_FACTOR = 0.4;
+  var DEPUTY_CAP = 3;
+
+  var TRACKS = [
+    { key: "coercion", name: "Coercion", threshold: 55,
+      why: "Police, security services and the local officials who decide who is detained and whose meeting is permitted." },
+    { key: "legal", name: "Legal instruments", threshold: 40,
+      why: "Prosecutors and courts — what turns an arrest into a conviction and a rival party into an illegal organization." },
+    { key: "patronage", name: "Patronage", threshold: 40,
+      why: "Land, jobs, ration cards, licenses and contracts, in countries where these were scarce and people were hungry." },
+    { key: "information", name: "Information", threshold: 40,
+      why: "Newsprint, radio, censorship and press licensing — whose account of events reaches people." }
+  ];
+
+  /* Base slate of posts. Scenario-specific posts are spliced in at the top. */
+  var BASE_POSTS = [
+    { key: "foreign", name: "Foreign affairs", cost: 4,
+      blurb: "Diplomatic representation, the peace treaty negotiations, embassies and consulates abroad.",
+      v: {},
+      nil: "The most visible chair in the cabinet, and the one your rivals wanted most. It gave you standing, a seat at the peace conference and a photograph in every newspaper. None of that helps you replace a county police chief." },
+    { key: "finance", name: "Finance", cost: 4,
+      blurb: "The budget, taxation, the currency, and the stabilization program after wartime inflation.",
+      v: { patronage: 10 },
+      nil: "A powerful ministry in normal times. In these years it mostly meant presiding over inflation, reparations payments and other people's spending decisions." },
+    { key: "defense", name: "Defense", cost: 4,
+      blurb: "The armed forces — small, supervised by Allied control machinery, and officered largely by men who served the previous regime.",
+      v: { coercion: 15 },
+      nil: "Less than it sounds. The army was capped by the armistice terms, watched by the occupying powers, and full of officers who were not yours. The police were smaller, less glamorous and far more useful." },
+    { key: "interior", name: "Interior", cost: 4,
+      blurb: "Police and gendarmerie, internal security, county and municipal administration, passports and residence permits, and the machinery that administers elections.",
+      v: { coercion: 60, legal: 15, patronage: 10, information: 5 } },
+    { key: "justice", name: "Justice", cost: 3,
+      blurb: "Prosecutors, judicial appointments, the courts, and the people's tribunals trying wartime collaboration.",
+      v: { legal: 60, coercion: 15 } },
+    { key: "agriculture", name: "Agriculture and land reform", cost: 3,
+      blurb: "Confiscation of large estates and redistribution of that land to peasants, village by village, with the paperwork that goes with it.",
+      v: { patronage: 45 } },
+    { key: "industry", name: "Industry", cost: 3,
+      blurb: "Nationalized and sequestered enterprises, appointments to their management, and reconstruction contracts.",
+      v: { patronage: 30 } },
+    { key: "education", name: "Education and culture", cost: 2,
+      blurb: "Schools and universities, curriculum, teacher appointments, and the cultural associations.",
+      v: { information: 20 } },
+    { key: "supply", name: "Public supply", cost: 2,
+      blurb: "Rationing and ration cards, import licenses, and the allocation of scarce food, fuel and consumer goods.",
+      v: { patronage: 30 } },
+    { key: "welfare", name: "Social welfare", cost: 2,
+      blurb: "Pensions, relief for refugees and the war-damaged, and the social insurance funds with their staff and buildings.",
+      v: { patronage: 20 } },
+    { key: "information", name: "Information", cost: 2,
+      blurb: "Radio, film, censorship, and the licensing of newspapers together with their allocation of newsprint.",
+      v: { information: 65 } },
+    { key: "reconstruction", name: "Reconstruction and public works", cost: 2,
+      blurb: "Rebuilding contracts and the allocation of labor for clearance and repair.",
+      v: { patronage: 15 } },
+    { key: "transport", name: "Transport", cost: 1,
+      blurb: "Railways and river shipping, and the large unionized workforce that runs them.",
+      v: { patronage: 10, coercion: 5 } },
+    { key: "posts", name: "Posts and telegraphs", cost: 1,
+      blurb: "Mail, telephone and telegraph lines, and the radio transmitters themselves.",
+      v: { information: 15 } }
+  ];
+
+  var SCENARIOS = [
+    {
+      id: "hu",
+      label: "Start here: Hungary, 1945",
+      short: "Hungary, 1945",
+      meta: ["Budapest", "November 1945", "your party: 70 of 409 seats"],
+      title: "The cabinet is being divided and you came a distant second",
+      brief: [
+        "The count is in from the first genuinely free election in the country's history, and it is bad for you. The Smallholders' Party has an outright majority: 245 of the 409 seats in the National Assembly, where 205 is a majority. You have 70 seats, 17 percent of the chamber — second place, one seat ahead of the Social Democrats and a very long way behind the Smallholders.",
+        "You are in the cabinet anyway. The Allied Control Commission, chaired by a Soviet marshal, has made it clear there will be a broad coalition whatever the election said, and that your party will be in it. That gives you weight in the room that your seat share does not justify. It does not give you unlimited influence: the Smallholders will not be stripped of their dominant role, and the Social Democrats and the National Peasants expect posts too.",
+        "Spend your capital. You will not get many ministries, so the question is which ones."
+      ],
+      rival: "the Smallholders",
+      capital: 12,
+      posts: [
+        { key: "pm", name: "Prime minister", cost: 0,
+          blurb: "Chairs the cabinet, sets its agenda, and represents the government to the head of state and the public. No department of his own.",
+          v: {}, noDeputy: true,
+          unavailable: "Not on offer. The Smallholders won an outright majority and the premiership went with it — two Smallholder politicians in succession. No party with 70 of 409 seats was going to be offered it, and asking would have cost you the goodwill you need for everything below." },
+        { key: "deputypm", name: "Deputy prime minister", cost: 3,
+          blurb: "Deputizes for the prime minister, chairs cabinet in his absence, and speaks for the government. No department, no staff of your own.",
+          v: {}, noDeputy: true,
+          nil: "A seat at the head of the table and a title in every communique. It gave your leader precedence and visibility. It did not give him a single official who reported to him." }
+      ],
+      history: [
+        "The four main parties divided the portfolios on 9 November. Their first agreement gave the interior ministry to the Smallholders and the finance ministry to the Communists — which is to say, the deal on the table was the trade this tool asks you to think about, and it was struck the wrong way round. Moscow rejected it, and instructed the Soviet marshal who chaired the Allied Control Commission in Budapest to reopen the talks and secure interior for the Communists, together with a deputy premiership.",
+        "The Smallholders yielded, and interior went to the Communists. The party leader, Mátyás Rákosi, took the deputy premiership. The party's remaining posts were transport and social welfare. The premiership, foreign affairs and finance all went elsewhere, and on any conventional reading of the cabinet list the party holding 70 of 409 seats had come away with very little.",
+        "One more arrangement is worth noticing, because it is the other move this tool asks you to consider. A new information ministry was set up after the election to handle the press and the radio, and every minister who ran it until late 1947 was a Smallholder. The Communists took the job directly beneath him: from November 1945 until May 1947 the ministry's political state secretary, Gyula Kállai, was theirs. Another party's minister, your own deputy, in a department you never formally held.",
+        "Control of interior meant control of the police, the political police, local officials, investigations and surveillance. Rákosi later described what followed as salami tactics — cutting the opposition away slice by slice. The Smallholders were not banned; they were split. Their right wing was denounced as reactionary and forced out, their general secretary Béla Kovács was arrested by the Soviet authorities in February 1947 on conspiracy charges, and the remaining leadership was intimidated into cooperation. What was left merged or collapsed.",
+        "By 1949 there was one list and one party. The ministry that made the difference was never the most important post in the cabinet by any conventional measure.",
+        "The pattern was not confined to Hungary. In the Romanian government imposed after a Soviet ultimatum in March 1945, the Communists took both interior and justice, while foreign affairs went to a former prime minister from outside the party. In Bulgaria a Communist held interior continuously from 1944. In both countries the party concentrated on the same departments and, where it did not hold a ministry outright, placed reliable people one level below the minister — a tactic American diplomats were already describing in their dispatches at the time.",
+        "One last thing, if you built the cabinet the Communists actually took. In this tool it does not reach the standard the tool sets, and that is worth sitting with rather than treating as a glitch. Two of the four kinds of leverage stay thin, because the party held no part of the courts and held the press only through somebody else's ministry. What closed that gap is the thing this model has no term for. The Allied Control Commission and the forces behind it were still in the country, and the arrest that broke the Smallholders' leadership was carried out by the Soviet authorities rather than by any ministry in this cabinet. The tool scores what a cabinet gives you. Here, something outside the cabinet finished the work — which is the part of the story a model built out of ministries will always miss."
+      ]
+    },
+    {
+      id: "cz",
+      label: "Then try: Czechoslovakia, 1946",
+      short: "Czechoslovakia, 1946",
+      meta: ["Prague", "May 1946", "your party: 114 of 300 seats"],
+      title: "You are the largest party. Now divide the cabinet",
+      brief: [
+        "This is the exception in the region: a genuinely free election, and it left you the largest party in the country. Your party took 114 of the 300 seats, 38 percent of the chamber and the largest bloc by a distance — the next party down has 55 — and it did so without a Soviet occupation force standing behind you. The Red Army left in 1945. Your support is real, built on the wartime resistance, the expulsion of the Germans, and a widespread belief that the pre-war republic failed in 1938 and the western powers failed with it.",
+        "Being the largest party puts you first in line to form the government, and it does not put you in charge of it. At 114 seats against the 151 that make a majority, you need partners — the National Socialists, the People's Party, the Slovak Democrats and the Social Democrats — and they are serious parties with their own bases, in a country with a working parliamentary tradition. You have more weight in this negotiation than any of them. You do not have enough to dictate it.",
+        "You could take the offices that match your standing as the largest party. Or you could take something else."
+      ],
+      rival: "the National Socialists",
+      capital: 14,
+      posts: [
+        { key: "pm", name: "Prime minister", cost: 5,
+          blurb: "Chairs the cabinet, sets its agenda, and represents the government to the president and the public. No department of his own.",
+          v: {}, noDeputy: true,
+          nil: "The top job, and within your reach as the largest party. It gave you the agenda and the public standing of a governing party. What it did not give you was anyone who took orders: every ministry still answered to its own minister." }
+      ],
+      history: [
+        "The Communists took the premiership, and alongside it three departments: interior, information, and agriculture, which was running the redistribution of land in the borderlands the Germans had been expelled from. Foreign affairs went to a minister who belonged to no party at all. Justice went to the National Socialists, the largest of the rival parties. Measured by prestige, the party holding well over a third of the seats had left one of the two most senior departments to someone outside every party and the other to its main opponent.",
+        "Interior mattered for the same reason it mattered everywhere else. Through 1947 the Communist interior minister, Václav Nosek, steadily filled the security apparatus with party members, and his opponents in cabinet steadily objected. In February 1948 the dispute became a crisis: a majority of the cabinet voted to require him to reinstate eight senior police officers he had removed, and he refused.",
+        "On 21 February twelve of the twenty-seven ministers resigned in protest, expecting that the government would fall and an election would follow. It was a serious miscalculation. Twelve was not enough to bring the cabinet down; the president at first refused to accept the resignations, and while the question hung, Communist action committees, the police and a newly formed armed workers' militia took control of the streets, the ministries and the newspaper offices. On 25 February, fearing civil war and Soviet intervention, he accepted the resignations. There was no coup in the sense of a battle; there was a government that already held the instruments and an opposition that had assumed the rules still applied.",
+        "It is worth discussing what makes this case awkward. The party had genuine mass support here, so an account that explains 1948 purely by ministry-grabbing is incomplete. But the ministries the party chose to hold look almost identical to those chosen by parties with a fifth of its support, in countries where the Red Army had never left. That similarity is what needs explaining.",
+        "If you build that actual cabinet in this tool, it does not come out clean. The premiership is expensive and scores nothing, and what the party went without was justice, which stayed with the National Socialists. On that much the tool is defensible: February 1948 did not run through the courts. It ran through the police, the action committees and the armed workers' militia, and the legal apparatus caught up afterwards.",
+        "The value of the premiership is where this tool is likely using an incorrect assumption, and it is worth seeing why. When the twelve ministers resigned they expected the government to fall and an election to follow. It did not fall, and the ministries they had left were simply filled again — by a cabinet whose agenda, and whose recommendations to the president about those vacancies, were in Communist hands. Deciding what the government takes up and when, and who replaces a minister who walks out, is real leverage over the state, and this model scores it at nothing. A tool disagreeing with the record does not settle which one is wrong. Here it is probably the tool."
+      ]
+    }
+  ];
+
+  var current = 0;
+  var role = {};      /* key -> "minister" | "deputy" */
+  var mode = "choose";
+
+  var tabsEl = document.getElementById("tabs");
+  var listEl = document.getElementById("postList");
+  var stripEl = document.getElementById("strip");
+  var liveEl = document.getElementById("liveRegion");
+  var chooseView = document.getElementById("chooseView");
+  var revealView = document.getElementById("revealView");
+  /* Both views swap out wholesale, taking the control that was just used with them.
+     These headings are the named successors focus lands on. */
+  var chooseTitleEl = document.getElementById("chooseTitle");
+  var revealTitleEl = document.getElementById("revealTitle");
+
+  function sc() { return SCENARIOS[current]; }
+
+  /* Scenario posts first, then the standard slate, minus anything this scenario
+     did not have as a separate department, plus any scenario-specific rewrites. */
+  function posts() {
+    var s = sc();
+    var out = s.posts.slice();
+    BASE_POSTS.forEach(function (p) {
+      if (s.omit && s.omit.indexOf(p.key) !== -1) return;
+      var ov = s.override && s.override[p.key];
+      if (!ov) { out.push(p); return; }
+      var merged = {};
+      Object.keys(p).forEach(function (k) { merged[k] = p[k]; });
+      Object.keys(ov).forEach(function (k) { merged[k] = ov[k]; });
+      out.push(merged);
+    });
+    return out;
+  }
+  function postByKey(k) {
+    var all = posts(), i;
+    for (i = 0; i < all.length; i++) { if (all[i].key === k) return all[i]; }
+    return null;
+  }
+
+  function spent() {
+    var t = 0;
+    Object.keys(role).forEach(function (k) {
+      var p = postByKey(k);
+      if (!p) return;
+      t += (role[k] === "minister") ? p.cost : 1;
+    });
+    return t;
+  }
+  function remaining() { return sc().capital - spent(); }
+  function deputyCount() {
+    return Object.keys(role).filter(function (k) { return role[k] === "deputy"; }).length;
+  }
+
+  /* ---------- tabs ---------- */
+
+  function buildTabs() {
+    SCENARIOS.forEach(function (s, i) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("role", "tab");
+      b.id = "tab-" + s.id;
+      b.textContent = s.label;
+      b.setAttribute("aria-selected", i === current ? "true" : "false");
+      b.tabIndex = i === current ? 0 : -1;
+      b.addEventListener("click", function () { selectScenario(i, true); });
+      b.addEventListener("keydown", function (ev) {
+        var d = 0;
+        if (ev.key === "ArrowRight") d = 1;
+        else if (ev.key === "ArrowLeft") d = -1;
+        else if (ev.key === "Home") d = -SCENARIOS.length;
+        else if (ev.key === "End") d = SCENARIOS.length;
+        else return;
+        ev.preventDefault();
+        var n = Math.min(SCENARIOS.length - 1, Math.max(0, i + d));
+        selectScenario(n, true);
+        tabsEl.children[n].focus();
+      });
+      tabsEl.appendChild(b);
+    });
+  }
+
+  function selectScenario(i, announce) {
+    current = i;
+    role = {};
+    mode = "choose";
+    Array.prototype.forEach.call(tabsEl.children, function (b, n) {
+      b.setAttribute("aria-selected", n === i ? "true" : "false");
+      b.tabIndex = n === i ? 0 : -1;
+    });
+    buildBriefing();
+    buildList();
+    buildHistory();
+    render();
+    if (announce) {
+      say(sc().short + " selected. Bargaining capital " + sc().capital + " points. Selection cleared.");
+    }
+  }
+
+  /* ---------- briefing ---------- */
+
+  function buildBriefing() {
+    var meta = document.getElementById("briefMeta");
+    meta.innerHTML = "";
+    sc().meta.forEach(function (m) {
+      var s = document.createElement("span");
+      s.textContent = m;
+      meta.appendChild(s);
+    });
+    document.getElementById("briefTitle").textContent = sc().title;
+    var body = document.getElementById("briefBody");
+    body.innerHTML = "";
+    sc().brief.forEach(function (t) {
+      var p = document.createElement("p");
+      p.textContent = t;
+      body.appendChild(p);
+    });
+  }
+
+  /* ---------- post list ---------- */
+
+  function buildList() {
+    listEl.innerHTML = "";
+    posts().forEach(function (p) {
+      var li = document.createElement("li");
+      li.className = "post";
+      li.id = "post-" + p.key;
+
+      var head = document.createElement("div");
+      head.className = "post-head";
+      var nm = document.createElement("span");
+      nm.className = "post-name";
+      nm.textContent = p.name;
+      head.appendChild(nm);
+
+      var bl = document.createElement("p");
+      bl.className = "post-blurb";
+      bl.textContent = p.blurb;
+
+      var status = document.createElement("span");
+      status.className = "post-status";
+      status.id = "status-" + p.key;
+      status.hidden = true;
+
+      li.appendChild(head);
+      li.appendChild(bl);
+
+      if (p.unavailable) {
+        li.className = "post unavailable";
+        status.className = "post-status blocked";
+        status.hidden = false;
+        status.textContent = "not on offer";
+        var note = document.createElement("p");
+        note.className = "post-blocked";
+        note.textContent = p.unavailable;
+        li.appendChild(status);
+        li.appendChild(note);
+        listEl.appendChild(li);
+        return;
+      }
+
+      var acts = document.createElement("div");
+      acts.className = "post-actions";
+
+      var takeBtn = document.createElement("button");
+      takeBtn.type = "button";
+      takeBtn.className = "act";
+      takeBtn.id = "take-" + p.key;
+      takeBtn.appendChild(document.createTextNode("Take the ministry "));
+      takeBtn.appendChild(costTag(p.cost));
+      takeBtn.addEventListener("click", function () { choose(p.key, "minister"); });
+      acts.appendChild(takeBtn);
+
+      if (!p.noDeputy) {
+        var depBtn = document.createElement("button");
+        depBtn.type = "button";
+        depBtn.className = "act";
+        depBtn.id = "dep-" + p.key;
+        depBtn.appendChild(document.createTextNode("Place a deputy "));
+        depBtn.appendChild(costTag(1));
+        depBtn.addEventListener("click", function () { choose(p.key, "deputy"); });
+        acts.appendChild(depBtn);
+      }
+
+      li.appendChild(status);
+      li.appendChild(acts);
+      listEl.appendChild(li);
+    });
+  }
+
+  function costTag(n) {
+    var c = document.createElement("span");
+    c.className = "act-cost";
+    c.textContent = n + (n === 1 ? " pt" : " pts");
+    return c;
+  }
+
+  function choose(key, want) {
+    if (mode !== "choose") return;
+    var p = postByKey(key);
+    if (role[key] === want) {
+      delete role[key];
+      render();
+      say(p.name + " released. " + capitalLine());
+      return;
+    }
+    var cost = (want === "minister") ? p.cost : 1;
+    var refund = role[key] ? ((role[key] === "minister") ? p.cost : 1) : 0;
+    if (cost - refund > remaining()) {
+      say("You cannot afford " + p.name + " as " + (want === "minister" ? "a ministry" : "a deputy placement") +
+          ". It costs " + cost + " and you have " + remaining() + " points left.");
+      return;
+    }
+    if (want === "deputy" && role[key] !== "deputy" && deputyCount() >= DEPUTY_CAP) {
+      say("You have already placed the maximum of " + DEPUTY_CAP + " deputies.");
+      return;
+    }
+    role[key] = want;
+    render();
+    say(p.name + (want === "minister" ? " taken as a ministry. " : " — deputy placed. ") + capitalLine());
+  }
+
+  function capitalLine() {
+    return remaining() + " of " + sc().capital + " points left.";
+  }
+
+  /* ---------- scoring ---------- */
+
+  function scores() {
+    var out = {};
+    TRACKS.forEach(function (t) { out[t.key] = 0; });
+    Object.keys(role).forEach(function (k) {
+      var p = postByKey(k);
+      if (!p) return;
+      var f = (role[k] === "minister") ? 1 : DEPUTY_FACTOR;
+      Object.keys(p.v).forEach(function (tk) {
+        out[tk] += p.v[tk] * f;
+      });
+    });
+    TRACKS.forEach(function (t) { out[t.key] = Math.min(100, Math.round(out[t.key])); });
+    return out;
+  }
+
+  function verdict(s) {
+    var coercion = s.coercion >= 55;
+    var supports = 0;
+    ["legal", "patronage", "information"].forEach(function (k) {
+      var t = TRACKS.filter(function (x) { return x.key === k; })[0];
+      if (s[k] >= t.threshold) supports++;
+    });
+    if (!coercion && supports >= 2) return "blocked";
+    if (!coercion) return "sidelined";
+    if (supports === 3) return "complete";
+    if (supports === 2) return "slow";
+    return "crude";
+  }
+
+  /* ---------- rendering ---------- */
+
+  function render() {
+    var s = spent(), rem = remaining();
+    /* While the cabinet is tabled the post controls are still on screen and still
+       focusable, but choose() ignores them. Say so rather than letting them
+       advertise themselves as live. */
+    var tabled = (mode !== "choose");
+
+    /* posts */
+    posts().forEach(function (p) {
+      if (p.unavailable) return;
+      var li = document.getElementById("post-" + p.key);
+      var r = role[p.key];
+      li.className = "post" + (r === "minister" ? " held" : r === "deputy" ? " deputized" : "");
+
+      var status = document.getElementById("status-" + p.key);
+      if (r) {
+        status.hidden = false;
+        status.textContent = r === "minister" ? "yours — minister" : "yours — deputy only";
+      } else {
+        status.hidden = true;
+      }
+
+      var take = document.getElementById("take-" + p.key);
+      var afford = (p.cost - (r === "minister" ? p.cost : r === "deputy" ? 1 : 0)) <= rem;
+      take.setAttribute("aria-pressed", r === "minister" ? "true" : "false");
+      take.setAttribute("aria-disabled", tabled || (!afford && r !== "minister") ? "true" : "false");
+      take.setAttribute("aria-label",
+        p.name + ", costs " + p.cost + " points. " +
+        (tabled ? (r === "minister" ? "You hold this ministry. " : "") +
+          "The cabinet is tabled; use Negotiate again to change your selection."
+        : r === "minister" ? "You hold this ministry. Activate to release it."
+          : afford ? "Take this ministry." : "You cannot afford this; " + rem + " points left."));
+
+      var dep = document.getElementById("dep-" + p.key);
+      if (dep) {
+        var depOk = (1 - (r === "minister" ? p.cost : r === "deputy" ? 1 : 0)) <= rem &&
+                    (r === "deputy" || deputyCount() < DEPUTY_CAP);
+        dep.setAttribute("aria-pressed", r === "deputy" ? "true" : "false");
+        dep.setAttribute("aria-disabled", tabled || (!depOk && r !== "deputy") ? "true" : "false");
+        dep.setAttribute("aria-label",
+          "Place a deputy in " + p.name + ", costs 1 point, worth part of the ministry. " +
+          (tabled ? (r === "deputy" ? "Your deputy is placed. " : "") +
+            "The cabinet is tabled; use Negotiate again to change your selection."
+          : r === "deputy" ? "Your deputy is placed. Activate to withdraw."
+            : depOk ? "Place a deputy." : "Not available: " + rem + " points left, " +
+              deputyCount() + " of " + DEPUTY_CAP + " deputies placed."));
+      }
+    });
+
+    /* cabinet table strip */
+    stripEl.innerHTML = "";
+    posts().forEach(function (p) {
+      var d = document.createElement("div");
+      var r = role[p.key];
+      d.className = "seat" + (r === "minister" ? " is-mine" : r === "deputy" ? " is-deputy" : "");
+      stripEl.appendChild(d);
+    });
+    var mine = Object.keys(role).filter(function (k) { return role[k] === "minister"; }).length;
+    document.getElementById("stripCaption").textContent =
+      "The cabinet table: " + posts().length + " posts, of which you are asking for " + mine +
+      (mine === 1 ? " ministry" : " ministries") +
+      (deputyCount() ? " and " + deputyCount() + (deputyCount() === 1 ? " deputy placement" : " deputy placements") : "") +
+      ". Everything else stays with another party.";
+
+    /* capital */
+    document.getElementById("capitalFigure").textContent = rem;
+    document.getElementById("capitalSub").textContent =
+      "points left of " + sc().capital + ". Spent: " + s + ". Deputies placed: " +
+      deputyCount() + " of " + DEPUTY_CAP + ".";
+
+    var pips = "";
+    var i;
+    for (i = 0; i < sc().capital; i++) {
+      pips += (i < s) ? "<span class=\"spent\">\u25CF</span>" : "\u25CB";
+    }
+    document.getElementById("pips").innerHTML = pips;
+
+    /* chosen list */
+    var cl = document.getElementById("chosenList");
+    cl.innerHTML = "";
+    var keys = Object.keys(role);
+    if (!keys.length) {
+      var li0 = document.createElement("li");
+      li0.className = "empty";
+      li0.textContent = "Nothing claimed yet. Every post on the list is currently going to somebody else.";
+      cl.appendChild(li0);
+    } else {
+      posts().forEach(function (p) {
+        if (!role[p.key]) return;
+        var li = document.createElement("li");
+        var n = document.createElement("span");
+        n.textContent = p.name;
+        var rl = document.createElement("span");
+        rl.className = "role";
+        rl.textContent = role[p.key] === "minister" ? "minister" : "deputy";
+        li.appendChild(n);
+        li.appendChild(rl);
+        cl.appendChild(li);
+      });
+    }
+
+    /* commit button */
+    var commit = document.getElementById("commitBtn");
+    var ok = keys.length > 0;
+    commit.setAttribute("aria-disabled", ok ? "false" : "true");
+    document.getElementById("commitNote").textContent = ok
+      ? "You will see how the next three years go, and you can come back and try a different cabinet."
+      : "Claim at least one post first.";
+  }
+
+  /* ---------- reveal ---------- */
+
+  function narrative(s, v) {
+    var rival = sc().rival;
+    var co = s.coercion >= 55, lg = s.legal >= 40, pa = s.patronage >= 40, inf = s.information >= 40;
+    var phases = [];
+
+    var p1 = [];
+    p1.push(co
+      ? "Chiefs of police and county officials are replaced one desk at a time. The men who take those chairs owe their jobs to your party, and their reports reach you before they reach the cabinet."
+      : "The police answer to somebody else. When your organizers are detained after a rally in the provinces, you raise it in cabinet and you are outvoted.");
+    p1.push(pa
+      ? "Land, jobs and ration cards move through offices you run. In the villages, people work out fairly quickly which party's local branch to petition, and how much faster the paperwork moves when they do."
+      : "You have the better argument. " + cap(rival) + " have the land, the ration cards and the jobs.");
+    p1.push(inf
+      ? "Newsprint is rationed and your ministry writes the quotas. " + cap(rival) + "' main daily is thinner every month, the radio bulletins are yours, and a paper that prints the wrong thing finds its license under review."
+      : (s.information >= 20
+        ? "You license the newspapers and ration their newsprint, so the printed opposition is thin and careful about what it prints. Broadcasting is another matter: the transmitters are not yours, and the account of events that people hear on the radio at eight in the evening is somebody else's."
+        : "The opposition press prints what it likes. Your version of events reaches the party faithful and not many others."));
+    phases.push(p1);
+
+    var p2 = [];
+    if (co && lg) {
+      p2.push("Your police find a conspiracy and your prosecutors indict it. The evidence is thin. The arrests are not, and " + cap(rival) + "' general secretary is among them.");
+    } else if (co && !lg) {
+      p2.push("Your police make the arrests and prosecutors who answer to " + rival + " keep releasing the detainees. It can still be done. It is slower, and it is loud enough that people notice.");
+    } else if (!co && lg) {
+      p2.push("You can bring charges. The police who would have to act on them are not yours, and the files you would need are not either.");
+    } else {
+      p2.push("Your opponents govern and you criticize them, which is what opposition parties do, except that you are supposed to be in the government.");
+    }
+    if (co && (pa || inf)) {
+      p2.push(cap(rival) + " begin to come apart from the inside. Their left wing decides the future lies with you; those who disagree are named in the press as reactionaries, investigated one at a time, and quietly dropped from the party's lists.");
+    } else {
+      p2.push("Your coalition partners hold together. They disagree with each other about a great many things, but not about you.");
+    }
+    phases.push(p2);
+
+    var p3 = [];
+    if (v === "complete") {
+      p3.push("By the end there is nothing left to dismantle. The other parties have been split, prosecuted, absorbed or dissolved in some combination, and what survives of them sits on a single list at the next election. You did not need to overthrow the government. You were the government, and you held the parts of it that decide who is allowed to be anything else.");
+    } else if (v === "slow") {
+      p3.push("You get there, later and more crudely than you would have liked. There is a gap in your machinery, and it costs you: a trial that collapses, or a newspaper that keeps printing, or a region where your party still has nothing to hand out. The end is the same and the road is rougher, and more people abroad are watching by the time you arrive.");
+    } else if (v === "crude") {
+      p3.push("You have a political police and not much else. You can arrest people, and you do, but you cannot convict them cleanly, feed the districts that support you, or control what the country reads about any of it. Repression without the rest of the apparatus produces martyrs and a government nobody believes. Your patrons in Moscow are unimpressed.");
+    } else if (v === "blocked") {
+      p3.push("You have built something real — patronage, or a press, or a legal apparatus — and no way to use it against anyone. Your rivals can have your organizers detained and you cannot do the same to theirs. In a competitive system this would be a strong position. This is not going to stay a competitive system, and the parties that end up running it will be the ones holding the police.");
+    } else {
+      p3.push("Three years on you have offices, letterhead, and a respectable share of a government you do not control. You are the largest opposition-in-office in the country, which is a phrase with no future in it. When the confrontation comes, it will be settled by people holding instruments you declined to ask for.");
+    }
+    p3.push("That is what this tool's rule says follows from the cabinet you built. It is a simplification, and it is not what happened — the record for this country is below, and it is worth reading against your own choices.");
+    phases.push(p3);
+
+    return phases;
+  }
+
+  function cap(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
+
+  function showReveal() {
+    var s = scores();
+    var v = verdict(s);
+
+    mode = "reveal";
+    chooseView.hidden = true;
+    revealView.hidden = false;
+    render();
+
+    /* years */
+    var yearsEl = document.getElementById("years");
+    yearsEl.innerHTML = "";
+    var labels = ["The first year", "The second year", "The reckoning"];
+    var phases = narrative(s, v);
+    var delay = 0;
+    phases.forEach(function (para, i) {
+      var block = document.createElement("div");
+      block.className = "year-block";
+      var lab = document.createElement("div");
+      lab.className = "year-label fade";
+      lab.textContent = labels[i];
+      lab.style.transitionDelay = delay + "ms";
+      block.appendChild(lab);
+      delay += 250;
+      para.forEach(function (t) {
+        var p = document.createElement("p");
+        p.className = "fade";
+        p.textContent = t;
+        p.style.transitionDelay = delay + "ms";
+        block.appendChild(p);
+        delay += 450;
+      });
+      yearsEl.appendChild(block);
+    });
+    requestAnimationFrame(function () {
+      Array.prototype.forEach.call(yearsEl.querySelectorAll(".fade"), function (el) {
+        el.classList.add("shown");
+      });
+    });
+
+    /* result */
+    var resultEl = document.getElementById("result");
+    var heads = {
+      complete: ["This is the machine", " is-yes is-solved"],
+      slow: ["Enough, in the end", " is-yes"],
+      crude: ["Force without the rest of it", " is-no"],
+      blocked: ["Everything except the police", " is-no"],
+      sidelined: ["A respectable share of nothing", " is-no"]
+    };
+    var bodies = {
+      complete: "You hold the coercive apparatus and all three of the things that make it work: courts to legitimize what the police do, goods and land to reward the people who cooperate, and the press to explain it. This is the combination the parties in these countries actually assembled.",
+      slow: "You hold the coercive apparatus and enough supporting leverage to use it. One track is missing, which slows things down and makes them more visible, but the outcome is not really in doubt.",
+      crude: "You hold the police and little else. Coercion is necessary here and it is not sufficient: without courts, patronage or a press you can frighten your opponents without displacing them.",
+      blocked: "You built genuine leverage and left out the one thing everything else in this model rests on. Nothing you hold lets you decide who gets arrested, and the party that can decide that will eventually decide it about you.",
+      sidelined: "You are in the government and you have no grip on the state. The posts you hold are the ones that look most impressive in a cabinet list, which is a different thing from the ones that determine who governs in three years."
+    };
+    resultEl.className = "result" + heads[v][1];
+    resultEl.innerHTML = "";
+    var strong = document.createElement("strong");
+    strong.textContent = heads[v][0];
+    resultEl.appendChild(strong);
+    resultEl.appendChild(document.createTextNode(bodies[v]));
+
+    /* tracks */
+    var tEl = document.getElementById("tracks");
+    tEl.innerHTML = "";
+    TRACKS.forEach(function (t) {
+      var val = s[t.key];
+      var pass = val >= t.threshold;
+      var li = document.createElement("li");
+      li.className = pass ? "st-yes" : "st-no";
+
+      var head = document.createElement("div");
+      head.className = "track-head";
+      var ic = document.createElement("span");
+      ic.className = "track-icon";
+      ic.setAttribute("aria-hidden", "true");
+      ic.textContent = pass ? "\u2713" : "\u2717";
+      var nm = document.createElement("span");
+      nm.className = "track-name";
+      nm.textContent = t.name;
+      var wd = document.createElement("span");
+      wd.className = "track-word";
+      wd.textContent = pass ? "enough" : "short";
+      var num = document.createElement("span");
+      num.className = "track-num";
+      num.textContent = val + " / " + t.threshold + " needed";
+      head.appendChild(ic);
+      head.appendChild(nm);
+      head.appendChild(wd);
+      head.appendChild(num);
+
+      var bar = document.createElement("div");
+      bar.className = "bar";
+      bar.setAttribute("aria-hidden", "true");
+      var fill = document.createElement("div");
+      fill.className = "fill";
+      fill.style.width = Math.min(100, val) + "%";
+      var tick = document.createElement("div");
+      tick.className = "tick";
+      tick.style.left = t.threshold + "%";
+      bar.appendChild(fill);
+      bar.appendChild(tick);
+
+      var why = document.createElement("p");
+      why.className = "track-why";
+      why.textContent = t.why;
+
+      li.appendChild(head);
+      li.appendChild(bar);
+      li.appendChild(why);
+      tEl.appendChild(li);
+    });
+
+    /* ledger */
+    var lEl = document.getElementById("ledger");
+    lEl.innerHTML = "";
+    posts().forEach(function (p) {
+      if (!role[p.key]) return;
+      var f = role[p.key] === "minister" ? 1 : DEPUTY_FACTOR;
+      var li = document.createElement("li");
+      var nm = document.createElement("span");
+      nm.className = "lname";
+      nm.textContent = p.name + " ";
+      var rl = document.createElement("span");
+      rl.className = "lrole";
+      rl.textContent = role[p.key] === "minister" ? "minister" : "deputy, at 40 percent";
+      var val = document.createElement("span");
+      val.className = "lval";
+
+      var parts = [];
+      TRACKS.forEach(function (t) {
+        if (p.v[t.key]) parts.push(t.name.toLowerCase() + " +" + Math.round(p.v[t.key] * f));
+      });
+      val.textContent = parts.length ? parts.join(", ") : (p.nil || "Nothing on any of the four tracks.");
+      if (parts.length && p.nil) val.textContent += ". " + p.nil;
+
+      li.appendChild(nm);
+      li.appendChild(rl);
+      li.appendChild(val);
+      lEl.appendChild(li);
+    });
+
+    /* Points left on the table, reported without comment. */
+    var left = remaining();
+    if (left > 0) {
+      var uli = document.createElement("li");
+      var unm = document.createElement("span");
+      unm.className = "lname";
+      unm.textContent = "Unspent ";
+      var url = document.createElement("span");
+      url.className = "lrole";
+      url.textContent = left + (left === 1 ? " point" : " points") + " of " + sc().capital;
+      uli.appendChild(unm);
+      uli.appendChild(url);
+      lEl.appendChild(uli);
+    }
+
+    say("Cabinet tabled. " + heads[v][0] + ". " + bodies[v] + " Coercion " + s.coercion +
+        ", legal instruments " + s.legal + ", patronage " + s.patronage +
+        ", information " + s.information + "." +
+        (left > 0 ? " " + left + (left === 1 ? " point" : " points") + " unspent." : ""));
+
+    revealTitleEl.focus();
+  }
+
+  function backToChoosing() {
+    mode = "choose";
+    revealView.hidden = true;
+    chooseView.hidden = false;
+    render();
+    say("Back to the negotiation. Your selection is unchanged; adjust it and table it again.");
+    chooseTitleEl.focus();
+  }
+
+  /* ---------- history ---------- */
+
+  function buildHistory() {
+    var b = document.getElementById("historyBody");
+    b.innerHTML = "";
+    sc().history.forEach(function (t) {
+      var p = document.createElement("p");
+      p.textContent = t;
+      b.appendChild(p);
+    });
+  }
+
+  /* ---------- controls ---------- */
+
+  function say(msg) { liveEl.textContent = msg; }
+
+  document.getElementById("commitBtn").addEventListener("click", function () {
+    if (this.getAttribute("aria-disabled") === "true") {
+      say("Claim at least one post before tabling your demands.");
+      return;
+    }
+    showReveal();
+  });
+
+  document.getElementById("againBtn").addEventListener("click", backToChoosing);
+
+  document.getElementById("clearBtn").addEventListener("click", function () {
+    role = {};
+    render();
+    say("All claims cleared. " + capitalLine());
+  });
+
+  var themeBtn = document.getElementById("themeToggle");
+  function applyTheme(m) {
+    document.documentElement.setAttribute("data-theme", m);
+    themeBtn.textContent = m === "dark" ? "Switch to light mode" : "Switch to dark mode";
+  }
+  applyTheme(window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  themeBtn.addEventListener("click", function () {
+    applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  });
+
+  buildTabs();
+  selectScenario(0, false);
+})();
+</script>
+</body>
+</html>

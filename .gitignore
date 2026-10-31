@@ -6,5 +6,3 @@
 
 # Local-only check against exam items; must never go into a shared repository
 exam-overlap-check.js
-keyboard_check.py
-render_check.py

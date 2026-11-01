@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>From votes to seats: the Hare quota and largest remainders</title>
+<style>
+  :root {
+    --bg: #FAFAFA;
+    --panel: #FFFFFF;
+    --border: #D0D0D0;
+    --text: #111111;
+    --text-2: #555555;
+    --hint: #999999;
+    --deemph: #707070;
+    --accent: #0072B2;
+    --favorable: #0072B2;
+    --unfavorable: #B33E00;
+    --neutral-state: #5F5E5A;
+    --gold-ui: #B8860B;
+    --gold-text: #946B09;
+    --body-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --data-font: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --u: 8px;
+  }
+
+  html[data-theme="dark"] {
+    --bg: #1A1A1A;
+    --panel: #2A2A2A;
+    --border: #3A3A3A;
+    --text: #F2F2F2;
+    --text-2: #B3B3B3;
+    --hint: #7A7A7A;
+    --deemph: #8F8F8F;
+    --accent: #7FC7EE;
+    --favorable: #7FC7EE;
+    --unfavorable: #F08A4B;
+    --neutral-state: #A8A6A0;
+    --gold-ui: #E0B23D;
+    --gold-text: #E0B23D;
+  }
+
+  * { box-sizing: border-box; }
+
+  /* Author rules that set `display` outrank the browser's [hidden] rule, so anything
+     given a display value here would stay visible when hidden. Enforce it globally. */
+  [hidden] { display: none !important; }
+
+  body {
+    margin: 0;
+    padding: calc(var(--u) * 3);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body-font);
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  code, .num { font-family: var(--data-font); font-variant-numeric: tabular-nums; }
+
+  header { margin-bottom: calc(var(--u) * 3); }
+  h1 { font-size: 1.65rem; font-weight: 600; margin: 0 0 var(--u) 0; line-height: 1.25; }
+  .standfirst { margin: 0; color: var(--text-2); max-width: 68ch; }
+
+  .topbar {
+    display: flex; flex-wrap: wrap; gap: calc(var(--u) * 2);
+    align-items: flex-end; justify-content: space-between;
+    margin-bottom: calc(var(--u) * 3);
+  }
+
+  .field-label { display: block; font-size: 0.8rem; color: var(--text-2); margin-bottom: var(--u); }
+
+  [role="tablist"] { display: flex; flex-wrap: wrap; gap: var(--u); }
+
+  [role="tab"] {
+    font: inherit; font-size: 0.95rem;
+    padding: var(--u) calc(var(--u) * 2);
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+
+  [role="tab"][aria-selected="true"] {
+    border-color: var(--accent);
+    box-shadow: inset 0 -3px 0 var(--accent);
+    font-weight: 600;
+  }
+
+  .theme-toggle {
+    font: inherit; font-size: 0.85rem;
+    padding: var(--u) calc(var(--u) * 2);
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+
+  button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible,
+  input:focus-visible, h2[tabindex="-1"]:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* ---------- the worksheet block ---------- */
+
+  .model-block {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 6px; padding: calc(var(--u) * 2);
+    margin-bottom: calc(var(--u) * 3);
+  }
+
+  .model-block h2 { font-size: 1.05rem; font-weight: 600; margin: 0 0 var(--u) 0; }
+  .model-block h3 {
+    font-size: 0.95rem; font-weight: 600;
+    margin: calc(var(--u) * 3) 0 var(--u) 0;
+    padding-top: calc(var(--u) * 2);
+    border-top: 1px solid var(--border);
+  }
+
+  .lede { margin: 0 0 calc(var(--u) * 2) 0; color: var(--text-2); max-width: 78ch; }
+
+  /* position: relative makes the scroller the containing block for the absolutely
+     positioned .sr-only text in its cells, so that text cannot widen the page.
+     See the house style's checklist item on scroll containers. */
+  .table-scroll { overflow-x: auto; padding-bottom: var(--u); position: relative; }
+
+  table.alloc { border-collapse: collapse; width: 100%; min-width: 600px; }
+  table.alloc caption {
+    text-align: left; font-size: 0.8rem; color: var(--text-2); padding-bottom: var(--u);
+  }
+  table.alloc th, table.alloc td {
+    border: 1px solid var(--border);
+    padding: calc(var(--u) * 0.75) var(--u);
+    text-align: center; font-size: 0.9rem;
+  }
+  table.alloc thead th { font-weight: 600; background: var(--bg); font-size: 0.85rem; }
+  table.alloc tbody th {
+    text-align: left; font-weight: 600; white-space: nowrap;
+    background: var(--bg); font-size: 0.85rem;
+  }
+  table.alloc td { font-family: var(--data-font); font-variant-numeric: tabular-nums; }
+  table.alloc td.tot { font-weight: 600; }
+
+  /* A row not yet reached keeps its height and its cells; only the values are
+     concealed, so stepping forward moves nothing. */
+  table.alloc tr.is-ahead td {
+    background: repeating-linear-gradient(45deg,
+      var(--panel), var(--panel) 5px, var(--bg) 5px, var(--bg) 10px);
+  }
+  table.alloc tr.is-ahead .v { visibility: hidden; }
+  table.alloc tr:not(.is-ahead) .pend { display: none; }
+
+  table.alloc tr.is-current th { box-shadow: inset 4px 0 0 var(--accent); }
+  table.alloc tr.is-current td, table.alloc tr.is-current th {
+    border-top-color: var(--accent); border-bottom-color: var(--accent);
+  }
+
+  .seat-mark { color: var(--gold-text); font-weight: 600; }
+
+  /* practice inputs inside the table */
+  table.alloc input[type="number"], table.alloc input[type="text"] {
+    font-family: var(--data-font); font-size: 0.9rem; font-variant-numeric: tabular-nums;
+    width: 100%; max-width: 6.5rem; padding: calc(var(--u) * 0.5);
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 3px; text-align: center;
+  }
+  table.alloc input.quota-in { max-width: 8.5rem; }
+  table.alloc input[readonly] { border-style: dashed; }
+
+  .rs-btn {
+    white-space: nowrap;
+    font: inherit; font-family: var(--data-font); font-size: 0.85rem;
+    min-width: 4.5rem; padding: calc(var(--u) * 0.5) var(--u);
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 3px; cursor: pointer;
+  }
+  .rs-btn[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 -3px 0 var(--accent); font-weight: 600; }
+  .rs-btn[aria-disabled="true"] { cursor: default; }
+  /* In step 1 the remainder-seat row is hatched like any row not yet reached,
+     and its buttons keep their space but cannot be seen or reached. */
+  table.alloc tr.is-ahead .rs-btn { visibility: hidden; }
+
+  .stage-label {
+    margin: 0 0 calc(var(--u) * 1.5) 0; padding-left: var(--u);
+    border-left: 4px solid var(--accent); font-weight: 600;
+  }
+
+  /* The mark's line is reserved from the start, so checking a step adds no
+     height to the row and nothing below it moves. */
+  .mark { display: block; font-size: 0.75rem; font-family: var(--body-font); margin-top: 2px; line-height: 1.4; min-height: 1.4em; }
+  .mark.ok { color: var(--favorable); }
+  .mark.bad { color: var(--unfavorable); }
+  .mark.shown { color: var(--neutral-state); }
+  td.is-ok input, td.is-ok .rs-btn { border-color: var(--favorable); }
+  td.is-bad input, td.is-bad .rs-btn { border-color: var(--unfavorable); border-width: 2px; }
+
+  .over { color: var(--unfavorable); font-family: var(--body-font); font-size: 0.75rem; display: block; }
+  .even { color: var(--text-2); font-family: var(--body-font); font-size: 0.75rem; display: block; }
+
+  /* ---------- the ranking ---------- */
+
+  .rank-wrap { margin-top: calc(var(--u) * 2); }
+  ol.rank { margin: 0; padding-left: calc(var(--u) * 3); }
+  ol.rank li { margin: 0 0 calc(var(--u) * 0.5) 0; }
+  ol.rank .rname { font-weight: 600; }
+  ol.rank .rval { font-family: var(--data-font); font-variant-numeric: tabular-nums; }
+  ol.rank .bar {
+    display: inline-block; height: 10px; vertical-align: middle;
+    background: var(--border); border-radius: 2px; margin: 0 var(--u);
+  }
+  ol.rank.winners .bar { background: var(--gold-ui); }
+  .cutline {
+    margin: var(--u) 0; padding: calc(var(--u) * 0.5) var(--u);
+    border-top: 2px dashed var(--gold-ui); color: var(--gold-text);
+    font-size: 0.85rem; font-weight: 600;
+  }
+  .tie-note { color: var(--neutral-state); }
+
+  /* ---------- step bar ---------- */
+
+  .stepbar {
+    display: flex; flex-wrap: wrap; gap: var(--u); align-items: center;
+    margin-top: calc(var(--u) * 2);
+  }
+  .step-count { font-family: var(--data-font); font-size: 0.85rem; color: var(--text-2); margin-right: var(--u); }
+
+  .narration {
+    margin-top: calc(var(--u) * 2); padding: calc(var(--u) * 1.5);
+    border: 1px solid var(--border); border-left: 4px solid var(--accent);
+    border-radius: 4px; max-width: 82ch;
+  }
+  .narration h3 { margin: 0 0 var(--u) 0; padding: 0; border: 0; font-size: 0.95rem; }
+  .narration p { margin: 0 0 var(--u) 0; }
+  .narration p:last-child { margin-bottom: 0; }
+  .narration .watch { border-left: 3px solid var(--gold-ui); padding-left: var(--u); }
+
+  /* ---------- boards ---------- */
+
+  .board {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: calc(var(--u) * 3); margin-bottom: calc(var(--u) * 3);
+  }
+  @media (max-width: 860px) { .board { grid-template-columns: minmax(0, 1fr); } }
+
+  .col > h2 { font-size: 1.05rem; font-weight: 600; margin: 0 0 var(--u) 0; }
+
+  .cgroup {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 6px; padding: calc(var(--u) * 2);
+    margin-bottom: calc(var(--u) * 2);
+  }
+  .cgroup h3 { font-size: 0.95rem; font-weight: 600; margin: 0 0 var(--u) 0; }
+  .cgroup p { margin: 0 0 var(--u) 0; }
+  .cgroup p:last-child { margin-bottom: 0; }
+
+  .btnrow { display: flex; flex-wrap: wrap; gap: var(--u); }
+
+  .preset-btn, .plain-btn {
+    font: inherit; font-size: 0.85rem;
+    padding: calc(var(--u) * 0.75) calc(var(--u) * 1.5);
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+  .preset-btn[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 -3px 0 var(--accent); }
+  .plain-btn[aria-disabled="true"] {
+    color: var(--hint); border-style: dashed; cursor: default;
+  }
+
+  .primary-btn {
+    font: inherit; font-size: 0.95rem; font-weight: 600;
+    padding: var(--u) calc(var(--u) * 2);
+    background: var(--accent); color: var(--panel);
+    border: 1px solid var(--accent); border-radius: 4px; cursor: pointer;
+  }
+  html[data-theme="dark"] .primary-btn { color: var(--bg); }
+  .primary-btn[aria-disabled="true"] {
+    background: var(--panel); color: var(--hint);
+    border-style: dashed; border-color: var(--border); cursor: default;
+  }
+
+  .ctrl-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--u); }
+  .ctrl-head label { font-size: 0.9rem; font-weight: 600; }
+  .ctrl-val { font-family: var(--data-font); font-variant-numeric: tabular-nums; font-weight: 600; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); margin: 0; }
+  .scale {
+    display: flex; justify-content: space-between;
+    font-family: var(--data-font); font-size: 0.72rem; color: var(--text-2); margin-top: 2px;
+  }
+
+  .vote-row {
+    display: grid; grid-template-columns: 5rem 1fr; gap: var(--u);
+    align-items: center; margin-bottom: var(--u);
+  }
+  .vote-row label { font-size: 0.9rem; }
+  .vote-row input {
+    font-family: var(--data-font); font-size: 0.95rem; font-variant-numeric: tabular-nums;
+    padding: calc(var(--u) * 0.5) var(--u); width: 100%; max-width: 12rem;
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 3px;
+  }
+  .warn { color: var(--unfavorable); font-size: 0.85rem; }
+
+  .result { margin-top: calc(var(--u) * 2); padding: calc(var(--u) * 1.5);
+            border: 1px solid var(--border); border-left-width: 4px; border-radius: 4px; max-width: 82ch; }
+  .result.is-correct { border-left-color: var(--favorable); }
+  .result.is-wrong { border-left-color: var(--unfavorable); }
+  .result .verdict { font-weight: 600; margin: 0 0 var(--u) 0; }
+  .result.is-correct .verdict { color: var(--favorable); }
+  .result.is-wrong .verdict { color: var(--unfavorable); }
+  .result ul { margin: 0 0 var(--u) 0; padding-left: calc(var(--u) * 2.5); }
+  .result li { margin-bottom: calc(var(--u) * 0.5); }
+
+  ul.coverage { list-style: none; margin: 0; padding: 0; }
+  ul.coverage li {
+    display: grid; grid-template-columns: 1.6rem 1fr; gap: var(--u);
+    padding: calc(var(--u) * 0.75) 0; border-bottom: 1px solid var(--border);
+    font-size: 0.9rem; align-items: start;
+  }
+  ul.coverage li:last-child { border-bottom: 0; }
+  ul.coverage .tick { text-align: center; color: var(--hint); }
+  ul.coverage li.done .tick { color: var(--gold-ui); font-weight: 700; }
+  ul.coverage li.done .cname { color: var(--gold-text); }
+  ul.coverage .cname { font-weight: 600; }
+  ul.coverage .cdesc { display: block; font-weight: 400; color: var(--text-2); font-size: 0.85rem; }
+
+  .all-done {
+    margin-top: calc(var(--u) * 2); border: 2px solid var(--gold-ui);
+    border-radius: 4px; padding: calc(var(--u) * 1.5); font-size: 0.9rem;
+  }
+  .all-done strong { color: var(--gold-text); }
+
+  /* ---------- notes ---------- */
+
+  .notes { margin-top: calc(var(--u) * 4); }
+  .notes details {
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: calc(var(--u) * 1.5) calc(var(--u) * 2);
+    margin-bottom: calc(var(--u) * 1.5); background: var(--panel);
+  }
+  .notes summary { cursor: pointer; font-weight: 600; }
+  .notes details > *:not(summary) { max-width: 78ch; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    table.alloc tr, .rs-btn { transition: background-color 0.15s ease, border-color 0.15s ease; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>From votes to seats</h1>
+    <p class="standfirst">
+      A party list system promises each party seats in proportion to its votes, but seats come in whole
+      numbers and votes do not. The week 9 lecture's method for closing that gap is the Hare quota with
+      largest remainders. Step through it one row at a time on a district you can change, then fill in the
+      table yourself for districts you have not seen.
+    </p>
+  </header>
+
+  <div class="topbar">
+    <div>
+      <span class="field-label" id="mode-label">Two ways to use this</span>
+      <div role="tablist" aria-labelledby="mode-label" id="tabs">
+        <button role="tab" id="tab-explore" aria-selected="true" aria-controls="exploreBoard" type="button">Step through a district</button>
+        <button role="tab" id="tab-practice" aria-selected="false" aria-controls="practiceBoard" tabindex="-1" type="button">Fill in the table yourself</button>
+      </div>
+    </div>
+    <button class="theme-toggle" id="themeToggle" type="button">Switch to dark mode</button>
+  </div>
+
+  <!-- ============================ EXPLORE ============================ -->
+
+  <div id="exploreBoard" role="tabpanel" aria-labelledby="tab-explore">
+
+    <section class="model-block" aria-labelledby="exploreTitle">
+      <h2 id="exploreTitle" tabindex="-1">The district</h2>
+      <p class="lede" id="exploreLede"></p>
+
+      <div class="table-scroll">
+        <table class="alloc" id="exploreTable">
+          <caption id="exploreCaption">Seat allocation by the Hare quota and largest remainders, laid out as in the lecture. Rows not yet reached are hatched.</caption>
+        </table>
+      </div>
+
+      <div class="stepbar">
+        <span class="step-count" id="stepCount"></span>
+        <button class="plain-btn" id="prevStep" type="button">Previous step</button>
+        <button class="primary-btn" id="nextStep" type="button">Next step</button>
+        <button class="plain-btn" id="allSteps" type="button">Show every step</button>
+        <button class="plain-btn" id="restartSteps" type="button">Back to the start</button>
+      </div>
+
+      <div class="narration" id="narration" aria-labelledby="narrHead">
+        <h3 id="narrHead"></h3>
+        <div id="narrBody"></div>
+      </div>
+
+      <!-- Below the narration on purpose: the step buttons sit directly under the
+           table, so nothing above them changes height as the steps advance. -->
+      <div class="rank-wrap" id="rankWrap" hidden>
+        <h3>The remainders, largest first</h3>
+        <ol class="rank winners" id="rankWin"></ol>
+        <p class="cutline" id="cutline"></p>
+        <ol class="rank" id="rankLose"></ol>
+      </div>
+    </section>
+
+    <div class="board">
+      <div class="col">
+        <h2>Pick a district</h2>
+        <div class="cgroup">
+          <h3>Ready-made districts</h3>
+          <p class="lede">The first is the ten-seat example from the lecture slides. The others were made up for this tool.</p>
+          <div class="btnrow" id="presets"></div>
+        </div>
+        <div class="cgroup">
+          <div class="ctrl-head">
+            <label for="seatSlider">Seats in the district</label>
+            <span class="ctrl-val" id="seatVal"></span>
+          </div>
+          <input type="range" id="seatSlider" min="1" max="15" step="1">
+          <div class="scale"><span>1</span><span>15</span></div>
+          <p class="lede" style="margin-top: var(--u)">This is the district magnitude: how many representatives the district elects.</p>
+        </div>
+      </div>
+
+      <div class="col">
+        <h2>Change the votes</h2>
+        <div class="cgroup">
+          <h3>Valid votes for each party</h3>
+          <div id="voteRows"></div>
+          <p class="warn" id="voteWarn" hidden></p>
+          <div class="btnrow">
+            <button class="plain-btn" id="addParty" type="button">Add a party</button>
+            <button class="plain-btn" id="removeParty" type="button">Remove the last party</button>
+          </div>
+          <p class="lede" style="margin-top: var(--u)">
+            Any change recalculates the whole table and keeps you on the same step. The parties do not have to
+            be in order of size, though the lecture's examples always are.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================ PRACTICE ============================ -->
+
+  <div id="practiceBoard" role="tabpanel" aria-labelledby="tab-practice" hidden>
+
+    <section class="model-block" aria-labelledby="practiceTitle">
+      <h2 id="practiceTitle" tabindex="-1">District 1</h2>
+      <p class="lede" id="practiceLede"></p>
+      <p class="stage-label" id="stageLabel"></p>
+
+      <div class="table-scroll">
+        <table class="alloc" id="practiceTable">
+          <caption id="practiceCaption">Step 1: fill in the quota and each party's automatic seats, and check them. Step 2: once those are right, the remainders are filled in for you and you choose which parties win a remainder seat. Hatched rows are not yet filled in.</caption>
+        </table>
+      </div>
+
+      <p class="lede" id="runningTotal" style="margin-top: var(--u)"></p>
+
+      <div class="btnrow">
+        <button class="primary-btn" id="checkAuto" type="button">Check the quota and automatic seats</button>
+        <button class="plain-btn" id="showAuto" type="button" hidden>Show me the quota and automatic seats</button>
+        <button class="primary-btn" id="checkRem" type="button" hidden>Check the remainder seats</button>
+        <button class="primary-btn" id="nextProblem" type="button" hidden>Next district</button>
+      </div>
+
+      <div class="result" id="result" hidden>
+        <p class="verdict" id="resultVerdict"></p>
+        <ul id="resultList"></ul>
+        <p id="resultSummary"></p>
+      </div>
+
+      <div class="rank-wrap" id="pRankWrap" hidden>
+        <h3>The remainders, largest first</h3>
+        <ol class="rank winners" id="pRankWin"></ol>
+        <p class="cutline" id="pCutline"></p>
+        <ol class="rank" id="pRankLose"></ol>
+      </div>
+    </section>
+
+    <div class="board">
+      <div class="col">
+        <h2>How it is checked</h2>
+        <div class="cgroup">
+          <p>
+            <strong>Step 1.</strong> Fill in the <strong>quota</strong> and each party's
+            <strong>automatic seats</strong>, then check them. If something is wrong, the cells are marked and
+            the tool says what kind of mistake it looks like. Fix them and check again as often as you like, or
+            ask to be shown the answer and go on.
+          </p>
+          <p>
+            <strong>Step 2.</strong> Once the automatic seats are right, the votes ÷ quota and remainder rows are
+            filled in for you. Press a party's button to give it a <strong>remainder seat</strong>, then check.
+            This check is once only; afterwards the ranking of remainders and the correct totals appear.
+          </p>
+          <p>
+            The total-seats row adds up your entries as you go, so you can see whether you have handed out more
+            or fewer seats than the district has. The method itself is on the other tab, worked through step by
+            step.
+          </p>
+        </div>
+      </div>
+
+      <div class="col">
+        <h2>Three things that catch people out</h2>
+        <div class="cgroup">
+          <p class="lede">
+            Every district shows at least one of these. Each is checked off once you get both steps right at the
+            first check, without being shown anything, in a district that has it. Districts lean toward
+            whichever you have not got yet.
+          </p>
+          <ul class="coverage" id="coverage"></ul>
+          <div class="all-done" id="allDone" hidden>
+            <strong>All three covered.</strong>
+            You have now handled every trap this method sets. The districts do not run out, so keep going for
+            as long as it is useful, but from here they are practice on cases you have already met.
+          </div>
+          <p style="margin-top: calc(var(--u) * 2)">
+            <button class="plain-btn" id="resetPractice" type="button">Start over</button>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================ NOTES ============================ -->
+
+  <div class="notes">
+
+    <details>
+      <summary>Why the remainder seats are not just rounding</summary>
+      <p>
+        Rounding each party's votes ÷ quota to the nearest whole number looks like a shortcut to the same
+        answer. It is not, because nothing makes the rounded numbers add up to the number of seats. In the
+        lecture's ten-seat example, rounding gives <span class="num" id="roundLectureText"></span> seats
+        in a district that has ten. Rounding can also hand out too few, when several parties each sit just
+        under one half.
+      </p>
+      <p>
+        The largest remainder method avoids this by fixing the number of remainder seats first — whatever is
+        left after the automatic seats — and then giving them out in order. So the question is never whether
+        a remainder is “big enough” in itself. It is whether it is among the largest, when there are only so
+        many seats to go round. <span id="halfLoserText"></span>
+      </p>
+      <p>
+        And every party is in that ranking, including parties that won no automatic seats at all. For them
+        the remainder is simply their whole votes ÷ quota.
+      </p>
+    </details>
+
+    <details>
+      <summary>Two ways of writing a remainder</summary>
+      <p>
+        The lecture writes a remainder as a fraction of a quota, and so does this tool throughout. The same
+        remainder can be written as a number of votes: multiply the fraction by the quota. With a quota of
+        <span class="num">10,000</span>, a remainder of <span class="num">0.7</span> is
+        <span class="num">7,000</span> votes left over after paying for the automatic seats. Within a district
+        the two always rank the parties in the same order, because every party is divided by the same quota.
+      </p>
+      <p>
+        Where votes ÷ quota does not come out to a short decimal, the tool cuts it off rather than rounding it
+        and adds an ellipsis — so <span class="num">1.99…</span> is never shown as
+        <span class="num">2.00</span>, which would look like a full second quota. The ranking itself always
+        uses the exact values.
+      </p>
+    </details>
+
+    <details>
+      <summary>Ties, and other ways of turning votes into seats</summary>
+      <p>
+        Two parties can have exactly the same remainder at the point where the seats run out. The method as
+        taught in the lecture does not say how to break that tie, so this tool does not invent a rule: it
+        marks the seat as undecided and says which parties are tied. You can make a tie on the first tab by
+        giving two parties the same number of votes.
+      </p>
+      <p>
+        The Hare quota with largest remainders is one formula among several. The lecture also gives the
+        Droop quota, which divides the votes by one more than the number of seats, making the quota slightly
+        smaller. Applied the same way to the lecture's ten-seat example, it gives
+        <span id="droopText"></span> The votes are identical; only the formula changed.
+      </p>
+    </details>
+
+    <details>
+      <summary>Where these numbers come from</summary>
+      <p>
+        The method and the ten-seat example are from the week 9 lecture slides on electoral systems. The
+        other ready-made districts and every practice district were made up for this tool. They are not the
+        results of any real election, and none of them is a homework or exam question.
+      </p>
+      <p>
+        Practice districts are generated, not chosen. Each one has a whole-number quota and vote totals that
+        divide into it to exactly two decimal places, so the arithmetic is the same kind you will meet in the
+        course rather than long division.
+      </p>
+    </details>
+  </div>
+
+  <div class="sr-only" role="status" aria-live="polite" id="liveRegion"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var MAXP = 6;
+  var LETTERS = ["A", "B", "C", "D", "E", "F"];
+
+  /* ---------- exact arithmetic ----------
+     Votes ÷ quota = votes × seats ÷ total. Everything is kept as integers over
+     the common denominator `total`, so ranking and flooring are exact. */
+
+  function withCommas(n) {
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+
+  /* num/den as a decimal. Exact to at most 3 places if it terminates there;
+     otherwise cut off (never rounded) at 2 places and marked with an ellipsis. */
+  function fmtRatio(num, den, commas) {
+    var whole = Math.floor(num / den);
+    var rest = num - whole * den;
+    var head = commas ? withCommas(whole) : String(whole);
+    if (rest === 0) return head;
+    var digits = "";
+    for (var d = 1; d <= 3; d++) {
+      rest *= 10;
+      digits += String(Math.floor(rest / den));
+      rest = rest % den;
+      if (rest === 0) return head + "." + digits;
+    }
+    return head + "." + digits.slice(0, 2) + "…";
+  }
+
+  function allocate(votes, M) {
+    var P = votes.length, total = 0, i;
+    for (i = 0; i < P; i++) total += votes[i];
+    if (total <= 0 || M < 1) return null;
+
+    var auto = [], rem = [], autoSum = 0;
+    for (i = 0; i < P; i++) {
+      var num = votes[i] * M;
+      var r = num % total;
+      auto.push((num - r) / total);
+      rem.push(r);               /* remainder, in units of 1/total of a quota */
+      autoSum += auto[i];
+    }
+    var R = M - autoSum;
+
+    var order = [];
+    for (i = 0; i < P; i++) order.push(i);
+    order.sort(function (a, b) { return rem[b] - rem[a] || a - b; });
+
+    var remSeat = [];
+    for (i = 0; i < P; i++) remSeat.push(0);
+    var tied = [], contested = 0;
+    if (R > 0) {
+      var cutVal = rem[order[R - 1]];
+      var tieAtCut = R < P && rem[order[R]] === cutVal;
+      for (var k = 0; k < P; k++) {
+        var p = order[k];
+        if (rem[p] > cutVal) remSeat[p] = 1;
+        else if (rem[p] === cutVal) {
+          if (tieAtCut) { remSeat[p] = null; tied.push(p); }
+          else if (k < R) remSeat[p] = 1;
+        }
+      }
+      if (tieAtCut) {
+        var secure = 0;
+        for (i = 0; i < P; i++) if (remSeat[i] === 1) secure++;
+        contested = R - secure;
+      }
+    }
+
+    var totalSeats = [], rounded = [], roundedSum = 0;
+    for (i = 0; i < P; i++) {
+      totalSeats.push(remSeat[i] === null ? null : auto[i] + remSeat[i]);
+      /* nearest whole number, halves rounded up, computed exactly */
+      var rd = Math.floor((2 * votes[i] * M + total) / (2 * total));
+      rounded.push(rd);
+      roundedSum += rd;
+    }
+
+    return { votes: votes.slice(), M: M, P: P, total: total, auto: auto, autoSum: autoSum,
+             rem: rem, R: R, order: order, remSeat: remSeat, tied: tied, contested: contested,
+             totalSeats: totalSeats, rounded: rounded, roundedSum: roundedSum };
+  }
+
+  function vq(a, i) { return fmtRatio(a.votes[i] * a.M, a.total, false); }
+  function remText(a, i) { return fmtRatio(a.rem[i], a.total, false); }
+  function quotaText(a) { return fmtRatio(a.total, a.M, true); }
+  function seatWord(n) { return n === 1 ? "seat" : "seats"; }
+  function partyList(ix) {
+    var names = ix.map(function (i) { return "party " + LETTERS[i]; });
+    if (names.length <= 1) return names.join("");
+    return names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
+  }
+
+  /* ---------- the worksheet table (shared builder) ---------- */
+
+  var ROWS = [
+    { key: "votes",    label: "Votes",           step: 0 },
+    { key: "seats",    label: "Seats",           step: 0, totalOnly: true },
+    { key: "quota",    label: "Quota",           step: 1, totalOnly: true },
+    { key: "vq",       label: "Votes ÷ quota", step: 2 },
+    { key: "auto",     label: "Automatic seats", step: 3 },
+    { key: "rem",      label: "Remainder",       step: 4 },
+    { key: "remSeats", label: "Remainder seats", step: 5 },
+    { key: "total",    label: "Total seats",     step: 6 }
+  ];
+
+  function buildTable(table, prefix, practice) {
+    var thead = document.createElement("thead");
+    var hr = document.createElement("tr");
+    var corner = document.createElement("td");
+    hr.appendChild(corner);
+    for (var p = 0; p < MAXP; p++) {
+      var th = document.createElement("th");
+      th.scope = "col";
+      th.id = prefix + "-h" + p;
+      th.textContent = "Party " + LETTERS[p];
+      hr.appendChild(th);
+    }
+    var tth = document.createElement("th");
+    tth.scope = "col";
+    tth.textContent = "Total";
+    hr.appendChild(tth);
+    thead.appendChild(hr);
+    table.appendChild(thead);
+
+    var tbody = document.createElement("tbody");
+    ROWS.forEach(function (row) {
+      var tr = document.createElement("tr");
+      tr.id = prefix + "-r-" + row.key;
+      var rh = document.createElement("th");
+      rh.scope = "row";
+      rh.textContent = row.label;
+      tr.appendChild(rh);
+      for (var c = 0; c <= MAXP; c++) {
+        var td = document.createElement("td");
+        var isTotal = c === MAXP;
+        td.id = prefix + "-" + row.key + "-" + (isTotal ? "t" : c);
+        if (isTotal) td.className = "tot";
+        if (practice && row.key === "quota" && isTotal) {
+          td.innerHTML = '<input type="text" inputmode="numeric" class="quota-in" id="in-quota" ' +
+            'aria-label="Quota" autocomplete="off"><span class="mark" id="mk-quota"></span>';
+        } else if (practice && row.key === "auto" && !isTotal) {
+          td.innerHTML = '<input type="number" min="0" max="20" step="1" id="in-auto-' + c + '" ' +
+            'aria-label="Automatic seats, party ' + LETTERS[c] + '"><span class="mark" id="mk-auto-' + c + '"></span>';
+        } else if (practice && row.key === "remSeats" && !isTotal) {
+          td.innerHTML = '<button type="button" class="rs-btn" id="in-rs-' + c + '" aria-pressed="false">no seat</button>' +
+            '<span class="mark" id="mk-rs-' + c + '"></span><span class="sr-only pend">not yet: comes after step 1</span>';
+        } else {
+          td.innerHTML = '<span class="v"></span><span class="sr-only pend">not yet worked out</span>';
+        }
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+  }
+
+  function cellV(prefix, key, col) {
+    var td = document.getElementById(prefix + "-" + key + "-" + col);
+    return td ? td.querySelector(".v") : null;
+  }
+  function setV(prefix, key, col, html) {
+    var v = cellV(prefix, key, col);
+    if (v) v.innerHTML = html;
+  }
+
+  function showColumns(prefix, P) {
+    for (var c = 0; c < MAXP; c++) {
+      document.getElementById(prefix + "-h" + c).hidden = c >= P;
+      ROWS.forEach(function (row) {
+        document.getElementById(prefix + "-" + row.key + "-" + c).hidden = c >= P;
+      });
+    }
+  }
+
+  /* Fill every value cell from an allocation. Which rows show is decided
+     separately, by class, so filling never moves anything. */
+  function fillTable(prefix, a, skipKeys) {
+    var skip = skipKeys || {};
+    for (var i = 0; i < a.P; i++) {
+      if (!skip.votes) setV(prefix, "votes", i, withCommas(a.votes[i]));
+      if (!skip.seats) setV(prefix, "seats", i, "");
+      if (!skip.quota) setV(prefix, "quota", i, "");
+      if (!skip.vq) setV(prefix, "vq", i, vq(a, i));
+      if (!skip.auto) setV(prefix, "auto", i, String(a.auto[i]));
+      if (!skip.rem) setV(prefix, "rem", i, remText(a, i));
+      if (!skip.remSeats) {
+        var rs = a.remSeat[i];
+        setV(prefix, "remSeats", i, rs === null ? "tied" : rs === 1 ? '<span class="seat-mark">1</span>' : "0");
+      }
+      if (!skip.total) {
+        var ts = a.totalSeats[i];
+        setV(prefix, "total", i, ts === null ? a.auto[i] + " or " + (a.auto[i] + 1) : String(ts));
+      }
+    }
+    setV(prefix, "votes", "t", withCommas(a.total));
+    setV(prefix, "seats", "t", String(a.M));
+    if (!skip.quota) setV(prefix, "quota", "t", quotaText(a));
+    setV(prefix, "vq", "t", "");
+    if (!skip.auto) setV(prefix, "auto", "t", String(a.autoSum));
+    setV(prefix, "rem", "t", "");
+    if (!skip.remSeats) setV(prefix, "remSeats", "t", String(a.R));
+    if (!skip.total) setV(prefix, "total", "t", String(a.M));
+  }
+
+  function setRowStates(prefix, step, current) {
+    ROWS.forEach(function (row) {
+      var tr = document.getElementById(prefix + "-r-" + row.key);
+      tr.classList.toggle("is-ahead", row.step > step);
+      tr.classList.toggle("is-current", current && row.step === step && step > 0);
+    });
+  }
+
+  /* ---------- the ranking (rebuilt freely: it holds no controls) ---------- */
+
+  function renderRanking(a, ids) {
+    var win = document.getElementById(ids.win), lose = document.getElementById(ids.lose);
+    var cut = document.getElementById(ids.cut);
+    win.innerHTML = ""; lose.innerHTML = "";
+    var maxRem = 0, i;
+    for (i = 0; i < a.P; i++) if (a.rem[i] > maxRem) maxRem = a.rem[i];
+
+    function item(p) {
+      var li = document.createElement("li");
+      var w = maxRem > 0 ? Math.round(80 * a.rem[p] / a.total) : 0;
+      var status = a.remSeat[p] === 1 ? "wins a remainder seat"
+                 : a.remSeat[p] === null ? "tied for the last remainder seat"
+                 : "no remainder seat";
+      li.innerHTML = '<span class="rname">Party ' + LETTERS[p] + '</span>' +
+        '<span class="bar" aria-hidden="true" style="width:' + w + 'px"></span>' +
+        '<span class="rval">' + remText(a, p) + '</span> — ' +
+        (a.remSeat[p] === null ? '<span class="tie-note">' + status + '</span>' : status) +
+        (a.auto[p] === 0 ? " (no automatic seats)" : "");
+      return li;
+    }
+
+    var nWin = 0;
+    a.order.forEach(function (p) {
+      if (a.remSeat[p] === 1) { win.appendChild(item(p)); nWin++; }
+    });
+    var tiedItems = [];
+    a.order.forEach(function (p) { if (a.remSeat[p] === null) tiedItems.push(p); });
+    var rest = [];
+    a.order.forEach(function (p) { if (a.remSeat[p] === 0) rest.push(p); });
+
+    if (a.R === 0) {
+      cut.textContent = "No seats are left after the automatic seats, so nobody wins a remainder seat.";
+    } else if (a.tied.length) {
+      cut.textContent = a.contested + " remainder " + seatWord(a.contested) + " left, " +
+        a.tied.length + " parties tied for " + (a.contested === 1 ? "it" : "them") +
+        ". The method as taught does not say how to break this tie.";
+    } else {
+      cut.textContent = "The " + a.R + " remainder " + seatWord(a.R) + " run out here.";
+    }
+    win.hidden = nWin === 0;
+    lose.start = nWin + 1;
+    tiedItems.concat(rest).forEach(function (p) { lose.appendChild(item(p)); });
+    lose.hidden = lose.children.length === 0;
+  }
+
+  var live = document.getElementById("liveRegion");
+  function say(msg) { live.textContent = msg; }
+
+  /* ============================ EXPLORE ============================ */
+
+  var PRESETS = [
+    { id: "lecture", label: "The lecture's example", M: 10,
+      votes: [47000, 16000, 15800, 12000, 6100, 3100] },
+    { id: "seven", label: "Seven seats, four parties", M: 7,
+      votes: [33800, 17400, 12500, 6300] },
+    { id: "round", label: "Where rounding fails", M: 6,
+      votes: [21200, 13600, 9000, 4200] }
+  ];
+
+  var ex = { votes: PRESETS[0].votes.slice(), M: PRESETS[0].M, step: 0, preset: "lecture" };
+  var LASTSTEP = 6;
+
+  var exploreTable = document.getElementById("exploreTable");
+  buildTable(exploreTable, "ex", false);
+
+  var presetBtns = {};
+  PRESETS.forEach(function (p) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "preset-btn";
+    b.textContent = p.label;
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () {
+      ex.votes = p.votes.slice(); ex.M = p.M; ex.preset = p.id; ex.step = 0;
+      syncVoteInputs();
+      renderExplore();
+      say(p.label + " loaded: " + p.M + " seats, " + p.votes.length + " parties. Back at the start.");
+    });
+    document.getElementById("presets").appendChild(b);
+    presetBtns[p.id] = b;
+  });
+
+  function syncPresets() {
+    for (var k in presetBtns) {
+      if (Object.prototype.hasOwnProperty.call(presetBtns, k)) {
+        presetBtns[k].setAttribute("aria-pressed", k === ex.preset ? "true" : "false");
+      }
+    }
+  }
+
+  var seatSlider = document.getElementById("seatSlider");
+  seatSlider.addEventListener("input", function () {
+    ex.M = parseInt(seatSlider.value, 10);
+    ex.preset = null;
+    renderExplore();
+    var a = allocate(ex.votes, ex.M);
+    say(ex.M + " " + seatWord(ex.M) + ". " + (a ? "The quota is now " + quotaText(a) + "." : ""));
+  });
+
+  /* Vote inputs: built once for six parties, rows shown or hidden. */
+  var voteRows = document.getElementById("voteRows");
+  var voteInputs = [], voteRowEls = [];
+  (function () {
+    for (var i = 0; i < MAXP; i++) {
+      var row = document.createElement("div");
+      row.className = "vote-row";
+      row.innerHTML = '<label for="vote' + i + '">Party ' + LETTERS[i] + '</label>' +
+        '<input type="text" inputmode="numeric" id="vote' + i + '" autocomplete="off">';
+      voteRows.appendChild(row);
+      var input = row.querySelector("input");
+      (function (idx, el) {
+        el.addEventListener("input", function () {
+          var digits = el.value.replace(/[^0-9]/g, "");
+          ex.votes[idx] = digits === "" ? 0 : Math.min(parseInt(digits, 10), 99999999);
+          ex.preset = null;
+          renderExplore();
+        });
+        el.addEventListener("change", function () {
+          el.value = withCommas(ex.votes[idx]);
+          var a = allocate(ex.votes, ex.M);
+          say("Party " + LETTERS[idx] + ", " + withCommas(ex.votes[idx]) + " votes." +
+              (a ? " Total " + withCommas(a.total) + ", quota " + quotaText(a) + "." : ""));
+        });
+      })(i, input);
+      voteInputs.push(input);
+      voteRowEls.push(row);
+    }
+  })();
+
+  function syncVoteInputs() {
+    for (var i = 0; i < MAXP; i++) {
+      voteRowEls[i].hidden = i >= ex.votes.length;
+      if (i < ex.votes.length) voteInputs[i].value = withCommas(ex.votes[i]);
+    }
+  }
+
+  var addBtn = document.getElementById("addParty");
+  var removeBtn = document.getElementById("removeParty");
+  addBtn.addEventListener("click", function () {
+    if (ex.votes.length >= MAXP) { say("Six parties is the most this table holds."); return; }
+    ex.votes.push(2000);
+    ex.preset = null;
+    syncVoteInputs();
+    renderExplore();
+    say("Party " + LETTERS[ex.votes.length - 1] + " added with 2,000 votes.");
+  });
+  removeBtn.addEventListener("click", function () {
+    if (ex.votes.length <= 2) { say("A district needs at least two parties here."); return; }
+    var gone = LETTERS[ex.votes.length - 1];
+    ex.votes.pop();
+    ex.preset = null;
+    syncVoteInputs();
+    renderExplore();
+    say("Party " + gone + " removed.");
+  });
+
+  function syncPartyButtons() {
+    var n = ex.votes.length;
+    addBtn.setAttribute("aria-disabled", n >= MAXP ? "true" : "false");
+    addBtn.setAttribute("aria-label", n >= MAXP ? "Add a party. Unavailable: six parties is the most this table holds" : "Add a party");
+    removeBtn.textContent = "Remove party " + LETTERS[n - 1];
+    removeBtn.setAttribute("aria-disabled", n <= 2 ? "true" : "false");
+  }
+
+  /* ---------- narration ---------- */
+
+  function narrate(a, step) {
+    var head, ps = [];
+    var i, big = 0;
+    for (i = 1; i < a.P; i++) if (a.votes[i] > a.votes[big]) big = i;
+
+    if (step === 0) {
+      head = "The district";
+      ps.push(a.M + " " + seatWord(a.M) + " to fill and " + withCommas(a.total) + " valid votes, split between " +
+        a.P + " parties. Press Next step to work through the table one row at a time.");
+    } else if (step === 1) {
+      head = "Step 1: the quota";
+      ps.push("The Hare quota is valid votes ÷ seats: <span class=\"num\">" + withCommas(a.total) + " ÷ " +
+        a.M + " = " + quotaText(a) + "</span>. Think of it as the price of a seat. Every " + quotaText(a) +
+        " votes a party has buys it one seat.");
+    } else if (step === 2) {
+      head = "Step 2: votes ÷ quota";
+      ps.push("Divide each party's votes by the quota. Party " + LETTERS[0] + ": <span class=\"num\">" +
+        withCommas(a.votes[0]) + " ÷ " + quotaText(a) + " = " + vq(a, 0) + "</span>. The whole-number " +
+        "part is how many full quotas the party has; the decimal part is a quota it has only partly paid for.");
+    } else if (step === 3) {
+      head = "Step 3: automatic seats";
+      var ex0 = -1;
+      for (i = 0; i < a.P; i++) if (a.rem[i] * 2 >= a.total && ex0 < 0) ex0 = i;
+      ps.push("Each party gets the whole-number part of its votes ÷ quota, and no more. Never round here" +
+        (ex0 >= 0 ? ": party " + LETTERS[ex0] + "'s <span class=\"num\">" + vq(a, ex0) + "</span> gives " +
+          a.auto[ex0] + " automatic " + seatWord(a.auto[ex0]) + ", not " + (a.auto[ex0] + 1) + "." : "."));
+      ps.push("That hands out <span class=\"num\">" + a.autoSum + "</span> of the " + a.M + " seats, which leaves <span class=\"num\">" +
+        a.R + "</span>. " + (a.R === 0 ? "Every seat has been paid for in full quotas, so there are no remainder seats in this district."
+          : "No party has a full quota left to buy them with, so they are given out by a different rule."));
+      if (a.roundedSum !== a.M) {
+        ps.push('<span class="watch">Rounding instead would have handed out <span class="num">' + a.roundedSum +
+          "</span> seats in a district that has " + a.M + ".</span>");
+      }
+    } else if (step === 4) {
+      head = "Step 4: remainders";
+      ps.push("A party's remainder is what is left of its votes ÷ quota after its automatic seats: for party " +
+        LETTERS[0] + ", <span class=\"num\">" + vq(a, 0) + " − " + a.auto[0] + " = " + remText(a, 0) + "</span>.");
+      var zeros = [];
+      for (i = 0; i < a.P; i++) if (a.auto[i] === 0) zeros.push(i);
+      if (zeros.length) {
+        ps.push("A party with no automatic seats still has a remainder: all of its votes ÷ quota. " +
+          (zeros.length === 1 ? "Party " + LETTERS[zeros[0]] + "'s is " : partyList(zeros).replace(/^p/, "P") + "'s are ") +
+          zeros.map(function (z) { return remText(a, z); }).join(" and ") + ".");
+      }
+    } else if (step === 5) {
+      head = "Step 5: remainder seats";
+      if (a.R === 0) {
+        ps.push("There are no remainder seats to give out in this district.");
+      } else {
+        ps.push("Rank every party by its remainder, largest first, and give one seat to each party from the top " +
+          "until the " + a.R + " remainder " + seatWord(a.R) + " run out. The ranking is listed below. " +
+          "It is the size of the remainder that counts, not the size of the party.");
+        var notes = [];
+        var zw = [];
+        for (i = 0; i < a.P; i++) if (a.auto[i] === 0 && a.remSeat[i] === 1) zw.push(i);
+        if (zw.length) notes.push(partyList(zw).replace(/^p/, "P") + " won no automatic seats and still " +
+          (zw.length === 1 ? "wins" : "win") + " a remainder seat.");
+        if (a.remSeat[big] === 0) notes.push("Party " + LETTERS[big] + " has the most votes and gets no remainder seat, because its remainder, " +
+          remText(a, big) + ", is not among the largest " + a.R + ".");
+        var halfLosers = [], lowWinners = [];
+        for (i = 0; i < a.P; i++) {
+          if (a.rem[i] * 2 >= a.total && a.remSeat[i] === 0) halfLosers.push(i);
+          if (a.rem[i] * 2 < a.total && a.remSeat[i] === 1) lowWinners.push(i);
+        }
+        if (halfLosers.length) notes.push(partyList(halfLosers).replace(/^p/, "P") + " " +
+          (halfLosers.length === 1 ? "has" : "have") + " a remainder of one half or more and still " +
+          (halfLosers.length === 1 ? "misses" : "miss") + " out.");
+        if (lowWinners.length) notes.push(partyList(lowWinners).replace(/^p/, "P") + " " +
+          (lowWinners.length === 1 ? "wins" : "win") + " with a remainder under one half.");
+        if (a.tied.length) notes.push(partyList(a.tied).replace(/^p/, "P") + " are tied at " + remText(a, a.tied[0]) +
+          " for the last " + (a.contested === 1 ? "seat" : a.contested + " seats") + ". The method as taught does not say how to break the tie, so the tool leaves it undecided.");
+        notes.forEach(function (n) { ps.push('<span class="watch">' + n + "</span>"); });
+      }
+    } else {
+      head = "Step 6: total seats";
+      ps.push("Each party's total is its automatic seats plus any remainder seat. A party never gets more than one " +
+        "remainder seat: there are always fewer remainder seats than parties.");
+      if (a.tied.length) {
+        ps.push("The totals for " + partyList(a.tied) + " depend on how the tie is broken, so they are shown as a range.");
+      } else {
+        ps.push("Check: the totals add up to " + a.M + ", the number of seats in the district. They always will, " +
+          "which is the whole reason for doing it this way rather than rounding.");
+      }
+    }
+    return { head: head, body: ps.map(function (p) { return "<p>" + p + "</p>"; }).join("") };
+  }
+
+  var stepCount = document.getElementById("stepCount");
+  var prevStep = document.getElementById("prevStep");
+  var nextStep = document.getElementById("nextStep");
+  var allSteps = document.getElementById("allSteps");
+
+  function renderExplore() {
+    syncPresets();
+    syncPartyButtons();
+    seatSlider.value = String(ex.M);
+    document.getElementById("seatVal").textContent = ex.M + " " + seatWord(ex.M);
+    seatSlider.setAttribute("aria-valuetext", ex.M + " " + seatWord(ex.M) + " in the district");
+
+    showColumns("ex", ex.votes.length);
+    var a = allocate(ex.votes, ex.M);
+    var warn = document.getElementById("voteWarn");
+    if (!a) {
+      warn.hidden = false;
+      warn.textContent = "Every party has zero votes, so there is nothing to divide. Give at least one party some votes.";
+      return;
+    }
+    warn.hidden = true;
+
+    fillTable("ex", a);
+    setRowStates("ex", ex.step, true);
+    renderRanking(a, { win: "rankWin", lose: "rankLose", cut: "cutline" });
+    document.getElementById("rankWrap").hidden = ex.step < 5;
+
+    document.getElementById("exploreLede").textContent = a.M + " " + seatWord(a.M) + " and " +
+      withCommas(a.total) + " valid votes." + (ex.preset === "lecture" ? " This is the example from the lecture slides." : "");
+
+    var n = narrate(a, ex.step);
+    document.getElementById("narrHead").textContent = n.head;
+    document.getElementById("narrBody").innerHTML = n.body;
+
+    stepCount.textContent = ex.step === 0 ? "Start" : "Step " + ex.step + " of " + LASTSTEP;
+    prevStep.setAttribute("aria-disabled", ex.step === 0 ? "true" : "false");
+    nextStep.setAttribute("aria-disabled", ex.step === LASTSTEP ? "true" : "false");
+    allSteps.setAttribute("aria-disabled", ex.step === LASTSTEP ? "true" : "false");
+    return { a: a, n: n };
+  }
+
+  function stepTo(s) {
+    ex.step = Math.max(0, Math.min(LASTSTEP, s));
+    var out = renderExplore();
+    if (out) {
+      var tmp = document.createElement("div");
+      tmp.innerHTML = out.n.body;
+      say(out.n.head + ". " + tmp.textContent);
+    }
+  }
+
+  prevStep.addEventListener("click", function () {
+    if (ex.step === 0) { say("Already at the start."); return; }
+    stepTo(ex.step - 1);
+  });
+  nextStep.addEventListener("click", function () {
+    if (ex.step === LASTSTEP) { say("That was the last step."); return; }
+    stepTo(ex.step + 1);
+  });
+  allSteps.addEventListener("click", function () {
+    if (ex.step === LASTSTEP) { say("Every step is already showing."); return; }
+    stepTo(LASTSTEP);
+  });
+  document.getElementById("restartSteps").addEventListener("click", function () { stepTo(0); });
+
+  /* ============================ PRACTICE ============================ */
+
+  /* Quotas are round numbers and every party's votes are a whole number of
+     hundredths of a quota, so votes ÷ quota is exact to two decimal places.
+     No quota here times any seat count from 6 to 10 makes 100,000, the total used
+     in every lecture, homework and exam example, so a practice district can never
+     coincide with one of them. That exclusion is by construction; the course's
+     own problems are deliberately not listed in this file. */
+  var QUOTAS = [6000, 8000, 9000, 12000, 15000, 18000, 24000, 30000];
+  var MIN_M = 6, MAX_M = 10, MIN_P = 3, MAX_P = 5;
+  /* At least half the seats are handed out as automatic seats, to at least two
+     parties, so every district exercises both halves of the method. Small
+     districts otherwise often had no automatic seats at all. */
+  var MIN_AUTO_SHARE = 0.5, MIN_AUTO_PARTIES = 2;
+
+  var TRAPS = [
+    { key: "zeroWins", label: "A party with no automatic seats wins a remainder seat",
+      desc: "Every party is in the ranking for remainder seats, not only the ones that already have a seat." },
+    { key: "bigMisses", label: "The biggest party gets no remainder seat",
+      desc: "Remainder seats go to the largest remainders, not the largest parties." },
+    { key: "roundingFails", label: "Rounding gives the wrong answer",
+      desc: "Rounding each party's votes ÷ quota would give at least one party the wrong number of seats." }
+  ];
+  var UNCOVERED_BOOST = 4;
+
+  function randInt(rng, lo, hi) { return lo + Math.floor(rng() * (hi - lo + 1)); }
+
+  function featuresOf(a) {
+    var f = { zeroWins: false, bigMisses: false, roundingFails: false };
+    for (var i = 0; i < a.P; i++) {
+      if (a.auto[i] === 0 && a.remSeat[i] === 1) f.zeroWins = true;
+      if (a.rounded[i] !== a.totalSeats[i]) f.roundingFails = true;
+    }
+    var big = 0;
+    for (i = 1; i < a.P; i++) if (a.votes[i] > a.votes[big]) big = i;
+    if (a.remSeat[big] === 0) f.bigMisses = true;
+    return f;
+  }
+
+  /* One attempt at a district. Returns null if it fails any constraint. */
+  function tryDistrict(rng) {
+    var M = randInt(rng, MIN_M, MAX_M);
+    var P = randInt(rng, MIN_P, MAX_P);
+    var Q = QUOTAS[randInt(rng, 0, QUOTAS.length - 1)];
+    var units = 100 * M;                       /* hundredths of a quota */
+
+    var w = [], sw = 0, i;
+    for (i = 0; i < P; i++) { var x = 0.15 + rng(); w.push(x * x); sw += x * x; }
+    var c = [], sc = 0;
+    for (i = 0; i < P; i++) { c.push(Math.max(10, Math.floor(units * w[i] / sw))); sc += c[i]; }
+    c[0] += units - sc;
+    if (c[0] < 10) return null;
+    c.sort(function (x, y) { return y - x; });
+    for (i = 1; i < P; i++) if (c[i] === c[i - 1]) return null;
+
+    var votes = c.map(function (h) { return h * Q / 100; });
+    var a = allocate(votes, M);
+    if (!a || a.total !== M * Q || a.total === 100000) return null;
+    if (a.R < 1 || a.R > P - 1) return null;
+    if (a.autoSum < MIN_AUTO_SHARE * M) return null;
+    var withAuto = 0;
+    for (i = 0; i < P; i++) if (a.auto[i] > 0) withAuto++;
+    if (withAuto < MIN_AUTO_PARTIES) return null;
+    for (i = 0; i < P; i++) {
+      var hund = c[i] % 100;
+      if (hund < 5 || hund > 95) return null;  /* no remainder too close to 0 or 1 */
+    }
+    var r1 = a.rem[a.order[a.R - 1]], r2 = a.rem[a.order[a.R]];
+    if ((r1 - r2) * 100 < 5 * a.total) return null;  /* cutoff gap at least 0.05 */
+    var f = featuresOf(a);
+    if (!f.zeroWins && !f.bigMisses && !f.roundingFails) return null;
+    return { M: M, P: P, Q: Q, votes: votes, a: a, f: f };
+  }
+
+  function makeDistrict(rng, target) {
+    for (var t = 0; t < 20000; t++) {
+      var d = tryDistrict(rng);
+      if (d && (!target || d.f[target])) return d;
+    }
+    return null;
+  }
+
+  function pickTarget(rng, covered) {
+    var total = 0, i, ws = [];
+    for (i = 0; i < TRAPS.length; i++) {
+      var wt = covered[TRAPS[i].key] ? 1 : UNCOVERED_BOOST;
+      ws.push(wt); total += wt;
+    }
+    var r = rng() * total;
+    for (i = 0; i < TRAPS.length; i++) { r -= ws[i]; if (r < 0) return TRAPS[i].key; }
+    return TRAPS[TRAPS.length - 1].key;
+  }
+
+  /* ---------- checking an answer ---------- */
+
+  function parseCount(s) {
+    var t = String(s).replace(/[,\s]/g, "");
+    if (!/^\d+$/.test(t)) return null;
+    return parseInt(t, 10);
+  }
+
+  /* Returns per-cell correctness plus a list of diagnoses, each naming the kind
+     of mistake. A diagnosis is reported only when the student's entries match
+     the pattern that mistake produces. */
+  /* Step 1: the quota and the automatic seats. */
+  function diagnoseAuto(a, ans) {
+    var out = { quotaOk: false, autoOk: [], all: true, notes: [] };
+    var i, P = a.P;
+    var Q = a.total / a.M;
+
+    out.quotaOk = ans.quota !== null && ans.quota * a.M === a.total;
+    if (!out.quotaOk) {
+      out.all = false;
+      var droopExact = a.total / (a.M + 1);
+      var droop = Math.floor(droopExact) + 1;
+      if (ans.quota === null) {
+        out.notes.push("No quota entered. The Hare quota is valid votes ÷ seats: " + withCommas(a.total) +
+          " ÷ " + a.M + " = " + withCommas(Q) + ".");
+      } else if (ans.quota === droop || ans.quota === Math.floor(droopExact) || ans.quota * (a.M + 1) === a.total) {
+        out.notes.push("That is the Droop quota, which divides by seats + 1. This method uses the Hare quota, " +
+          "votes ÷ seats: " + withCommas(a.total) + " ÷ " + a.M + " = " + withCommas(Q) + ".");
+      } else {
+        out.notes.push("The Hare quota is valid votes ÷ seats: " + withCommas(a.total) + " ÷ " + a.M +
+          " = " + withCommas(Q) + ", not " + withCommas(ans.quota) + ".");
+      }
+    }
+
+    var autoAllOk = true, matchesRounding = true, roundingDiffers = false;
+    for (i = 0; i < P; i++) {
+      out.autoOk.push(ans.auto[i] === a.auto[i]);
+      if (ans.auto[i] !== a.auto[i]) autoAllOk = false;
+      if (ans.auto[i] !== a.rounded[i]) matchesRounding = false;
+      if (a.rounded[i] !== a.auto[i]) roundingDiffers = true;
+    }
+    if (!autoAllOk) {
+      out.all = false;
+      if (matchesRounding && roundingDiffers) {
+        var ex1 = -1;
+        for (i = 0; i < P; i++) if (a.rounded[i] !== a.auto[i] && ex1 < 0) ex1 = i;
+        out.notes.push("Your automatic seats are votes ÷ quota rounded to the nearest whole number. Automatic " +
+          "seats are the whole-number part only: party " + LETTERS[ex1] + "'s " + vq(a, ex1) + " gives " +
+          a.auto[ex1] + ", because the decimal part is a quota it has not fully paid for. That part is " +
+          "settled in the remainder round.");
+      } else {
+        var wrong = [];
+        for (i = 0; i < P; i++) if (!out.autoOk[i]) wrong.push("party " + LETTERS[i] + " has " + vq(a, i) +
+          " quotas, so " + a.auto[i] + " automatic " + seatWord(a.auto[i]));
+        out.notes.push("Automatic seats are the whole-number part of votes ÷ quota: " + wrong.join("; ") + ".");
+      }
+    }
+    return out;
+  }
+
+  /* Step 2: the remainder seats. Reached only once the automatic seats are
+     right (or have been shown), so the count of seats left is the true one. */
+  function diagnoseRem(a, ans) {
+    var out = { rsOk: [], all: true, notes: [] };
+    var i, P = a.P;
+    var chosen = [], nChosen = 0;
+    for (i = 0; i < P; i++) {
+      out.rsOk.push(ans.rs[i] === a.remSeat[i]);
+      if (ans.rs[i] === 1) { chosen.push(i); nChosen++; }
+    }
+    var rsAllOk = out.rsOk.every(function (x) { return x; });
+    if (!rsAllOk) {
+      out.all = false;
+      var bySize = [];
+      for (i = 0; i < P; i++) bySize.push(i);
+      bySize.sort(function (x, y) { return a.votes[y] - a.votes[x]; });
+      var topVotes = bySize.slice(0, nChosen).sort().join(",");
+      var halfSet = [];
+      for (i = 0; i < P; i++) if (a.rem[i] * 2 >= a.total) halfSet.push(i);
+      var said = false;
+
+      if (nChosen !== a.R) {
+        out.notes.push("After the automatic seats there " + (a.R === 1 ? "is 1 seat" : "are " + a.R + " seats") +
+          " left, so exactly " + a.R + " " + (a.R === 1 ? "party wins" : "parties win") + " a remainder seat. You gave out " +
+          nChosen + ".");
+        said = true;
+      }
+      if (nChosen > 0 && chosen.join(",") === halfSet.join(",") && halfSet.join(",") !== winnersOf(a).join(",")) {
+        out.notes.push("You gave a remainder seat to every party whose remainder is one half or more. There is no " +
+          "cutoff at one half: the number of remainder seats is whatever is left over, and they go down the " +
+          "ranking until they run out.");
+        said = true;
+      }
+      if (nChosen === a.R && chosen.join(",") === topVotes && topVotes !== winnersOf(a).join(",")) {
+        out.notes.push("You gave the remainder seats to the parties with the most votes. They go to the parties " +
+          "with the largest remainders, whatever their size.");
+        said = true;
+      }
+      var missedZero = [];
+      for (i = 0; i < P; i++) if (a.auto[i] === 0 && a.remSeat[i] === 1 && ans.rs[i] !== 1) missedZero.push(i);
+      if (missedZero.length) {
+        out.notes.push(partyList(missedZero).replace(/^p/, "P") + " won no automatic seats, but " +
+          (missedZero.length === 1 ? "its remainder is" : "their remainders are") + " among the largest " + a.R +
+          ". Parties with no automatic seats are in the ranking too.");
+        said = true;
+      }
+      if (!said) {
+        out.notes.push("The remainder seats go to the " + a.R + " largest remainders: " +
+          winnersOf(a).map(function (p) { return "party " + LETTERS[p] + " (" + remText(a, p) + ")"; }).join(", ") + ".");
+      }
+    }
+    return out;
+  }
+
+  /* Both steps at once. The tool checks them separately; this combined form is
+     what the verification script exercises. */
+  function diagnose(a, ans) {
+    var s1 = diagnoseAuto(a, ans), s2 = diagnoseRem(a, ans);
+    return { quotaOk: s1.quotaOk, autoOk: s1.autoOk, rsOk: s2.rsOk, all: s1.all && s2.all,
+             notes: s1.notes.concat(s2.notes) };
+  }
+
+  function winnersOf(a) {
+    var w = [];
+    for (var i = 0; i < a.P; i++) if (a.remSeat[i] === 1) w.push(i);
+    return w;
+  }
+
+  /* ---------- practice state and rendering ---------- */
+
+  var practiceTable = document.getElementById("practiceTable");
+  buildTable(practiceTable, "pr", true);
+
+  var pr = { n: 0, d: null, stage: 1, autoTries: 0, assisted: false,
+             covered: { zeroWins: false, bigMisses: false, roundingFails: false },
+             stats: { asked: 0, right: 0 }, announced: false };
+
+  var quotaIn = document.getElementById("in-quota");
+  var autoIns = [], rsBtns = [];
+  for (var ci = 0; ci < MAXP; ci++) {
+    autoIns.push(document.getElementById("in-auto-" + ci));
+    rsBtns.push(document.getElementById("in-rs-" + ci));
+  }
+  var checkAutoBtn = document.getElementById("checkAuto");
+  var showAutoBtn = document.getElementById("showAuto");
+  var checkRemBtn = document.getElementById("checkRem");
+  var nextBtn = document.getElementById("nextProblem");
+
+  function readAnswer() {
+    var ans = { quota: parseCount(quotaIn.value), auto: [], rs: [] };
+    for (var i = 0; i < pr.d.P; i++) {
+      var v = parseCount(autoIns[i].value);
+      ans.auto.push(v === null ? -1 : v);
+      ans.rs.push(rsBtns[i].getAttribute("aria-pressed") === "true" ? 1 : 0);
+    }
+    return ans;
+  }
+
+  function renderRunningTotal() {
+    if (!pr.d || pr.stage === 3) return;
+    var ans = readAnswer(), sum = 0, blanks = 0, autoSum = 0;
+    for (var i = 0; i < pr.d.P; i++) {
+      var au = ans.auto[i] < 0 ? 0 : ans.auto[i];
+      var t = au + ans.rs[i];
+      if (ans.auto[i] < 0) blanks++;
+      setV("pr", "total", i, String(t));
+      sum += t;
+      autoSum += au;
+    }
+    /* The automatic-seats total is always the sum of the student's own entries.
+       It used to be written only on entering step 2 and was never cleared, so the
+       next district showed the previous district's sum until checked. */
+    setV("pr", "auto", "t", String(autoSum));
+    var note = sum === pr.d.M ? '<span class="even">matches the seats</span>'
+      : '<span class="over">' + (sum > pr.d.M ? (sum - pr.d.M) + " too many" : (pr.d.M - sum) + " short") + "</span>";
+    setV("pr", "total", "t", sum + " of " + pr.d.M + note);
+    document.getElementById("runningTotal").textContent = pr.stage === 1
+      ? "Your automatic seats hand out " + sum + " of the district's " + pr.d.M + " seats" +
+        (blanks ? ", with " + blanks + " " + (blanks === 1 ? "box" : "boxes") + " still empty." : ".")
+      : "Your entries hand out " + sum + " of the district's " + pr.d.M + " seats.";
+  }
+
+  function lockStep1(lock) {
+    quotaIn.readOnly = lock;
+    quotaIn.setAttribute("aria-readonly", lock ? "true" : "false");
+    for (var i = 0; i < MAXP; i++) {
+      autoIns[i].readOnly = lock;
+      autoIns[i].setAttribute("aria-readonly", lock ? "true" : "false");
+    }
+  }
+  function lockStep2(lock) {
+    for (var i = 0; i < MAXP; i++) {
+      if (lock) rsBtns[i].setAttribute("aria-disabled", "true");
+      else rsBtns[i].removeAttribute("aria-disabled");
+    }
+  }
+
+  function clearMark(id) {
+    var m = document.getElementById(id);
+    m.textContent = ""; m.className = "mark";
+    m.parentNode.classList.remove("is-ok", "is-bad");
+  }
+  function clearMarks() {
+    clearMark("mk-quota");
+    for (var i = 0; i < MAXP; i++) { clearMark("mk-auto-" + i); clearMark("mk-rs-" + i); }
+  }
+
+  function mark(id, ok) {
+    var m = document.getElementById(id);
+    m.className = "mark " + (ok ? "ok" : "bad");
+    m.textContent = ok ? "✓ right" : "✗ wrong";
+    m.parentNode.classList.remove("is-ok", "is-bad");
+    m.parentNode.classList.add(ok ? "is-ok" : "is-bad");
+  }
+  function markShown(id) {
+    var m = document.getElementById(id);
+    m.className = "mark shown";
+    m.textContent = "shown";
+    m.parentNode.classList.remove("is-ok", "is-bad");
+  }
+
+  function setStageLabel() {
+    document.getElementById("stageLabel").textContent =
+      pr.stage === 1 ? "Step 1 of 2: automatic seats"
+      : pr.stage === 2 ? "Step 2 of 2: remainder seats"
+      : "Done: table complete";
+  }
+
+  function showResult(ok, verdict, notes, summary) {
+    var box = document.getElementById("result");
+    box.hidden = false;
+    box.className = "result " + (ok ? "is-correct" : "is-wrong");
+    document.getElementById("resultVerdict").textContent = verdict;
+    var ul = document.getElementById("resultList");
+    ul.innerHTML = "";
+    notes.forEach(function (n) { var li = document.createElement("li"); li.textContent = n; ul.appendChild(li); });
+    ul.hidden = notes.length === 0;
+    document.getElementById("resultSummary").textContent = summary;
+    say(verdict + " " + notes.join(" ") + " " + summary);
+  }
+
+  var rng = Math.random;
+
+  function newDistrict() {
+    var target = pickTarget(rng, pr.covered);
+    pr.d = makeDistrict(rng, target);
+    pr.n += 1;
+    pr.stage = 1; pr.autoTries = 0; pr.assisted = false;
+    var d = pr.d;
+
+    showColumns("pr", d.P);
+    document.getElementById("practiceTitle").textContent = "District " + pr.n;
+    document.getElementById("practiceLede").textContent = d.M + " seats, " + withCommas(d.a.total) +
+      " valid votes, " + d.P + " parties. Use the Hare quota and the largest remainder method.";
+    setStageLabel();
+
+    fillTable("pr", d.a, { quota: true, auto: true, remSeats: true, total: true });
+    for (var i = 0; i < MAXP; i++) {
+      autoIns[i].value = "";
+      rsBtns[i].setAttribute("aria-pressed", "false");
+      rsBtns[i].textContent = "no seat";
+      if (i < d.P) rsBtns[i].setAttribute("aria-label", "Remainder seat, party " + LETTERS[i] + ": no seat");
+    }
+    quotaIn.value = "";
+    clearMarks();
+    lockStep1(false);
+    lockStep2(true);
+
+    ROWS.forEach(function (row) {
+      var tr = document.getElementById("pr-r-" + row.key);
+      tr.classList.toggle("is-ahead", row.key === "vq" || row.key === "rem" || row.key === "remSeats");
+      tr.classList.remove("is-current");
+    });
+
+    document.getElementById("result").hidden = true;
+    document.getElementById("pRankWrap").hidden = true;
+    checkAutoBtn.hidden = false;
+    showAutoBtn.hidden = true;
+    checkRemBtn.hidden = true;
+    nextBtn.hidden = true;
+    renderRunningTotal();
+    renderCoverage();
+  }
+
+  /* Move from step 1 to step 2: lock the quota and automatic seats, fill in the
+     working rows, and open the remainder-seat buttons. */
+  function enterStep2(verdictOk, verdict, notes, summary) {
+    var a = pr.d.a;
+    pr.stage = 2;
+    setStageLabel();
+    quotaIn.value = withCommas(a.total / a.M);
+    lockStep1(true);
+    lockStep2(false);
+    ["vq", "rem", "remSeats"].forEach(function (k) {
+      document.getElementById("pr-r-" + k).classList.remove("is-ahead");
+    });
+    checkAutoBtn.hidden = true;
+    showAutoBtn.hidden = true;
+    checkRemBtn.hidden = false;
+    renderRunningTotal();
+    showResult(verdictOk, verdict, notes, summary);
+    rsBtns[0].focus();
+  }
+
+  for (var bi = 0; bi < MAXP; bi++) {
+    (function (i) {
+      rsBtns[i].addEventListener("click", function () {
+        if (pr.stage !== 2) { say(pr.stage === 1 ? "Remainder seats come after step 1." : "Already checked. Choose Next district to continue."); return; }
+        var on = rsBtns[i].getAttribute("aria-pressed") !== "true";
+        rsBtns[i].setAttribute("aria-pressed", on ? "true" : "false");
+        rsBtns[i].textContent = on ? "+1 seat" : "no seat";
+        rsBtns[i].setAttribute("aria-label", "Remainder seat, party " + LETTERS[i] + ": " + (on ? "wins one" : "no seat"));
+        renderRunningTotal();
+        say("Party " + LETTERS[i] + (on ? " given a remainder seat. " : " has no remainder seat. ") +
+            document.getElementById("runningTotal").textContent);
+      });
+      autoIns[i].addEventListener("input", function () {
+        if (pr.stage === 1) clearMark("mk-auto-" + i);
+        renderRunningTotal();
+      });
+    })(bi);
+  }
+  quotaIn.addEventListener("input", function () { if (pr.stage === 1) clearMark("mk-quota"); });
+
+  checkAutoBtn.addEventListener("click", function () {
+    if (pr.stage !== 1) return;
+    var a = pr.d.a;
+    var res = diagnoseAuto(a, readAnswer());
+    pr.autoTries++;
+    mark("mk-quota", res.quotaOk);
+    for (var i = 0; i < pr.d.P; i++) mark("mk-auto-" + i, res.autoOk[i]);
+
+    if (res.all) {
+      enterStep2(true, "✓ The quota and every automatic seat are right.", [],
+        "The votes ÷ quota and remainder rows are now filled in. Your automatic seats hand out " +
+        a.autoSum + " of " + a.M + " seats. Now give a remainder seat to each party that should get one.");
+    } else {
+      showAutoBtn.hidden = false;
+      showResult(false, "✗ Not yet. The cells marked wrong need another look.", res.notes,
+        "Fix them and check again, or choose “Show me the quota and automatic seats” to go on to the " +
+        "remainder seats.");
+      checkAutoBtn.focus();
+    }
+  });
+
+  showAutoBtn.addEventListener("click", function () {
+    if (pr.stage !== 1) return;
+    var a = pr.d.a, d = pr.d;
+    pr.assisted = true;
+    quotaIn.value = withCommas(a.total / a.M);
+    markShown("mk-quota");
+    for (var i = 0; i < d.P; i++) {
+      autoIns[i].value = String(a.auto[i]);
+      markShown("mk-auto-" + i);
+    }
+    var vqs = [];
+    for (i = 0; i < d.P; i++) vqs.push("party " + LETTERS[i] + " " + vq(a, i) + " → " + a.auto[i]);
+    enterStep2(true, "Here are the quota and the automatic seats.",
+      ["The quota is " + withCommas(a.total) + " ÷ " + a.M + " = " + withCommas(a.total / a.M) +
+       ". Automatic seats are the whole-number part of votes ÷ quota: " + vqs.join("; ") + "."],
+      "The remainder seats are still yours to work out. This district will not count toward the three traps, " +
+      "since step 1 was shown rather than worked.");
+  });
+
+  checkRemBtn.addEventListener("click", function () {
+    if (pr.stage !== 2) return;
+    var d = pr.d, a = d.a;
+    var res = diagnoseRem(a, readAnswer());
+    pr.stage = 3;
+    pr.stats.asked++;
+    setStageLabel();
+    for (var i = 0; i < d.P; i++) mark("mk-rs-" + i, res.rsOk[i]);
+    lockStep2(true);
+
+    fillTable("pr", a, { quota: true, auto: true, remSeats: true });
+    renderRanking(a, { win: "pRankWin", lose: "pRankLose", cut: "pCutline" });
+    document.getElementById("pRankWrap").hidden = false;
+
+    var counts = res.all && !pr.assisted && pr.autoTries === 1;
+    var totals = [];
+    for (i = 0; i < d.P; i++) totals.push("party " + LETTERS[i] + " " + a.totalSeats[i]);
+    var summary = "The correct totals: " + totals.join(", ") + ". The ranking of remainders is below the table.";
+    if (res.all && !counts) {
+      summary += pr.assisted
+        ? " This district does not count toward the three traps, since step 1 was shown."
+        : " This district does not count toward the three traps, since step 1 took more than one check.";
+    }
+    if (counts) {
+      pr.stats.right++;
+      TRAPS.forEach(function (t) { if (d.f[t.key]) pr.covered[t.key] = true; });
+    }
+    renderCoverage();
+
+    checkRemBtn.hidden = true;
+    nextBtn.hidden = false;
+    showResult(res.all, res.all ? "✓ Every remainder seat right." : "✗ Not quite. Here is what went wrong.",
+      res.notes, summary);
+    nextBtn.focus();
+  });
+
+  document.getElementById("nextProblem").addEventListener("click", function () {
+    newDistrict();
+    document.getElementById("practiceTitle").focus();
+    say("District " + pr.n + ". " + document.getElementById("practiceLede").textContent);
+  });
+
+  document.getElementById("resetPractice").addEventListener("click", function () {
+    pr.covered = { zeroWins: false, bigMisses: false, roundingFails: false };
+    pr.stats = { asked: 0, right: 0 };
+    pr.n = 0; pr.announced = false;
+    newDistrict();
+    document.getElementById("practiceTitle").focus();
+    say("Progress cleared. District 1. " + document.getElementById("practiceLede").textContent);
+  });
+
+  function renderCoverage() {
+    var ul = document.getElementById("coverage");
+    ul.innerHTML = "";
+    var done = 0;
+    TRAPS.forEach(function (t) {
+      var got = pr.covered[t.key];
+      if (got) done++;
+      var li = document.createElement("li");
+      li.className = got ? "done" : "";
+      li.innerHTML = '<span class="tick" aria-hidden="true">' + (got ? "✓" : "○") + "</span>" +
+        '<span class="cname">' + t.label + '<span class="cdesc">' + t.desc + "</span>" +
+        '<span class="sr-only">' + (got ? "Done." : "Not yet done.") + "</span></span>";
+      ul.appendChild(li);
+    });
+    var all = document.getElementById("allDone");
+    all.hidden = done < TRAPS.length;
+    if (done === TRAPS.length && !pr.announced) {
+      pr.announced = true;
+      say("All three covered. The districts keep coming for as long as you want them.");
+    }
+  }
+
+  /* ============================ NOTES DERIVED AT RUN TIME ============================ */
+
+  (function () {
+    var lec = allocate(PRESETS[0].votes, PRESETS[0].M);
+    document.getElementById("roundLectureText").textContent = String(lec.roundedSum);
+
+    /* A remainder of one half or more that wins nothing, taken from a ready-made
+       district and worded from that district's own numbers. Computed rather than
+       written in, so the example cannot drift if a preset is edited. */
+    var halfText = "";
+    PRESETS.some(function (p) {
+      var a = allocate(p.votes, p.M);
+      for (var k = 0; k < a.P; k++) {
+        if (a.rem[k] * 2 >= a.total && a.remSeat[k] === 0) {
+          var above = a.order.filter(function (q) { return a.rem[q] > a.rem[k]; });
+          halfText = (p.id === "lecture" ? "In the lecture’s example"
+                      : "In the “" + p.label.toLowerCase() + "” district on the first tab") +
+            ", party " + LETTERS[k] + "’s remainder is " + remText(a, k) +
+            " — more than half a quota — and it still wins nothing, because only " + a.R + " " +
+            seatWord(a.R) + (a.R === 1 ? " is" : " are") + " left and " +
+            partyList(above) + " " + (above.length === 1 ? "has a larger remainder." : "have larger remainders.");
+          return true;
+        }
+      }
+      return false;
+    });
+    document.getElementById("halfLoserText").textContent = halfText;
+
+    /* Droop quota: votes ÷ (seats + 1), then the same largest-remainder procedure.
+       Computed here rather than written in, so the note cannot drift. */
+    var v = PRESETS[0].votes, M = PRESETS[0].M, total = 0, i;
+    for (i = 0; i < v.length; i++) total += v[i];
+    var autoD = [], remD = [], sum = 0;
+    for (i = 0; i < v.length; i++) {
+      var num = v[i] * (M + 1);
+      var r = num % total;
+      autoD.push((num - r) / total); remD.push(r); sum += autoD[i];
+    }
+    var left = M - sum, order = [];
+    for (i = 0; i < v.length; i++) order.push(i);
+    order.sort(function (x, y) { return remD[y] - remD[x] || x - y; });
+    var droopSeats = autoD.slice();
+    for (i = 0; i < left; i++) droopSeats[order[i]] += 1;
+    var diffs = [];
+    for (i = 0; i < v.length; i++) {
+      if (droopSeats[i] !== lec.totalSeats[i]) {
+        diffs.push("party " + LETTERS[i] + " " + droopSeats[i] + " instead of " + lec.totalSeats[i]);
+      }
+    }
+    document.getElementById("droopText").textContent = diffs.length
+      ? diffs.join(", ") + "."
+      : "the same allocation as the Hare quota.";
+  })();
+
+  /* ============================ MODES ============================ */
+
+  var tabExplore = document.getElementById("tab-explore");
+  var tabPractice = document.getElementById("tab-practice");
+  var exploreBoard = document.getElementById("exploreBoard");
+  var practiceBoard = document.getElementById("practiceBoard");
+  var mode = "explore";
+
+  function selectMode(next, moveFocus) {
+    if (next === mode) return;
+    mode = next;
+    var isEx = next === "explore";
+    tabExplore.setAttribute("aria-selected", isEx ? "true" : "false");
+    tabPractice.setAttribute("aria-selected", isEx ? "false" : "true");
+    tabExplore.tabIndex = isEx ? 0 : -1;
+    tabPractice.tabIndex = isEx ? -1 : 0;
+    exploreBoard.hidden = !isEx;
+    practiceBoard.hidden = isEx;
+    if (isEx) {
+      renderExplore();
+      if (moveFocus) document.getElementById("exploreTitle").focus();
+      say("Step through a district.");
+    } else {
+      if (!pr.d) newDistrict();
+      if (moveFocus) document.getElementById("practiceTitle").focus();
+      say("Fill in the table yourself. District " + pr.n + ". " + document.getElementById("practiceLede").textContent);
+    }
+  }
+
+  tabExplore.addEventListener("click", function () { selectMode("explore", true); });
+  tabPractice.addEventListener("click", function () { selectMode("practice", true); });
+  document.getElementById("tabs").addEventListener("keydown", function (e) {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight" && e.key !== "Home" && e.key !== "End") return;
+    e.preventDefault();
+    var next = e.key === "Home" ? "explore" : e.key === "End" ? "practice"
+             : (mode === "explore" ? "practice" : "explore");
+    selectMode(next, false);
+    (next === "explore" ? tabExplore : tabPractice).focus();
+  });
+
+  /* ---------- theme ---------- */
+
+  var themeBtn = document.getElementById("themeToggle");
+  function applyTheme(m) {
+    document.documentElement.setAttribute("data-theme", m);
+    themeBtn.textContent = m === "dark" ? "Switch to light mode" : "Switch to dark mode";
+  }
+  applyTheme(window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  themeBtn.addEventListener("click", function () {
+    applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  });
+
+  /* ---------- exposed for the verification script only ---------- */
+  window.__seatTool = { allocate: allocate, diagnose: diagnose, diagnoseAuto: diagnoseAuto, diagnoseRem: diagnoseRem, makeDistrict: makeDistrict,
+    tryDistrict: tryDistrict, featuresOf: featuresOf, fmtRatio: fmtRatio, PRESETS: PRESETS,
+    QUOTAS: QUOTAS, MIN_M: MIN_M, MAX_M: MAX_M, MIN_AUTO_SHARE: MIN_AUTO_SHARE, MIN_AUTO_PARTIES: MIN_AUTO_PARTIES, TRAPS: TRAPS, pickTarget: pickTarget, setRng: function (f) { rng = f; } };
+
+  /* ---------- start ---------- */
+
+  syncVoteInputs();
+  renderExplore();
+  renderCoverage();
+})();
+</script>
+</body>
+</html>

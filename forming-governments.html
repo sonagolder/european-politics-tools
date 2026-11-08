@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forming a government</title>
+<style>
+  :root {
+    --bg: #FAFAFA;
+    --panel: #FFFFFF;
+    --border: #D0D0D0;
+    --text: #111111;
+    --text-2: #555555;
+    --hint: #999999;
+    --deemph: #707070;
+    --accent: #0072B2;
+    --favorable: #0072B2;
+    --unfavorable: #B33E00;
+    --neutral-state: #5F5E5A;
+    --gold-ui: #B8860B;
+    --gold-text: #946B09;
+    --body-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --data-font: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --u: 8px;
+  }
+
+  html[data-theme="dark"] {
+    --bg: #1A1A1A;
+    --panel: #2A2A2A;
+    --border: #3A3A3A;
+    --text: #F2F2F2;
+    --text-2: #B3B3B3;
+    --hint: #7A7A7A;
+    --deemph: #8F8F8F;
+    --accent: #7FC7EE;
+    --favorable: #7FC7EE;
+    --unfavorable: #F08A4B;
+    --neutral-state: #A8A6A0;
+    --gold-ui: #E0B23D;
+    --gold-text: #E0B23D;
+  }
+
+  * { box-sizing: border-box; }
+
+  /* Author rules that set `display` outrank the browser's [hidden] rule, so anything
+     given a display value here would stay visible when hidden. Enforce it globally. */
+  [hidden] { display: none !important; }
+
+  body {
+    margin: 0;
+    padding: calc(var(--u) * 3) calc(var(--u) * 2) calc(var(--u) * 6);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body-font);
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
+  .wrap { max-width: 1120px; margin: 0 auto; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  code, .num { font-family: var(--data-font); font-variant-numeric: tabular-nums; }
+
+  header { margin-bottom: calc(var(--u) * 3); }
+  h1 { font-size: 1.65rem; font-weight: 600; margin: 0 0 var(--u) 0; line-height: 1.25; }
+  .standfirst { margin: 0; color: var(--text-2); max-width: 70ch; }
+
+  .topbar {
+    display: flex; flex-wrap: wrap; gap: calc(var(--u) * 2);
+    align-items: flex-end; justify-content: space-between;
+    margin-bottom: calc(var(--u) * 3);
+  }
+
+  .field-label { display: block; font-size: 0.8rem; color: var(--text-2); margin-bottom: var(--u); }
+
+  [role="tablist"] { display: flex; flex-wrap: wrap; gap: var(--u); }
+  [role="tab"] {
+    font: inherit; font-size: 0.95rem;
+    padding: var(--u) calc(var(--u) * 2);
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+  [role="tab"][aria-selected="true"] {
+    border-color: var(--accent);
+    box-shadow: inset 0 -3px 0 var(--accent);
+    font-weight: 600;
+  }
+
+  .theme-toggle, .look-btn {
+    font: inherit; font-size: 0.85rem;
+    padding: var(--u) calc(var(--u) * 2);
+    background: var(--panel); color: var(--accent);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+  .theme-toggle { color: var(--text); }
+  .looks { display: flex; flex-wrap: wrap; gap: var(--u); margin-top: var(--u); }
+
+  button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible,
+  h2[tabindex="-1"]:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* ---------- the parliament strip (signature element) ---------- */
+
+  .chamber-block {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 6px; padding: calc(var(--u) * 2);
+    margin-bottom: calc(var(--u) * 3);
+  }
+  .chamber-block h2 { font-size: 1rem; font-weight: 600; margin: 0 0 calc(var(--u) * 0.5) 0; }
+  .chamber-sub { margin: 0 0 calc(var(--u) * 1.5) 0; font-size: 0.85rem; color: var(--text-2); }
+  .axis-ends {
+    display: flex; justify-content: space-between;
+    font-size: 0.75rem; color: var(--text-2); margin-bottom: calc(var(--u) * 0.5);
+  }
+  .strip { position: relative; display: flex; width: 100%; height: 56px; gap: 2px; }
+  .seg {
+    position: relative; min-width: 2px;
+    border: 1px solid var(--border); border-radius: 2px;
+    background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    overflow: hidden; line-height: 1.2;
+    font-family: var(--data-font); font-size: 0.75rem; color: var(--text);
+  }
+  .seg .s { font-size: 0.7rem; color: var(--text-2); }
+  .seg.is-in { background: var(--accent); border-color: var(--accent); color: var(--panel); font-weight: 700; }
+  .seg.is-in .s { color: var(--panel); }
+  html[data-theme="dark"] .seg.is-in, html[data-theme="dark"] .seg.is-in .s { color: var(--bg); }
+  .strip-cap { margin: calc(var(--u) * 0.5) 0 0 0; font-size: 0.85rem; color: var(--text-2); }
+
+  /* ---------- board ---------- */
+
+  .board {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: calc(var(--u) * 3);
+    align-items: start;
+  }
+  @media (max-width: 860px) { .board { grid-template-columns: minmax(0, 1fr); } }
+  .col { display: flex; flex-direction: column; gap: calc(var(--u) * 2); min-width: 0; }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 6px; padding: calc(var(--u) * 2);
+    scroll-margin-top: var(--u);
+  }
+  .card h2 { font-size: 1.05rem; font-weight: 600; margin: 0 0 var(--u) 0; }
+  .card-sub { margin: 0 0 calc(var(--u) * 2) 0; font-size: 0.92rem; color: var(--text-2); }
+  .card p { margin: 0 0 var(--u) 0; }
+
+  /* position: relative makes the scroller the containing block for the absolutely
+     positioned .sr-only text in its cells, so that text cannot widen the page.
+     See the house style's checklist item on scroll containers. */
+  .table-scroll { overflow-x: auto; position: relative; }
+
+  table.res { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+  table.res caption, table.coal caption { text-align: left; font-size: 0.85rem; color: var(--text-2); padding-bottom: var(--u); }
+  table.res th, table.res td { border-bottom: 1px solid var(--border); padding: var(--u); text-align: left; vertical-align: top; }
+  table.res thead th { font-size: 0.85rem; font-weight: 600; border-bottom: 2px solid var(--text); }
+  table.res td.n, table.res th.n { text-align: right; font-family: var(--data-font); font-variant-numeric: tabular-nums; }
+  table.res tfoot td { font-weight: 600; border-bottom: 0; }
+  .code { font-family: var(--data-font); font-weight: 700; }
+  .maj-line { margin: calc(var(--u) * 2) 0 0 0; font-size: 0.92rem; }
+  .maj-line strong { font-family: var(--data-font); }
+
+  .tag {
+    display: inline-block; font-size: 0.75rem; line-height: 1.3;
+    padding: 1px var(--u); border-radius: 4px; border: 1px solid var(--border);
+    margin: 2px calc(var(--u) * 0.5) 2px 0; white-space: nowrap;
+  }
+  .tag.role { border-color: var(--text); font-weight: 600; }
+  .tag.out { color: var(--deemph); }
+  .tag.formed { border: 2px solid var(--text); color: var(--text); font-weight: 700; }
+
+  /* ---------- coalitions card ---------- */
+
+  table.coal { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+  table.coal th, table.coal td { border-bottom: 1px solid var(--border); padding: calc(var(--u) * 0.5) var(--u); text-align: left; vertical-align: middle; }
+  table.coal thead th { font-size: 0.85rem; font-weight: 600; border-bottom: 2px solid var(--text); padding-top: var(--u); padding-bottom: var(--u); }
+  table.coal td.n, table.coal th.n { text-align: right; font-family: var(--data-font); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  table.coal.no-mw .c-mw, table.coal.no-conn .c-conn { display: none; }
+  .cname {
+    display: inline-block; font-family: var(--data-font); font-weight: 600; white-space: nowrap;
+    padding: 2px var(--u); border: 1px solid transparent; border-radius: 4px;
+  }
+  tr.pending .cname { border: 2px dashed var(--accent); padding: 1px calc(var(--u) - 1px); }
+  tr.out td {
+    color: var(--deemph);
+    background-image: repeating-linear-gradient(135deg, transparent 0 8px,
+      color-mix(in srgb, var(--deemph) 16%, transparent) 8px 9px);
+  }
+  tr.out .cname { font-weight: 400; }
+  tr.fresh td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+  .yn { font-size: 0.85rem; }
+  .yn .i, .yn .w { white-space: nowrap; }
+  .yn .w { font-weight: 600; }
+  .yn.yes .w, .yn.yes .i { color: var(--favorable); }
+  .yn.no .w, .yn.no .i { color: var(--unfavorable); }
+  .yn .why { display: block; color: var(--text-2); font-size: 0.78rem; line-height: 1.3; }
+  .tags { display: block; }
+  .coal-note { margin: calc(var(--u) * 2) 0 0 0; font-size: 0.88rem; color: var(--text-2); }
+
+  /* ---------- outcome card ---------- */
+
+  .gov-line { margin: 0 0 var(--u) 0; font-family: var(--data-font); font-weight: 700; }
+  .gamson {
+    margin: calc(var(--u) * 2) 0 0 0; padding: var(--u) calc(var(--u) * 2);
+    border: 1px solid var(--border); border-left: 4px solid var(--neutral-state);
+    border-radius: 4px; font-size: 0.92rem;
+  }
+
+  /* ---------- the panel ---------- */
+
+  .step-label { font-size: 0.8rem; color: var(--text-2); margin: 0 0 var(--u) 0; }
+  .step-title { font-size: 1.05rem; font-weight: 600; margin: 0 0 var(--u) 0; }
+  .step-body p { margin: 0 0 var(--u) 0; }
+  .nav { display: flex; gap: var(--u); align-items: center; margin-top: calc(var(--u) * 2); flex-wrap: wrap; }
+  .dots { display: flex; gap: var(--u); margin-left: auto; flex-wrap: wrap; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
+  .dot.on { background: var(--accent); }
+
+  .btn {
+    font: inherit; font-size: 0.95rem; padding: var(--u) calc(var(--u) * 2);
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+  .btn:disabled { color: var(--hint); border-style: dashed; cursor: default; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--panel); font-weight: 600; }
+  html[data-theme="dark"] .btn.primary { color: var(--bg); }
+  .btn.primary:disabled { background: var(--panel); color: var(--hint); border-color: var(--border); }
+
+  .chips-group { margin-bottom: calc(var(--u) * 2); }
+  .chips-desc { margin: 0 0 var(--u) 0; font-size: 0.85rem; color: var(--text-2); }
+  .chips { display: flex; flex-wrap: wrap; gap: var(--u); }
+  .chip {
+    font: inherit; font-size: 0.9rem; padding: var(--u) calc(var(--u) * 2);
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+  .chip[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 -3px 0 var(--accent); font-weight: 600; }
+  .chip .done-mark { font-family: var(--data-font); color: var(--gold-text); margin-left: calc(var(--u) * 0.5); }
+
+  .task { border-top: 1px solid var(--border); padding-top: calc(var(--u) * 2); margin-top: calc(var(--u) * 2); }
+  .task-q { font-weight: 600; margin: 0 0 var(--u) 0; }
+  .task-help { margin: 0 0 var(--u) 0; font-size: 0.88rem; color: var(--text-2); }
+  .opts { display: flex; flex-direction: column; gap: var(--u); }
+  .opt {
+    font: inherit; font-size: 0.95rem; text-align: left;
+    padding: var(--u) calc(var(--u) * 2); background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+  .opt.num, .opt.coal-opt { font-family: var(--data-font); font-variant-numeric: tabular-nums; }
+  .opt .sub { font-family: var(--body-font); font-size: 0.82rem; color: var(--text-2); margin-left: var(--u); }
+  .opt:hover { border-color: var(--accent); }
+  .opt[aria-pressed="true"] { border: 2px dashed var(--accent); padding: calc(var(--u) - 1px) calc(var(--u) * 2 - 1px); }
+  .opt[aria-disabled="true"] { cursor: default; color: var(--deemph); }
+  .opt[aria-disabled="true"]:hover { border-color: var(--border); }
+  .opt.chosen[aria-disabled="true"] { color: var(--text); border: 2px solid var(--accent); padding: calc(var(--u) - 1px) calc(var(--u) * 2 - 1px); }
+  .opt.chosen[aria-disabled="true"] .sub { color: var(--text-2); }
+
+  .result-note {
+    margin: var(--u) 0 0 0; padding: var(--u) calc(var(--u) * 2); border-radius: 4px;
+    border: 1px solid var(--border); font-size: 0.92rem;
+  }
+  .result-note.ok { box-shadow: inset 4px 0 0 var(--favorable); }
+  .result-note.no { box-shadow: inset 4px 0 0 var(--unfavorable); }
+  .result-note.info { box-shadow: inset 4px 0 0 var(--neutral-state); }
+  .result-note .head { font-weight: 600; }
+  .result-note.ok .head { color: var(--favorable); }
+  .result-note.no .head { color: var(--unfavorable); }
+
+  .finished {
+    margin-top: calc(var(--u) * 2); padding: var(--u) calc(var(--u) * 2);
+    border: 2px solid var(--gold-ui); border-radius: 4px; font-size: 0.92rem;
+  }
+  .finished p { margin: 0 0 var(--u) 0; }
+  .finished p:last-child { margin-bottom: 0; }
+
+  .back-btn {
+    position: fixed; right: calc(var(--u) * 2); bottom: calc(var(--u) * 2); z-index: 10;
+    font: inherit; font-size: 0.9rem; font-weight: 600;
+    padding: var(--u) calc(var(--u) * 2); border-radius: 4px; cursor: pointer;
+    background: var(--accent); color: var(--panel); border: 1px solid var(--accent);
+  }
+  html[data-theme="dark"] .back-btn { color: var(--bg); }
+
+  /* ---------- notes ---------- */
+
+  .notes { margin-top: calc(var(--u) * 4); }
+  .notes details {
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: calc(var(--u) * 1.5) calc(var(--u) * 2);
+    margin-bottom: calc(var(--u) * 1.5); background: var(--panel);
+  }
+  .notes summary { cursor: pointer; font-weight: 600; }
+  .notes details > *:not(summary) { max-width: 78ch; }
+  .notes details p { margin: calc(var(--u) * 1.5) 0 0 0; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .opt, .btn, [role="tab"], .chip, .seg { transition: border-color 120ms ease, background-color 120ms ease; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Forming a government</h1>
+    <p class="standfirst">
+      Voters in a parliamentary democracy elect a parliament, not a government. When no party wins a majority
+      of the seats, the parties bargain over who governs. This tool works through the week 12 lecture&rsquo;s
+      example of how to predict the result, and then gives you elections in invented countries to work
+      through, including some where the government that formed is not one either prediction expects.
+    </p>
+  </header>
+
+  <div class="topbar">
+    <div>
+      <span class="field-label" id="modeLabel">Two ways to use this</span>
+      <div role="tablist" aria-labelledby="modeLabel" id="tabs">
+        <button role="tab" id="tab-guided" aria-selected="true" aria-controls="guidedPanel" type="button">Guided walkthrough</button>
+        <button role="tab" id="tab-practice" aria-selected="false" aria-controls="practicePanel" tabindex="-1" type="button">Practice</button>
+      </div>
+    </div>
+    <button class="theme-toggle" id="themeToggle" type="button">Switch to dark mode</button>
+  </div>
+
+  <section class="chamber-block" aria-labelledby="stripTitle">
+    <h2 id="stripTitle">The parliament, seated from left to right</h2>
+    <p class="chamber-sub" id="stripSub"></p>
+    <div class="axis-ends" aria-hidden="true"><span>Left</span><span>Right</span></div>
+    <div class="strip" id="strip" aria-hidden="true"></div>
+    <p class="strip-cap" id="stripCap" aria-hidden="true"></p>
+  </section>
+
+  <div class="board">
+
+    <!-- ============ content column ============ -->
+    <div class="col">
+
+      <section class="card" id="electionCard" aria-labelledby="elTitle">
+        <h2 id="elTitle"></h2>
+        <p class="card-sub" id="elSub"></p>
+        <div class="table-scroll">
+          <table class="res">
+            <caption id="elCap">Parties listed from left to right.</caption>
+            <thead><tr><th scope="col">Party</th><th scope="col" class="n">Seats</th><th scope="col" class="n">Percent</th><th scope="col"><span class="sr-only">Role</span></th></tr></thead>
+            <tbody id="elBody"></tbody>
+            <tfoot><tr><td>Total</td><td class="n" id="elTotal"></td><td class="n">100</td><td></td></tr></tfoot>
+          </table>
+        </div>
+        <p class="maj-line" id="majLine"></p>
+      </section>
+
+      <section class="card" id="coalCard" aria-labelledby="coalTitle" hidden>
+        <h2 id="coalTitle">Potential governments</h2>
+        <div class="table-scroll">
+          <table class="coal" id="coalTable">
+            <caption id="coalCap"></caption>
+            <thead><tr>
+              <th scope="col">Government</th><th scope="col" class="n">Seats</th><th scope="col" class="n">Surplus</th>
+              <th scope="col" class="c-mw">Minimal winning?</th><th scope="col" class="c-conn">Connected?</th>
+            </tr></thead>
+            <tbody id="coalBody"></tbody>
+          </table>
+        </div>
+        <p class="coal-note" id="coalNote"></p>
+      </section>
+
+      <section class="card" id="outcomeCard" aria-labelledby="outTitle" hidden>
+        <h2 id="outTitle">What happened</h2>
+        <p class="gov-line" id="govLine"></p>
+        <div id="outBody"></div>
+        <div class="gamson" id="gamsonBox" hidden></div>
+      </section>
+    </div>
+
+    <!-- ============ the panel ============ -->
+    <div>
+
+      <section class="card" id="guidedPanel" role="tabpanel" aria-labelledby="tab-guided">
+        <p class="step-label" id="stepLabel"></p>
+        <div aria-live="polite" id="stepLive">
+          <h2 class="step-title" id="stepTitle" tabindex="-1"></h2>
+          <div class="step-body" id="stepBody"></div>
+          <div class="looks" id="stepLook"></div>
+        </div>
+        <div class="nav" id="guidedNav">
+          <button class="btn" type="button" id="prevBtn">Back</button>
+          <button class="btn primary" type="button" id="nextBtn">Next</button>
+          <div class="dots" id="dots" aria-hidden="true"></div>
+        </div>
+      </section>
+
+      <section class="card" id="practicePanel" role="tabpanel" aria-labelledby="tab-practice" hidden>
+        <h2 id="practiceTitle" tabindex="-1">Practice</h2>
+        <div id="casePicker"></div>
+
+        <div class="task" id="t1">
+          <p class="task-q">1. Who is the formateur?</p>
+          <p class="task-help">The formateur is the politician who gets the first chance to put a government together. The election card says how this country chooses.</p>
+          <div class="opts" id="o1"></div>
+          <div id="f1"></div>
+        </div>
+        <div class="task" id="t2" hidden>
+          <p class="task-q">2. Which of these majority governments are minimal winning coalitions?</p>
+          <p class="task-help">Choose every one that is, then check your answer.</p>
+          <div class="opts" id="o2"></div>
+          <div class="nav"><button class="btn" type="button" id="check2">Check these</button></div>
+          <div id="f2"></div>
+        </div>
+        <div class="task" id="t3" hidden>
+          <p class="task-q">3. If politicians cared only about office, which government should form? Which is the minimum winning coalition?</p>
+          <div class="opts" id="o3"></div>
+          <div id="f3"></div>
+        </div>
+        <div class="task" id="t4" hidden>
+          <p class="task-q">4. If politicians cared only about policy, which governments should form? Which minimal winning coalitions are connected?</p>
+          <p class="task-help">Choose every one that is, then check your answer.</p>
+          <div class="opts" id="o4"></div>
+          <div class="nav"><button class="btn" type="button" id="check4">Check these</button></div>
+          <div id="f4"></div>
+        </div>
+        <div class="task" id="t5" hidden>
+          <p class="task-q">5. The government that formed is on the outcome card. What type of government is it?</p>
+          <div class="opts" id="o5"></div>
+          <div id="f5"></div>
+        </div>
+        <div class="task" id="t6" hidden>
+          <p class="task-q">6. Which prediction does it match?</p>
+          <div class="opts" id="o6"></div>
+          <div id="f6"></div>
+        </div>
+        <div class="task" id="t7" hidden>
+          <p class="task-q" id="q7"></p>
+          <div class="opts" id="o7"></div>
+          <div id="f7"></div>
+        </div>
+        <div class="finished" id="caseDone" hidden></div>
+        <div class="nav">
+          <button class="btn primary" type="button" id="nextCase" hidden>Next country</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ============ notes ============ -->
+
+  <div class="notes">
+    <details>
+      <summary>How the two predictions are defined here</summary>
+      <p>
+        <strong>The office-seeking prediction</strong> is the minimum winning coalition: of all the minimal winning
+        coalitions, the one with the fewest seats, and so the fewest surplus seats. Some people call it the least
+        minimal winning coalition. There is only ever one in this tool&rsquo;s examples.
+      </p>
+      <p>
+        <strong>The policy-seeking prediction</strong> is a minimal winning connected coalition: a minimal winning
+        coalition whose parties sit next to each other on the left&ndash;right dimension, with no party outside the
+        coalition sitting between two of its members. This follows the lecture, and there can be more than one, so
+        a government matches the policy-seeking prediction if it is any of them.
+      </p>
+      <p>
+        Both predictions look at every possible government, not only the ones that include the formateur&rsquo;s
+        party. That is how the lecture and the homework classify coalitions. It also means a prediction can leave
+        out the party that is doing the negotiating, which is worth noticing when it happens.
+      </p>
+      <p>
+        The tool uses one left&ndash;right dimension and only the order of the parties along it, not the distances
+        between them. With two dimensions, as for the German Free Democrats (FDP) in the chapter, it is less clear
+        which coalitions count as connected.
+      </p>
+    </details>
+
+    <details>
+      <summary>Where these numbers come from</summary>
+      <p>
+        The four-party example in the walkthrough is the one in the week 12 lecture slides. The shares of each type
+        of government are from Figure 12.1 of chapter 12, which covers European governments that formed after
+        elections between 1945 and 2022. The real cases mentioned in the walkthrough are the chapter&rsquo;s and the
+        lecture&rsquo;s.
+      </p>
+      <p>
+        The countries in practice mode are invented. Their parties, seat totals and governments are not the results
+        of any real election, and none of them is a homework question.
+      </p>
+    </details>
+  </div>
+
+  <button class="back-btn" type="button" id="backBtn" hidden>Back to the steps</button>
+  <div class="sr-only" role="status" aria-live="polite" id="live"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var MINUS = "−";
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var liveEl = document.getElementById("live");
+  function say(msg) { liveEl.textContent = ""; setTimeout(function () { liveEl.textContent = msg; }, 30); }
+  function $(id) { return document.getElementById(id); }
+  function signed(n) { return n < 0 ? MINUS + Math.abs(n) : String(n); }
+  function orList(xs) {
+    if (xs.length <= 1) return xs.join("");
+    return xs.slice(0, -1).join(", ") + " or " + xs[xs.length - 1];
+  }
+  function andList(xs) {
+    if (xs.length <= 1) return xs.join("");
+    return xs.slice(0, -1).join(", ") + " and " + xs[xs.length - 1];
+  }
+
+  /* ================= the model ================= */
+
+  /* An election: parties in left-to-right order, each {c: code, n: name, s: seats}. */
+  function total(el) { return el.parties.reduce(function (a, p) { return a + p.s; }, 0); }
+  function majority(el) { return Math.floor(total(el) / 2) + 1; }
+  function seatsOf(el, code) { for (var i = 0; i < el.parties.length; i++) if (el.parties[i].c === code) return el.parties[i].s; return 0; }
+  function posOf(el, code) { for (var i = 0; i < el.parties.length; i++) if (el.parties[i].c === code) return i; return -1; }
+  function nameOf(el, code) { for (var i = 0; i < el.parties.length; i++) if (el.parties[i].c === code) return el.parties[i].n; return code; }
+
+  /* A coalition is an array of codes, always kept in left-to-right order, as the lecture writes them. */
+  function lr(el, coal) { return coal.slice().sort(function (a, b) { return posOf(el, a) - posOf(el, b); }); }
+  function coalSeats(el, coal) { return coal.reduce(function (a, c) { return a + seatsOf(el, c); }, 0); }
+  function surplus(el, coal) { return coalSeats(el, coal) - majority(el); }
+  function isMajority(el, coal) { return coalSeats(el, coal) >= majority(el); }
+  /* Members the coalition could lose and still hold a majority. */
+  function spareParties(el, coal) {
+    return coal.filter(function (c) { return coalSeats(el, coal) - seatsOf(el, c) >= majority(el); });
+  }
+  function isMinimal(el, coal) { return isMajority(el, coal) && spareParties(el, coal).length === 0; }
+  function isConnected(el, coal) {
+    var idx = coal.map(function (c) { return posOf(el, c); }).sort(function (a, b) { return a - b; });
+    return idx[idx.length - 1] - idx[0] === idx.length - 1;
+  }
+  /* The parties outside a coalition that sit between its members. */
+  function gapParties(el, coal) {
+    var idx = coal.map(function (c) { return posOf(el, c); });
+    var lo = Math.min.apply(null, idx), hi = Math.max.apply(null, idx), out = [];
+    for (var i = lo; i <= hi; i++) if (coal.indexOf(el.parties[i].c) < 0) out.push(el.parties[i].c);
+    return out;
+  }
+  function key(coal) { return coal.slice().sort().join("+"); }
+  function label(coal) { return coal.join(" + "); }
+  function sameCoal(a, b) { return !!a && !!b && key(a) === key(b); }
+
+  /* Every coalition, most parties first, then most seats first. */
+  function allCoalitions(el) {
+    var codes = el.parties.map(function (p) { return p.c; }), out = [];
+    var n = codes.length;
+    for (var m = 1; m < (1 << n); m++) {
+      var c = [];
+      for (var i = 0; i < n; i++) if (m & (1 << i)) c.push(codes[i]);
+      out.push(c);
+    }
+    out.sort(function (a, b) {
+      if (b.length !== a.length) return b.length - a.length;
+      return coalSeats(el, b) - coalSeats(el, a);
+    });
+    return out;
+  }
+
+  /* minimum is the minimal winning coalition with the fewest seats. The lecture gives no
+     rule for a tie, so none is invented: `minimum` is null if two tie, and the
+     verification script fails any example where that happens. */
+  function analysis(el) {
+    var all = allCoalitions(el);
+    var running = all.filter(function (c) { return isMajority(el, c); });
+    var mwcs = running.filter(function (c) { return isMinimal(el, c); });
+    var fewest = Math.min.apply(null, mwcs.map(function (c) { return coalSeats(el, c); }));
+    var mins = mwcs.filter(function (c) { return coalSeats(el, c) === fewest; });
+    var mwcc = mwcs.filter(function (c) { return isConnected(el, c); });
+    return { all: all, running: running, mwcs: mwcs, minimum: mins.length === 1 ? mins[0] : null, mwcc: mwcc };
+  }
+  function inSet(set, coal) { return set.some(function (c) { return sameCoal(c, coal); }); }
+
+  var TYPES = [
+    { v: "spm", t: "Single-party majority" },
+    { v: "mwc", t: "Minimal winning coalition" },
+    { v: "surplus", t: "Surplus majority coalition" },
+    { v: "spmin", t: "Single-party minority" },
+    { v: "mincoal", t: "Minority coalition" }
+  ];
+  function typeOf(el, coal) {
+    if (coal.length === 1) return isMajority(el, coal) ? "spm" : "spmin";
+    if (!isMajority(el, coal)) return "mincoal";
+    return isMinimal(el, coal) ? "mwc" : "surplus";
+  }
+
+  var MATCHES = [
+    { v: "office", t: "The office-seeking prediction only: it is the minimum winning coalition, but not connected" },
+    { v: "policy", t: "The policy-seeking prediction only: it is minimal winning connected, but not the minimum winning coalition" },
+    { v: "both", t: "Both predictions: it is the minimum winning coalition, and connected" },
+    { v: "neither", t: "Neither prediction" }
+  ];
+  function matchOf(el, a, formed) {
+    var o = sameCoal(a.minimum, formed), p = inSet(a.mwcc, formed);
+    if (o && p) return "both";
+    if (o) return "office";
+    if (p) return "policy";
+    return "neither";
+  }
+
+  /* ================= moving the reader ================= */
+
+  var CARDS = { election: "electionCard", coal: "coalCard", outcome: "outcomeCard" };
+  var CARD_NAMES = { election: "the election card", coal: "the potential governments card", outcome: "the outcome card" };
+  var backBtn = $("backBtn");
+  var movedAway = false, autoScrollUntil = 0;
+  function markMoved() { movedAway = true; autoScrollUntil = Date.now() + (reduceMotion ? 100 : 900); }
+
+  function isEnoughOnScreen(el) {
+    var r = el.getBoundingClientRect(), vh = window.innerHeight;
+    if (r.top >= 0 && r.bottom <= vh) return true;
+    if (r.height > vh && r.top >= 0 && (vh - r.top) >= 0.6 * vh) return true;
+    return false;
+  }
+  function goTo(el) {
+    markMoved();
+    el.scrollIntoView({ block: "start", behavior: reduceMotion ? "auto" : "smooth" });
+    setTimeout(updateBack, reduceMotion ? 150 : 950);
+  }
+  function bring(k) {
+    var el = $(CARDS[k]);
+    if (!el || el.hidden || isEnoughOnScreen(el)) return;
+    goTo(el);
+  }
+  function lookButtons(container, keys) {
+    container.innerHTML = "";
+    (keys || []).forEach(function (k) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "look-btn";
+      b.textContent = "Look at " + CARD_NAMES[k];
+      b.addEventListener("click", function () { goTo($(CARDS[k])); });
+      container.appendChild(b);
+    });
+  }
+
+  function anchorFor(m) {
+    if (m === "guided") return $("guidedNav");
+    var ids = ["t7", "t6", "t5", "t4", "t3", "t2", "t1"];
+    for (var i = 0; i < ids.length; i++) if (!$(ids[i]).hidden) return $(ids[i]);
+    return null;
+  }
+  function anchorVisible(el) {
+    var r = el.getBoundingClientRect();
+    return r.bottom > 0 && r.top < window.innerHeight;
+  }
+  function updateBack() {
+    var a = anchorFor(mode);
+    if (!a) { backBtn.hidden = true; return; }
+    if (anchorVisible(a)) {
+      if (Date.now() >= autoScrollUntil) movedAway = false;
+      backBtn.hidden = true; return;
+    }
+    backBtn.hidden = !movedAway;
+    backBtn.textContent = mode === "guided" ? "Back to the steps" : "Back to the question";
+  }
+  window.addEventListener("scroll", updateBack, { passive: true });
+  window.addEventListener("resize", updateBack);
+  backBtn.addEventListener("click", function () {
+    var a = anchorFor(mode);
+    if (!a) return;
+    a.scrollIntoView({ block: "center", behavior: reduceMotion ? "auto" : "smooth" });
+    movedAway = false;
+    backBtn.hidden = true;
+  });
+
+  /* ================= rendering ================= */
+
+  /* The strip is aria-hidden and holds no controls, so it is rebuilt freely. Everything it
+     shows is also in the election table and the potential governments card. */
+  function renderStrip(el, highlight, hlName) {
+    var N = total(el), strip = $("strip");
+    strip.innerHTML = "";
+    el.parties.forEach(function (p) {
+      var d = document.createElement("div");
+      var inC = highlight && highlight.indexOf(p.c) >= 0;
+      d.className = "seg" + (inC ? " is-in" : "");
+      d.style.flexGrow = String(p.s);
+      d.style.flexBasis = "0";
+      var share = p.s / N;
+      if (share >= 0.045) {
+        d.innerHTML = "<span>" + (inC ? "✓ " : "") + p.c + "</span>" + (share >= 0.07 ? "<span class='s'>" + p.s + "</span>" : "");
+      }
+      strip.appendChild(d);
+    });
+    $("stripCap").textContent = highlight
+      ? "Filled, with a check: the parties in " + (hlName || label(highlight)) + "."
+      : "Each party’s width is its share of the seats.";
+  }
+
+  /* view: { el, title, sub, stripSub, form (code or null), formNote, highlight: [codes], hlName } */
+  function renderElection(view) {
+    var el = view.el, N = total(el);
+    $("elTitle").textContent = view.title;
+    $("elSub").textContent = view.sub || "";
+    $("stripSub").textContent = view.stripSub || view.title;
+    var body = $("elBody");
+    body.innerHTML = "";
+    el.parties.forEach(function (p) {
+      var tr = document.createElement("tr");
+      var td0 = document.createElement("td");
+      td0.innerHTML = p.n + " (<span class='code'>" + p.c + "</span>)";
+      var td1 = document.createElement("td"); td1.className = "n"; td1.textContent = p.s;
+      var td2 = document.createElement("td"); td2.className = "n"; td2.textContent = (100 * p.s / N).toFixed(1);
+      var td3 = document.createElement("td");
+      if (view.form === p.c) td3.innerHTML = "<span class='tag role'>formateur’s party</span>";
+      tr.appendChild(td0); tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
+      body.appendChild(tr);
+    });
+    $("elTotal").textContent = N;
+    $("majLine").innerHTML = "A majority takes <strong>" + majority(el) + "</strong> of the " + N + " seats." +
+      (el.parties.some(function (p) { return p.s >= majority(el); }) ? "" : " No party has a majority on its own.");
+    renderStrip(el, view.highlight || null, view.hlName);
+  }
+
+  function ynCell(ok, why) {
+    return "<span class='yn " + (ok ? "yes" : "no") + "'><span class='i' aria-hidden='true'>" + (ok ? "✓ " : "✗ ") +
+      "</span><span class='w'>" + (ok ? "Yes" : "No") + "</span>" + (why ? "<span class='why'>" + why + "</span>" : "") + "</span>";
+  }
+  function mwWhy(el, c) {
+    if (!isMajority(el, c)) return "";
+    var sp = spareParties(el, c);
+    if (!sp.length) return "";
+    return sp.length === 1 ? sp[0] + " is not needed" : sp.length === 2 ? "could lose " + orList(sp) : "more parties than needed";
+  }
+  function connWhy(el, c) {
+    var g = gapParties(el, c);
+    return g.length ? "skips " + andList(g) : "";
+  }
+
+  /* spec: { el, rows, strikeShort, showMW, showConn, pending: {key:1}, office, policy (array),
+             formed, fresh: {key:1}, caption, note } */
+  function renderCoal(spec) {
+    var el = spec.el, body = $("coalBody"), table = $("coalTable");
+    table.classList.toggle("no-mw", !spec.showMW);
+    table.classList.toggle("no-conn", !spec.showConn);
+    $("coalCap").textContent = spec.caption || "";
+    body.innerHTML = "";
+    spec.rows.forEach(function (c0) {
+      var c = lr(el, c0), k = key(c), tr = document.createElement("tr"), tags = [];
+      var short = !isMajority(el, c);
+      var out = spec.strikeShort && short;
+      var cls = [];
+      if (out) {
+        cls.push("out");
+        tags.push("<span class='tag out'>✕ short of a majority</span>");
+      } else {
+        if (spec.pending && spec.pending[k]) cls.push("pending");
+        if (spec.office && sameCoal(spec.office, c)) tags.push("<span class='tag'>minimum winning</span>");
+        if (spec.policy && inSet(spec.policy, c)) tags.push("<span class='tag'>minimal winning connected</span>");
+      }
+      if (spec.formed && sameCoal(spec.formed, c)) tags.push("<span class='tag formed'>◆ formed</span>");
+      if (spec.fresh && spec.fresh[k]) cls.push("fresh");
+      tr.className = cls.join(" ");
+      var maj = isMajority(el, c), mw = isMinimal(el, c);
+      tr.innerHTML = "<td><span class='cname'>" + label(c) + "</span>" + (tags.length ? "<span class='tags'>" + tags.join("") + "</span>" : "") + "</td>" +
+        "<td class='n'>" + coalSeats(el, c) + "</td>" +
+        "<td class='n'>" + signed(surplus(el, c)) + "</td>" +
+        "<td class='c-mw'>" + (maj ? ynCell(mw, mwWhy(el, c)) : "") + "</td>" +
+        "<td class='c-conn'>" + (mw ? ynCell(isConnected(el, c), connWhy(el, c)) : "") + "</td>";
+      body.appendChild(tr);
+    });
+    $("coalNote").textContent = spec.note || "";
+  }
+
+  function renderOutcome(o) {
+    $("outTitle").textContent = o.title;
+    $("govLine").textContent = o.govLine;
+    $("outBody").innerHTML = o.paras.map(function (p) { return "<p>" + p + "</p>"; }).join("");
+    $("gamsonBox").hidden = !o.gamson;
+    $("gamsonBox").innerHTML = o.gamson || "";
+  }
+
+  function showCards(c) {
+    $("electionCard").hidden = !c.election;
+    $("coalCard").hidden = !c.coal;
+    $("outcomeCard").hidden = !c.outcome;
+  }
+
+  /* ================= guided walkthrough ================= */
+
+  /* The four-party example from the week 12 lecture slides. */
+  var LECT = { parties: [
+    { c: "A", n: "Party A", s: 30 },
+    { c: "B", n: "Party B", s: 22 },
+    { c: "C", n: "Party C", s: 20 },
+    { c: "D", n: "Party D", s: 28 }
+  ] };
+  var LA_ = analysis(LECT);
+  var LECT_TITLE = "The lecture’s example";
+  var LECT_SUB = "Four parties in a 100-seat parliament, as in the week 12 lecture slides.";
+
+  var freshAll = {}; LA_.all.forEach(function (c) { freshAll[key(c)] = 1; });
+  var freshMw = {}; LA_.mwcs.forEach(function (c) { freshMw[key(c)] = 1; });
+  var freshMwcc = {}; LA_.mwcc.forEach(function (c) { freshMwcc[key(c)] = 1; });
+
+  var CAP_ALL = "All fifteen governments that could form from four parties. Surplus is the number of seats beyond the 51 a majority needs.";
+  var CAP_RUN = "The seven governments whose parties hold a majority themselves, with the others still listed.";
+
+  var BASE = { election: true, coal: true };
+  var STEPS = [
+    { title: "Who governs in a parliamentary democracy",
+      cards: { election: true },
+      body: [
+        "In a parliamentary democracy, voters elect the members of parliament. They don’t vote for a prime minister or a cabinet; those are chosen afterward. The government, meaning the prime minister and the cabinet ministers who head the government departments, needs the support of a majority in parliament, at least implicitly, to take office and to stay there. Parliament can remove it with a vote of no confidence, and in some countries a new government must first win an investiture vote.",
+        "When one party wins a majority of the seats, it can govern on its own. When more than two parties win seats, there is no guarantee that any of them will, and a party that wants to govern has to strike a deal with others. In Europe that is the usual situation. Of the governments that formed after elections between 1945 and 2022, only about one in seven (14.1 percent) were single-party majority governments."
+      ] },
+    { title: "The lecture’s example", look: ["election"],
+      cards: { election: true },
+      body: [
+        "The election card shows the example from the lecture: four parties in a 100-seat parliament, listed from left to right. A majority takes 51 seats, and no party has that many on its own. Which party or parties will govern?",
+        "The strip across the top of the page shows the same parliament, with each party’s width proportional to its seats."
+      ] },
+    { title: "Every possible government", changes: ["coal"], look: ["coal"],
+      cards: BASE,
+      coal: { rows: LA_.all, fresh: freshAll, caption: CAP_ALL },
+      body: [
+        "The potential governments card lists all fifteen governments that could form from four parties, from all four together down to each party on its own. Each one is written with its parties in left-to-right order, as the lecture writes them.",
+        "Surplus seats are the seats a government holds beyond the 51 it needs, and a negative number is how far it falls short. A + B + C, for example, has 21 seats more than it needs, while C + D is three seats short."
+      ] },
+    { title: "Majorities only", changes: ["coal"], look: ["coal"],
+      cards: BASE,
+      coal: { rows: LA_.all, strikeShort: true, caption: CAP_RUN },
+      body: [
+        "A government needs the support of a majority, and the simplest way to have it is for the parties in the cabinet to hold a majority themselves. So for now, set aside every government with a negative number of surplus seats. Seven remain.",
+        "That is a simplification. Governments whose parties don’t hold a majority form quite often, and the walkthrough comes back to them."
+      ] },
+    { title: "What do politicians want?",
+      cards: BASE,
+      coal: { rows: LA_.all, strikeShort: true, caption: CAP_RUN },
+      body: [
+        "To choose among the seven, we need to know what politicians want. Political scientists usually point to two things. Office-seeking politicians want the benefits of holding office: cabinet posts are among the best-paid jobs in politics, and they bring prestige, attention, and other positions to hand out to party members. Policy-seeking politicians want office in order to put the policies they believe in into effect.",
+        "The two goals lead to different predictions. The next steps imagine a world where every politician cares only about office, and then a world where every politician cares only about policy."
+      ] },
+    { title: "A purely office-seeking world", changes: ["coal"], look: ["coal"],
+      cards: BASE,
+      coal: { rows: LA_.all, strikeShort: true, showMW: true, fresh: freshMw, caption: CAP_RUN },
+      body: [
+        "Office-seeking politicians don’t want to share the rewards of office with more parties than they have to. So a government should contain just enough parties for a majority and no more: a minimal winning coalition. If any one party leaves a minimal winning coalition, the rest no longer hold a majority.",
+        "Three of the seven are minimal winning: A + B, A + D and B + C + D. A + B + C is not, because C is not needed: A + B has a majority without it."
+      ] },
+    { title: "The minimum winning coalition", changes: ["coal"], look: ["coal"],
+      cards: BASE, highlight: ["A", "B"], hlName: "the minimum winning coalition, A + B",
+      coal: { rows: LA_.all, strikeShort: true, showMW: true, office: LA_.minimum, caption: CAP_RUN },
+      body: [
+        "An election can produce several minimal winning coalitions. An office-seeking politician should prefer the one with the fewest seats, and so the fewest surplus seats: the minimum winning coalition, sometimes called the least minimal winning coalition. Every seat beyond a majority belongs to a partner who will want a share of the cabinet posts in return.",
+        "Here the minimum winning coalition is A + B, with 52 seats and one to spare. That is the office-seeking prediction."
+      ] },
+    { title: "A purely policy-seeking world", changes: ["coal"], look: ["coal"],
+      cards: BASE, highlight: ["B", "C", "D"], hlName: "B + C + D, one of the two minimal winning connected coalitions",
+      coal: { rows: LA_.all, strikeShort: true, showMW: true, showConn: true, office: LA_.minimum, policy: LA_.mwcc, fresh: freshMwcc, caption: CAP_RUN },
+      body: [
+        "Policy-seeking politicians care what the government will do, and a coalition’s policy has to be a compromise among its parties. So they should prefer partners close to them on the left–right dimension, and we might predict that only parties sitting next to each other will govern together. A minimal winning connected coalition is a minimal winning coalition whose parties are next to each other.",
+        "A + D is minimal winning but not connected: it skips B and C. The other two are connected, so there are two policy-seeking predictions, A + B and B + C + D."
+      ] },
+    { title: "Comparing the predictions",
+      cards: BASE, highlight: ["A", "B"], hlName: "A + B, which both predictions include",
+      coal: { rows: LA_.all, strikeShort: true, showMW: true, showConn: true, office: LA_.minimum, policy: LA_.mwcc, caption: CAP_RUN },
+      body: [
+        "Here the predictions overlap: A + B is the minimum winning coalition, and it is also connected. The office-seeking prediction counts seats and picks out a single government. The policy-seeking prediction rules out coalitions whose parties aren’t neighbors, and can leave more than one standing. Real politicians care about both and trade one against the other.",
+        "Real cases are messier. After the Dutch election of 2017, thirteen parties won seats, and the government that formed 225 days later joined four of them: the liberal People’s Party for Freedom and Democracy (VVD), the Christian Democratic Appeal (CDA), Democrats 66 (D66) and the Christian Union (CU). It was minimal winning, but a seniors’ party, 50Plus, sat inside the coalition’s range on the left–right dimension and stayed in opposition, so the coalition was not connected. Bringing 50Plus in would have made it a surplus majority."
+      ] },
+    { title: "Five types of government",
+      cards: BASE,
+      coal: { rows: LA_.all, strikeShort: true, showMW: true, showConn: true, office: LA_.minimum, policy: LA_.mwcc, caption: CAP_RUN },
+      body: [
+        "Both predictions are majority governments. Real governments come in five types. Of the European governments that formed after elections between 1945 and 2022, minimal winning coalitions were the most common type (33.8 percent), followed by surplus majority coalitions (23.1 percent). Single-party minority governments (15.9 percent) and minority coalitions (13.1 percent) together made up almost 30 percent. Single-party majority governments were the least common (14.1 percent).",
+        "In a minority government, the party or parties in the cabinet don’t hold a majority of the seats themselves. A surplus majority coalition has more parties than it needs: it could lose a party and still hold a majority. Neither prediction expects either type, so the next two steps look at why they form."
+      ] },
+    { title: "Minority governments",
+      cards: BASE,
+      coal: { rows: LA_.all, strikeShort: true, showMW: true, showConn: true, office: LA_.minimum, policy: LA_.mwcc, caption: CAP_RUN },
+      body: [
+        "A minority government stays in office as long as no majority in parliament agrees to remove it. A large party in the middle of the left–right dimension is in a strong position to govern this way: it can pass laws with parties on its left on some issues and with parties on its right on others, while the parties on either side can’t agree on a government to replace it.",
+        "Sometimes a party outside the cabinet agrees to keep a minority government in office; it is then called a support party. About a quarter of European minority governments have one. After the 2017 British election, the Democratic Unionist Party (DUP) of Northern Ireland agreed to back the Conservative minority government on confidence, budget and Brexit votes, and Northern Ireland received an extra £1 billion.",
+        "Why stay out? Governing has costs. Voters may blame governing parties for unpopular policies, and small parties that joined governments have sometimes lost heavily at the next election: the British Liberal Democrats after governing with the Conservatives from 2010 to 2015, and the German Free Democrats (FDP), who fell out of parliament in 2013. A small party that cares about a few issues may do better supporting a minority government in return for concessions on them."
+      ] },
+    { title: "Surplus majority governments",
+      cards: BASE,
+      coal: { rows: LA_.all, strikeShort: true, showMW: true, showConn: true, office: LA_.minimum, policy: LA_.mwcc, caption: CAP_RUN },
+      body: [
+        "Why include a party you don’t need? An extra party is insurance if some of a governing party’s own members of parliament can’t always be counted on. Some laws need more than a bare majority: in Hungary, Fidesz and its small ally the Christian Democratic People’s Party (KDNP) have governed together with the two-thirds majority needed to amend the constitution. A government may also want a majority in the upper chamber of parliament, which can mean adding a party it doesn’t need in the lower one.",
+        "And policy-seeking parties have little reason to leave out a party that sits inside the coalition’s range on the left–right dimension, like 50Plus in the Dutch case."
+      ] },
+    { title: "Who gets to try first",
+      cards: { election: true },
+      body: [
+        "Rules shape government formation too. The formateur is the politician who leads the negotiations, usually a party leader hoping to become prime minister. In Greece the constitution gives the leader of the largest party the first chance; in the United Kingdom, custom gives it to the outgoing prime minister. In some countries an informateur, such as the speaker of parliament in Sweden, first talks to the party leaders and recommends a formateur. These rules can matter for which government forms.",
+        "Neither prediction knows who the formateur is: both look at every possible government, including ones that leave out the formateur’s party. Other rules matter as well. Where a new government must win an investiture vote, as in Germany, a majority has to back it openly; where there is no such vote, as in Norway, minority governments are easier to form. Parties can also announce before the election which partners they will govern with."
+      ] },
+    { title: "Gamson’s law", look: ["coal"],
+      cards: BASE, highlight: ["A", "B"], hlName: "A + B",
+      coal: { rows: LA_.all, strikeShort: true, showMW: true, showConn: true, office: LA_.minimum, policy: LA_.mwcc, caption: CAP_RUN },
+      body: [
+        "Once a coalition forms, who gets which cabinet posts? Gamson’s law says that parties receive posts roughly in proportion to the seats each brings to the coalition. If A + B formed, A would bring 30 of the coalition’s 52 seats and should get about 58 percent of the posts, and B about 42 percent.",
+        "It is a close approximation of how posts are actually shared out, though smaller parties tend to get a little more than their share. In the German coalition that took office in 2025, the Social Democrats brought 37 percent of the coalition’s seats and got 39 percent of the cabinet posts. Which posts matters too: a green party may fight hardest for the environment ministry. The practice tab gives you elections to work through, with a Gamson’s law question in some of them."
+      ] }
+  ];
+
+  var step = 0;
+  var dotsEl = $("dots");
+  STEPS.forEach(function () { var d = document.createElement("span"); d.className = "dot"; dotsEl.appendChild(d); });
+
+  function renderGuided(prev) {
+    var s = STEPS[step];
+    showCards(s.cards);
+    renderElection({ el: LECT, title: LECT_TITLE, sub: LECT_SUB, stripSub: "The lecture’s example: 100 seats, four parties.",
+                     form: null, highlight: s.highlight || null, hlName: s.hlName });
+    if (s.coal) {
+      var c = s.coal;
+      renderCoal({ el: LECT, rows: c.rows, strikeShort: c.strikeShort, showMW: c.showMW, showConn: c.showConn,
+                   office: c.office, policy: c.policy, fresh: c.fresh, caption: c.caption, note: "" });
+    }
+    $("stepLabel").textContent = "Step " + (step + 1) + " of " + STEPS.length;
+    $("stepTitle").textContent = s.title;
+    $("stepBody").innerHTML = s.body.map(function (p) { return "<p>" + p + "</p>"; }).join("");
+    lookButtons($("stepLook"), s.look);
+    $("prevBtn").disabled = step === 0;
+    $("nextBtn").disabled = step === STEPS.length - 1;
+    var dots = dotsEl.children;
+    for (var i = 0; i < dots.length; i++) dots[i].className = "dot" + (i === step ? " on" : "");
+    if (prev !== undefined && step > prev && s.changes) bring(s.changes[0]);
+  }
+  $("prevBtn").addEventListener("click", function () { if (step > 0) { var p = step; step--; renderGuided(p); $("stepTitle").focus({ preventScroll: true }); } });
+  $("nextBtn").addEventListener("click", function () {
+    if (step < STEPS.length - 1) {
+      var p = step; step++; renderGuided(p);
+      if (step === STEPS.length - 1) $("stepTitle").focus({ preventScroll: true });
+    }
+  });
+
+  /* ================= practice cases ================= */
+
+  var GROUPS = [
+    { id: "g1", label: "Countries A to D", desc: "" },
+    { id: "g2", label: "Countries E to H", desc: "" },
+    { id: "g3", label: "The same seat totals", desc: "Countries I and J elected parliaments with identical seat totals, but their parties sit in a different order. Work both and compare them." },
+    { id: "g4", label: "Countries K and L", desc: "" }
+  ];
+
+  var P = {
+    LA: "Left Alliance", SD: "Social Democrats", GR: "Greens", CP: "Center Party", LB: "Liberals",
+    CD: "Christian Democrats", CN: "Conservatives", NP: "National Party"
+  };
+  function parties(list) { return list.map(function (x) { return { c: x[0], n: P[x[0]], s: x[1] }; }); }
+
+  /* Explanations offered in the "why" questions, all reasons given in chapter 12 or the lecture. */
+  var WHY = {
+    support: "A party outside the cabinet agreed to keep it in office in return for a say on some policies.",
+    supermaj: "The government’s main reform needs more than a bare majority to pass.",
+    promise: "The parties had promised voters before the election that they would govern together.",
+    divided: "The opposition could bring the government down but couldn’t agree on a replacement.",
+    costs: "Joining the cabinet has costs: a junior partner can be blamed for unpopular policies and lose votes at the next election.",
+    insurance: "An extra party protects the government in case some of its own members of parliament vote against it.",
+    upper: "The government needs a majority in the upper chamber of parliament as well."
+  };
+  function whyOpts(right, wrongs) {
+    return [{ t: WHY[right], ok: true }].concat(wrongs.map(function (w) { return { t: WHY[w] }; }));
+  }
+
+  /* Each case: parties left to right; form (the formateur's party); formWhy; setup paragraphs;
+     formed (cabinet parties); story (what happened); final: gamson {K, ask} or why {opts, hint};
+     note (shown on completion). Every note is checked against the model by the verification script. */
+  var CASES = [
+    { id: "A", group: "g1",
+      el: { parties: parties([["SD", 27], ["GR", 12], ["CP", 21], ["CN", 40]]) }, form: "CN",
+      setup: ["Country A’s 100-seat parliament was elected last month. By long convention, the president asks the leader of the largest party to form a government first."],
+      formWhy: "The Conservatives are the largest party, and the president turns to their leader first.",
+      formed: ["CN", "GR"],
+      story: ["The Conservatives formed a coalition with the Greens, who had never been in government. The Greens accepted a coalition program close to the Conservatives’ economic platform in return for a share of the ministries. The cabinet has 13 posts."],
+      final: { kind: "gamson", K: 13, ask: "GR" },
+      note: "GR + CN is the minimum winning coalition: the Greens’ 12 seats leave one seat to spare. But it isn’t connected, because the Center Party sits between the Greens and the Conservatives. The policy-seeking predictions were CP + CN and SD + GR + CP." },
+    { id: "B", group: "g1",
+      el: { parties: parties([["LA", 15], ["SD", 70], ["CP", 25], ["LB", 30], ["CN", 35]]) }, form: "SD",
+      setup: ["Country B’s parliament has 175 seats. The constitution says the king must invite the leader of the largest party to form a government first."],
+      formWhy: "The Social Democrats are the largest party, and the constitution says their leader goes first.",
+      formed: ["SD"],
+      story: [
+        "The Center Party turned down the Social Democrats’ offer of three ministries, and the Social Democrats formed a cabinet on their own.",
+        "The Center Party last served as the junior partner in a Social Democrat-led government, and at the next election it lost almost half its seats. Its leader said the party had been blamed for that government’s spending cuts while getting little of its own program, and that it would now decide issue by issue whether to vote with the government."
+      ],
+      final: { kind: "why", hint: "Read what the Center Party’s leader said about what happened the last time it governed.",
+        opts: whyOpts("costs", ["supermaj", "support", "promise"]) },
+      note: "Neither prediction covers one party governing with 70 of 175 seats. The minimum winning coalition, CP + LB + CN, leaves out the formateur’s own party; the policy-seeking predictions were SD + CP and CP + LB + CN. The Center Party’s reasoning is one the chapter describes: junior partners have sometimes lost heavily after governing, as the British Liberal Democrats did in 2015." },
+    { id: "C", group: "g1",
+      el: { parties: parties([["LA", 14], ["SD", 44], ["LB", 22], ["CD", 34], ["NP", 6]]) }, form: "SD",
+      setup: ["Country C’s parliament has 120 seats. The speaker of parliament nominates the formateur after consulting the party leaders, and has always begun with the leader of the largest party."],
+      formWhy: "The speaker has always begun with the leader of the largest party, the Social Democrats.",
+      formed: ["SD", "LB"],
+      story: ["The Social Democrats formed a coalition with the Liberals. The cabinet has 18 posts."],
+      final: { kind: "gamson", K: 18, ask: "LB" },
+      note: "Two governments are minimal winning connected: SD + LB, which formed, and LB + CD + NP, which is also the minimum winning coalition, with one seat to spare. That one would have left the Social Democrats, the largest party and the formateur’s, in opposition. The predictions count seats and positions, not who is doing the negotiating." },
+    { id: "D", group: "g1",
+      el: { parties: parties([["LA", 17], ["SD", 40], ["CP", 24], ["CD", 38], ["CN", 31]]) }, form: "SD",
+      setup: ["Country D’s parliament has 150 seats. The president appoints the leader of the largest party as formateur."],
+      formWhy: "The Social Democrats are the largest party, so the president appoints their leader.",
+      formed: ["SD", "CP", "CD"],
+      story: [
+        "During the campaign, the Social Democrats, the Center Party and the Christian Democrats all promised a new constitution that would hand much of the central government’s power to the regions.",
+        "Constitutional amendments in Country D need the votes of two-thirds of the parliament, 100 of its 150 seats. The three parties formed a coalition together."
+      ],
+      final: { kind: "why", hint: "How many votes does the government’s main reform need?",
+        opts: whyOpts("supermaj", ["support", "costs", "divided"]) },
+      note: "SD + CD, the minimum winning coalition, has 78 seats, a majority without the Center Party, so the Center Party is surplus to staying in office. It is not surplus to the reform: without it the government is well short of the 100 votes an amendment needs. Hungary’s Fidesz and its small ally KDNP are the chapter’s example of a surplus majority that can amend the constitution." },
+    { id: "E", group: "g2",
+      el: { parties: parties([["LA", 20], ["SD", 55], ["CP", 30], ["CN", 45]]) }, form: "CN",
+      setup: ["Country E’s parliament has 150 seats. By custom, the outgoing prime minister gets the first chance to form a government. The outgoing prime minister is the leader of the Conservatives, who came second in the election."],
+      formWhy: "The Social Democrats won the most seats, but in Country E the outgoing prime minister goes first, and the outgoing prime minister leads the Conservatives.",
+      formed: ["SD", "CN"],
+      story: ["The Conservatives formed a coalition with the Social Democrats. The cabinet has 20 posts."],
+      final: { kind: "gamson", K: 20, ask: "SD" },
+      note: "Both predictions point to SD + CP: it is the minimum winning coalition, with nine seats to spare, and the only minimal winning connected coalition. But it leaves out the Conservatives, and their leader went first. Neither of the minimal winning coalitions that include the Conservatives is connected. Who gets the first chance is not part of either prediction, and here it decided the result." },
+    { id: "F", group: "g2",
+      el: { parties: parties([["LA", 12], ["SD", 40], ["LB", 24], ["CN", 48], ["NP", 26]]) }, form: "CN",
+      setup: ["Country F’s parliament has 150 seats. The president asks the leader of the largest party to form a government first."],
+      formWhy: "The Conservatives are the largest party, and the president asks their leader first.",
+      formed: ["LB", "CN"],
+      story: [
+        "The Conservatives and the Liberals formed a coalition cabinet together.",
+        "The National Party signed a written agreement to vote with the government on the budget and on any motion of no confidence, and to be consulted on immigration policy, but stayed out of the cabinet. Its leader said the party wanted influence over policy without having to answer for everything a government does."
+      ],
+      final: { kind: "why", hint: "Who keeps this government in office, and what did they get in return?",
+        opts: whyOpts("support", ["supermaj", "promise", "insurance"]) },
+      note: "Neither prediction expects a government short of a majority. The National Party took influence over policy without cabinet posts, as the Democratic Unionist Party did when it agreed to back the British Conservative minority government after the 2017 election." },
+    { id: "G", group: "g2",
+      el: { parties: parties([["LA", 18], ["SD", 104], ["LB", 30], ["CN", 40], ["NP", 8]]) }, form: "SD",
+      setup: ["Country G’s parliament has 200 seats. The president appoints the leader of the largest party as formateur."],
+      formWhy: "The Social Democrats are the largest party, so the president appoints their leader.",
+      formed: ["SD"],
+      story: ["The Social Democrats formed a cabinet on their own, and the new prime minister filled every post from her own party within a week."],
+      final: null,
+      note: "When one party has a majority on its own, adding any other party only adds surplus seats, so the party governing alone is the only minimal winning coalition. It is both predictions. An office-seeking party with a majority has no reason to share the cabinet." },
+    { id: "H", group: "g2",
+      el: { parties: parties([["LA", 10], ["SD", 36], ["LB", 12], ["CN", 24], ["NP", 38]]) }, form: "SD",
+      setup: [
+        "Country H’s parliament has 120 seats. The constitution requires the president to give the leader of the largest party the first chance to form a government and, if that fails, the leader of the second-largest party.",
+        "During the campaign every other party said it would not govern with the National Party. After three weeks, the National Party’s leader told the president she could not form a government, and the president turned to the next party in line."
+      ],
+      formWhy: "The National Party’s leader had the first chance and failed, so the constitution passes it to the leader of the second-largest party.",
+      formed: ["SD", "LB", "CN"],
+      story: ["The Social Democrats formed a coalition with the Liberals and the Conservatives. The cabinet has 12 posts."],
+      final: { kind: "gamson", K: 12, ask: "CN" },
+      note: "Being the largest party doesn’t guarantee a place in government. CN + NP was both the minimum winning coalition, with one seat to spare, and connected, but every other party had ruled out governing with the National Party. SD + LB + CN is the other minimal winning connected coalition: the Liberals bridge the Social Democrats and the Conservatives." },
+    { id: "I", group: "g3",
+      el: { parties: parties([["LA", 14], ["SD", 30], ["LB", 36], ["CN", 20]]) }, form: "LB",
+      setup: ["Country I’s parliament has 100 seats. The president asks the leader of the largest party to form a government first."],
+      formWhy: "The Liberals are the largest party, and the president asks their leader first.",
+      formed: ["LB", "CN"],
+      story: ["The Liberals formed a coalition with the Conservatives. The cabinet has 14 posts."],
+      final: { kind: "gamson", K: 14, ask: "CN" },
+      note: "Compare Country J. In both, the minimum winning coalition joins the 36-seat party and the 20-seat party. Here those two are neighbors, so the minimum winning coalition is also connected, and both predictions agree." },
+    { id: "J", group: "g3",
+      el: { parties: parties([["GR", 20], ["SD", 14], ["CP", 36], ["CN", 30]]) }, form: "CP",
+      setup: ["Country J’s parliament has 100 seats. The president asks the leader of the largest party to form a government first."],
+      formWhy: "The Center Party is the largest party, and the president asks its leader first.",
+      formed: ["CP", "CN"],
+      story: ["The Center Party formed a coalition with the Conservatives. The cabinet has 11 posts."],
+      final: { kind: "gamson", K: 11, ask: "CP" },
+      note: "The minimum winning coalition depends only on seats, so it picks the 20-seat party in both countries. Being connected depends on positions too: in Country J the Social Democrats sit between the Greens and the Center Party, so GR + CP is not connected, and the only minimal winning connected coalition is CP + CN." },
+    { id: "K", group: "g4",
+      el: { parties: parties([["GR", 10], ["SD", 44], ["LB", 14], ["CD", 30], ["CN", 52]]) }, form: "CN",
+      setup: ["Country K’s parliament has 150 seats. The president asks the leader of the largest party to form a government first."],
+      formWhy: "The Conservatives are the largest party, and the president asks their leader first.",
+      formed: ["LB", "CD", "CN"],
+      story: [
+        "Before the election, the Conservatives, the Christian Democrats and the Liberals campaigned as an alliance, with a joint program and an agreed candidate for prime minister, and told voters they would govern together.",
+        "On election night the Conservatives and Christian Democrats had 82 seats between them, a majority without the Liberals. The three parties formed a coalition together."
+      ],
+      final: { kind: "why", hint: "What had the parties told voters before the election?",
+        opts: whyOpts("promise", ["supermaj", "upper", "support"]) },
+      note: "The government is a minimal winning connected coalition, CD + CN, plus the Liberals, who aren’t needed for a majority. The chapter’s example of parties that campaign as an alliance is the Swedish center-right: when they win together, they expect to govern together." },
+    { id: "L", group: "g4",
+      el: { parties: parties([["LA", 18], ["SD", 20], ["CP", 34], ["CD", 13], ["CN", 16]]) }, form: "CP",
+      setup: ["Country L’s parliament has 101 seats. The president asks the leader of the largest party to form a government first."],
+      formWhy: "The Center Party is the largest party, and the president asks its leader first.",
+      formed: ["CP"],
+      story: [
+        "The Center Party formed a cabinet on its own. It passes bills with the left-wing parties on some issues and with the right-wing parties on others, and has signed no agreement with either side.",
+        "Between them the four opposition parties hold 67 seats, enough to bring the government down. But the two parties on the left and the two on the right have each said they would never support a government that included the other side."
+      ],
+      final: { kind: "why", hint: "The opposition has the seats to remove the government. What would it need to agree on first?",
+        opts: whyOpts("divided", ["support", "promise", "costs"]) },
+      note: "A large party in the middle of the left–right dimension, with opposition parties on both sides that can’t agree, can govern alone and pass laws with whichever side agrees. This is the situation the chapter illustrates with its Figure 12.3." }
+  ];
+
+  CASES.forEach(function (cs) {
+    cs.formed = lr(cs.el, cs.formed);
+    cs.a = analysis(cs.el);
+    cs.type = typeOf(cs.el, cs.formed);
+    cs.match = matchOf(cs.el, cs.a, cs.formed);
+  });
+
+  /* seeded shuffle, so a case renders the same way every time */
+  function seeded(str) {
+    var h = 2166136261;
+    for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return function () { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return ((h >>> 0) % 100000) / 100000; };
+  }
+  function seededShuffle(arr, seed) {
+    var r = seeded(seed), a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(r() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+
+  /* Gamson's law and its common mistakes. */
+  function gamsonOf(cs) {
+    var f = cs.final, x = seatsOf(cs.el, f.ask), S = coalSeats(cs.el, cs.formed);
+    return f.K * x / S;
+  }
+  function gamsonOptions(cs) {
+    var f = cs.final, el = cs.el, g = gamsonOf(cs), x = seatsOf(el, f.ask), N = total(el);
+    var pool = [
+      Math.round(f.K * x / N),                 /* share of the whole parliament */
+      Math.floor(f.K / cs.formed.length),      /* equal split */
+      Math.round(f.K * x / majority(el)),      /* share of the seats a majority needs */
+      f.K - g                                  /* the rest of the cabinet */
+    ];
+    var seen = {}, out = [];
+    seen[g] = 1;
+    pool.forEach(function (v) { if (v > 0 && v <= f.K && !seen[v]) { seen[v] = 1; out.push(v); } });
+    out = seededShuffle(out, cs.id + "g").slice(0, 3).concat([g]);
+    out.sort(function (a, b) { return a - b; });
+    return out;
+  }
+
+  /* ================= practice flow ================= */
+
+  var cur = null, stage = 1, first = true, done = {}, pend = {}, pend4 = {};
+
+  function buildPicker() {
+    var host = $("casePicker");
+    host.innerHTML = "";
+    GROUPS.forEach(function (g) {
+      var wrap = document.createElement("div"); wrap.className = "chips-group";
+      var lab = document.createElement("span"); lab.className = "field-label"; lab.textContent = g.label; lab.id = "glab-" + g.id;
+      wrap.appendChild(lab);
+      if (g.desc) { var d = document.createElement("p"); d.className = "chips-desc"; d.textContent = g.desc; wrap.appendChild(d); }
+      var row = document.createElement("div"); row.className = "chips"; row.setAttribute("role", "group"); row.setAttribute("aria-labelledby", lab.id);
+      CASES.filter(function (c) { return c.group === g.id; }).forEach(function (c) {
+        var b = document.createElement("button");
+        b.type = "button"; b.className = "chip"; b.id = "chip-" + c.id;
+        b.setAttribute("aria-pressed", cur && cur.id === c.id ? "true" : "false");
+        b.appendChild(document.createTextNode("Country " + c.id));
+        if (done[c.id]) {
+          var m = document.createElement("span"); m.className = "done-mark"; m.textContent = "✓"; m.setAttribute("aria-hidden", "true");
+          b.appendChild(m); b.setAttribute("aria-label", "Country " + c.id + ", finished with every answer right the first time");
+        }
+        b.addEventListener("click", function () { selectCase(c.id, true); $("chip-" + c.id).focus(); });
+        row.appendChild(b);
+      });
+      wrap.appendChild(row);
+      host.appendChild(wrap);
+    });
+  }
+
+  function note(id, kind, head, text) {
+    var el = $(id);
+    el.innerHTML = "";
+    var d = document.createElement("div");
+    d.className = "result-note " + kind;
+    if (head) {
+      var h = document.createElement("span"); h.className = "head";
+      h.textContent = (kind === "ok" ? "✓ " : kind === "no" ? "✕ " : "") + head + " ";
+      d.appendChild(h);
+    }
+    d.appendChild(document.createTextNode(text));
+    el.appendChild(d);
+    return d;
+  }
+  function addLooks(d, keys) {
+    var lk = document.createElement("div"); lk.className = "looks"; d.appendChild(lk);
+    lookButtons(lk, keys);
+  }
+  function lockOpts(id, chosenV) {
+    var bs = $(id).querySelectorAll(".opt");
+    for (var i = 0; i < bs.length; i++) {
+      bs[i].setAttribute("aria-disabled", "true");
+      if (chosenV !== undefined && bs[i].getAttribute("data-v") === chosenV) bs[i].classList.add("chosen");
+    }
+  }
+  function opt(container, v, html, cls) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "opt" + (cls ? " " + cls : "");
+    b.setAttribute("data-v", v); b.innerHTML = html;
+    $(container).appendChild(b);
+    return b;
+  }
+  function coalHtml(el, c) {
+    return label(lr(el, c)) + "<span class='sub'>" + coalSeats(el, c) + " seats, surplus " + signed(surplus(el, c)) + "</span>";
+  }
+
+  /* Stages: 1 formateur, 2 minimal winning, 3 minimum winning, 4 connected,
+     5 type, 6 match, 7 final question, 8 done. */
+  function caseView() {
+    var cs = cur;
+    var known = stage > 1;
+    renderElection({ el: cs.el, title: "Country " + cs.id, sub: cs.setup.join(" "),
+                     stripSub: "Country " + cs.id + ": " + total(cs.el) + " seats, " + cs.el.parties.length + " parties.",
+                     form: known ? cs.form : null,
+                     highlight: stage > 4 ? cs.formed : null, hlName: "the government that formed, " + label(cs.formed) });
+    showCards({ election: true, coal: known, outcome: stage > 4 });
+    if (known) {
+      var shortFormed = stage > 4 && !isMajority(cs.el, cs.formed);
+      renderCoal({
+        el: cs.el, rows: shortFormed ? cs.a.running.concat([cs.formed]) : cs.a.running, strikeShort: true, pending: stage === 2 ? pend : (stage === 4 ? pend4 : null),
+        showMW: stage > 2, showConn: stage > 4,
+        office: stage > 3 ? cs.a.minimum : null, policy: stage > 4 ? cs.a.mwcc : null,
+        formed: stage > 4 ? cs.formed : null,
+        caption: "Every government whose parties hold a majority, " + majority(cs.el) + " or more of the " + total(cs.el) + " seats." +
+          (shortFormed ? " The government that formed is short of a majority, so it is added at the bottom, struck out." : ""),
+        note: ""
+      });
+    }
+    if (stage > 4) {
+      var g = "";
+      if (cs.final && cs.final.kind === "gamson" && stage > 7) {
+        var f = cs.final, S = coalSeats(cs.el, cs.formed), x = seatsOf(cs.el, f.ask);
+        g = "<strong>Gamson’s law:</strong> " + f.ask + " brings " + x + " of the government’s " + S + " seats, so it should get " +
+            x + "/" + S + " of the " + f.K + " posts: " + gamsonOf(cs) + ".";
+      }
+      renderOutcome({ title: "What happened in Country " + cs.id, govLine: label(cs.formed) + ": " + coalSeats(cs.el, cs.formed) + " of " + total(cs.el) + " seats",
+                      paras: cs.story, gamson: g });
+    }
+  }
+
+  function selectCase(id, moveReader) {
+    cur = CASES.filter(function (c) { return c.id === id; })[0];
+    stage = 1; first = true; pend = {}; pend4 = {};
+    var cs = cur;
+    ["o1", "o2", "o3", "o4", "o5", "o6", "o7", "f1", "f2", "f3", "f4", "f5", "f6", "f7"].forEach(function (x) { $(x).innerHTML = ""; });
+    ["t2", "t3", "t4", "t5", "t6", "t7"].forEach(function (x) { $(x).hidden = true; });
+    $("caseDone").hidden = true; $("nextCase").hidden = true;
+    $("check2").disabled = false; $("check4").disabled = false;
+    cs.el.parties.forEach(function (p) { opt("o1", p.c, "Leader of the " + p.n + " (" + p.c + ")"); });
+    buildPicker();
+    caseView();
+    if (moveReader) bring("election");
+  }
+
+  function advance(to) {
+    stage = to;
+    caseView();
+  }
+
+  /* task 1: formateur */
+  $("o1").addEventListener("click", function (e) {
+    var b = e.target.closest(".opt"); if (!b || stage !== 1) return;
+    var v = b.getAttribute("data-v"), cs = cur;
+    if (v !== cs.form) {
+      first = false;
+      var largest = cs.el.parties.slice().sort(function (a, b2) { return b2.s - a.s; })[0].c;
+      var msg = v === largest
+        ? "The " + nameOf(cs.el, v) + " is the largest party, but read the election card again for who gets the first chance in Country " + cs.id + "."
+        : "Read the election card for how Country " + cs.id + " chooses the formateur, and check which party that points to.";
+      note("f1", "no", "Not that one.", msg + " Try again.");
+      say("Not that one. " + msg);
+      return;
+    }
+    lockOpts("o1", v);
+    var d = note("f1", "ok", "Right.", cs.formWhy + " The potential governments card lists every government whose parties hold a majority, whether or not it includes " + v + ".");
+    addLooks(d, ["coal"]);
+    say("Right. " + cs.formWhy);
+    advance(2);
+    renderMwcOptions();
+    $("t2").hidden = false;
+    bring("coal");
+  });
+
+  /* task 2: minimal winning coalitions (multi-select) */
+  function renderMwcOptions() {
+    var cs = cur;
+    $("o2").innerHTML = "";
+    cs.a.running.forEach(function (c) {
+      var b = opt("o2", key(c), coalHtml(cs.el, c), "coal-opt");
+      b.setAttribute("aria-pressed", "false");
+    });
+  }
+  $("o2").addEventListener("click", function (e) {
+    var b = e.target.closest(".opt"); if (!b || stage !== 2) return;
+    var k = b.getAttribute("data-v");
+    if (pend[k]) delete pend[k]; else pend[k] = 1;
+    b.setAttribute("aria-pressed", pend[k] ? "true" : "false");
+    caseView();
+  });
+  $("check2").addEventListener("click", function () {
+    if (stage !== 2) return;
+    var cs = cur, right = {}, nRight = 0, hits = 0, extras = 0;
+    cs.a.mwcs.forEach(function (c) { right[key(c)] = 1; nRight++; });
+    Object.keys(pend).forEach(function (k) { if (right[k]) hits++; else extras++; });
+    if (hits === nRight && extras === 0) {
+      var t = cs.a.mwcs.length === 1
+        ? label(cs.a.mwcs[0]) + " is the only one. " + cs.a.mwcs[0][0] + " has a majority on its own, so adding any party gives the government seats it doesn’t need."
+        : "In each of these, every party is needed: take any one away and the rest fall short of " + majority(cs.el) + " seats. In every other majority government, at least one party could leave and the rest would keep their majority.";
+      lockOpts("o2");
+      var bs = $("o2").querySelectorAll(".opt");
+      for (var i = 0; i < bs.length; i++) if (right[bs[i].getAttribute("data-v")]) bs[i].classList.add("chosen");
+      var d = note("f2", "ok", "Right.", t);
+      addLooks(d, ["coal"]);
+      say("Right. " + t);
+      $("check2").disabled = true;
+      if (cs.a.mwcs.length === 1) {
+        advance(4);
+        note("f3", "info", "", "With only one minimal winning coalition, " + label(cs.a.mwcs[0]) + " is the minimum winning coalition, and it is connected too, so it is both predictions.");
+        $("t3").hidden = false; $("o3").innerHTML = "";
+        revealOutcome();
+      } else {
+        advance(3);
+        cs.a.mwcs.forEach(function (c) { opt("o3", key(c), coalHtml(cs.el, c), "coal-opt"); });
+        $("t3").hidden = false;
+      }
+      bring("coal");
+      return;
+    }
+    first = false;
+    var msg;
+    if (hits === 0) msg = "None of those is minimal winning. For each government, ask whether it would still have a majority if any one party left. If it would, the government is bigger than it needs to be.";
+    else if (extras > 0) msg = "At least one of your choices isn’t minimal winning: one of its parties could leave and the rest would still hold a majority.";
+    else msg = "Those are all minimal winning, but there are more. Check each majority government.";
+    note("f2", "no", "Not quite.", msg + " Try again.");
+    say("Not quite. " + msg);
+  });
+
+  /* task 3: office-seeking prediction */
+  $("o3").addEventListener("click", function (e) {
+    var b = e.target.closest(".opt"); if (!b || stage !== 3) return;
+    var cs = cur, k = b.getAttribute("data-v"), el = cs.el;
+    var c = lr(el, cs.a.mwcs.filter(function (x) { return key(x) === k; })[0]);
+    if (k !== key(cs.a.minimum)) {
+      first = false;
+      var msg = label(c) + " is minimal winning, with " + surplus(el, c) + " surplus seats, but it isn’t the smallest. The minimum winning coalition is the minimal winning coalition with the fewest seats.";
+      note("f3", "no", "Not that one.", msg + " Try again.");
+      say("Not that one. " + msg);
+      return;
+    }
+    lockOpts("o3", k);
+    var t = label(c) + " has " + coalSeats(el, c) + " seats and " + surplus(el, c) + (surplus(el, c) === 1 ? " surplus seat" : " surplus seats") + ", fewer than any other minimal winning coalition. It is the minimum winning coalition.";
+    var d = note("f3", "ok", "Right.", t);
+    addLooks(d, ["coal"]);
+    say("Right. " + t);
+    advance(4);
+    $("o4").innerHTML = "";
+    cs.a.mwcs.forEach(function (x) { var bb = opt("o4", key(x), coalHtml(el, x), "coal-opt"); bb.setAttribute("aria-pressed", "false"); });
+    $("t4").hidden = false;
+    bring("coal");
+  });
+
+  /* task 4: policy-seeking prediction (multi-select among the minimal winning coalitions) */
+  $("o4").addEventListener("click", function (e) {
+    var b = e.target.closest(".opt"); if (!b || stage !== 4) return;
+    var k = b.getAttribute("data-v");
+    if (pend4[k]) delete pend4[k]; else pend4[k] = 1;
+    b.setAttribute("aria-pressed", pend4[k] ? "true" : "false");
+    caseView();
+  });
+  $("check4").addEventListener("click", function () {
+    if (stage !== 4) return;
+    var cs = cur, el = cs.el, right = {}, nRight = 0, hits = 0, wrong = [];
+    cs.a.mwcc.forEach(function (c) { right[key(c)] = 1; nRight++; });
+    Object.keys(pend4).forEach(function (k) {
+      if (right[k]) hits++;
+      else wrong.push(lr(el, cs.a.mwcs.filter(function (x) { return key(x) === k; })[0]));
+    });
+    if (hits === nRight && wrong.length === 0) {
+      lockOpts("o4");
+      var bs = $("o4").querySelectorAll(".opt");
+      for (var i = 0; i < bs.length; i++) if (right[bs[i].getAttribute("data-v")]) bs[i].classList.add("chosen");
+      $("check4").disabled = true;
+      var names = cs.a.mwcc.map(function (c) { return label(lr(el, c)); });
+      var t = (names.length === 1 ? names[0] + " is the only minimal winning coalition whose parties sit next to each other."
+        : andList(names) + " are the minimal winning coalitions whose parties sit next to each other.") +
+        " In every other one, a party outside the coalition sits between two of its members.";
+      note("f4", "ok", "Right.", t);
+      say("Right. " + t);
+      revealOutcome();
+      return;
+    }
+    first = false;
+    var msg;
+    var gapMsg = "";
+    if (wrong.length) {
+      var c = wrong[0], gp = gapParties(el, c);
+      gapMsg = label(c) + " isn’t connected: " + andList(gp) + (gp.length > 1 ? " sit" : " sits") + " between its members on the left–right dimension but " + (gp.length > 1 ? "are" : "is") + " outside it.";
+    }
+    if (hits === 0) {
+      msg = "None of those is connected. Look for the minimal winning coalitions whose parties are next to each other in the left-to-right list, with no party outside the coalition between them." + (gapMsg ? " " + gapMsg : "");
+    } else if (wrong.length) {
+      msg = "At least one of your choices isn’t connected. " + gapMsg;
+    } else {
+      msg = "Those are connected, but there are more. Check each minimal winning coalition.";
+    }
+    note("f4", "no", "Not quite.", msg + " Try again.");
+    say("Not quite. " + msg);
+  });
+
+  function revealOutcome() {
+    var cs = cur;
+    advance(5);
+    $("o5").innerHTML = "";
+    TYPES.forEach(function (t) { opt("o5", t.v, t.t); });
+    $("t5").hidden = false;
+    var last = $("f4").firstChild || $("f3").firstChild;
+    if (last) addLooks(last, ["outcome"]);
+    bring("outcome");
+    say("The outcome card now shows the government that formed in Country " + cs.id + ".");
+  }
+
+  /* task 5: type of government */
+  function typeHint(cs, chosen) {
+    var el = cs.el, f = cs.formed, s = coalSeats(el, f), m = majority(el);
+    var single = chosen === "spm" || chosen === "spmin";
+    if (single && f.length > 1) return "The cabinet has more than one party in it.";
+    if (!single && f.length === 1) return "Only one party is in the cabinet.";
+    var majT = chosen === "spm" || chosen === "mwc" || chosen === "surplus";
+    if (majT && s < m) return "The cabinet parties hold " + s + " seats, short of the " + m + " a majority needs.";
+    if (!majT && s >= m) return "The cabinet parties hold " + s + " seats, enough for a majority on their own.";
+    if (chosen === "mwc") return spareParties(el, f)[0] + " could leave the cabinet and the rest would still have a majority.";
+    if (chosen === "surplus") return "Every party in the cabinet is needed: take any one away and the rest fall short of a majority.";
+    return "Count the cabinet’s parties and seats again.";
+  }
+  $("o5").addEventListener("click", function (e) {
+    var b = e.target.closest(".opt"); if (!b || stage !== 5) return;
+    var cs = cur, v = b.getAttribute("data-v");
+    if (v !== cs.type) {
+      first = false;
+      var msg = typeHint(cs, v);
+      note("f5", "no", "Not that one.", msg + " Try again.");
+      say("Not that one. " + msg);
+      return;
+    }
+    lockOpts("o5", v);
+    var el = cs.el, s = coalSeats(el, cs.formed), m = majority(el), t;
+    if (v === "spm") t = cs.formed[0] + " governs alone with " + s + " seats, a majority by itself.";
+    else if (v === "spmin") t = cs.formed[0] + " governs alone with " + s + " seats, short of the " + m + " a majority needs.";
+    else if (v === "mincoal") t = "The cabinet parties hold " + s + " seats between them, short of the " + m + " a majority needs.";
+    else if (v === "mwc") t = "The cabinet parties hold " + s + " seats, and each is needed for the majority.";
+    else t = "The cabinet parties hold " + s + " seats, and " + orList(spareParties(el, cs.formed)) + " could leave without losing the majority.";
+    note("f5", "ok", "Right.", t);
+    say("Right. " + t);
+    stage = 6;
+    $("o6").innerHTML = "";
+    MATCHES.forEach(function (x) { opt("o6", x.v, x.t); });
+    $("t6").hidden = false;
+  });
+
+  /* task 6: which prediction */
+  $("o6").addEventListener("click", function (e) {
+    var b = e.target.closest(".opt"); if (!b || stage !== 6) return;
+    var cs = cur, v = b.getAttribute("data-v"), a = cs.a, el = cs.el;
+    var o = label(lr(el, a.minimum)), f = label(cs.formed);
+    var pols = a.mwcc.map(function (c) { return label(lr(el, c)); });
+    var p = pols.length === 1 ? pols[0] : orList(pols);
+    if (v !== cs.match) {
+      first = false;
+      var msg = "The office-seeking prediction was " + o + ", and the policy-seeking prediction " + (pols.length === 1 ? "was " : "was any one of ") + p + ". Compare each with " + f + ".";
+      note("f6", "no", "Not that one.", msg + " Try again.");
+      say("Not that one. " + msg);
+      return;
+    }
+    lockOpts("o6", v);
+    var t;
+    if (v === "both") t = f + " is the minimum winning coalition and connected, so it is both predictions.";
+    else if (v === "office") t = f + " is the minimum winning coalition but not connected. The policy-seeking prediction " + (pols.length === 1 ? "was " : "was any of ") + p + ".";
+    else if (v === "policy") t = f + " is minimal winning connected, but the minimum winning coalition was " + o + ".";
+    else t = f + " is not the minimum winning coalition, " + o + ", and not " + (pols.length === 1 ? "the minimal winning connected coalition, " : "one of the minimal winning connected coalitions, ") + p + "." +
+      (cs.type === "spmin" || cs.type === "mincoal" ? " Both predictions assume the cabinet parties hold a majority themselves."
+        : cs.type === "surplus" ? " Both predictions are minimal winning, and this government is larger than it needs to be to stay in office."
+        : " It is minimal winning, but it is not the smallest, and it isn’t connected.");
+    note("f6", "ok", "Right.", t);
+    say("Right. " + t);
+    if (!cs.final) { finishCase(); return; }
+    stage = 7;
+    var f7 = cs.final;
+    $("o7").innerHTML = "";
+    if (f7.kind === "gamson") {
+      $("q7").textContent = "7. Under Gamson’s law, how many of the " + f7.K + " cabinet posts should go to the " + nameOf(cs.el, f7.ask) + " (" + f7.ask + ")?";
+      gamsonOptions(cs).forEach(function (n) { opt("o7", String(n), String(n), "num"); });
+    } else {
+      $("q7").textContent = "7. Which explanation fits what happened in Country " + cs.id + " best?";
+      seededShuffle(f7.opts.map(function (x, i) { return { x: x, i: i }; }), cs.id).forEach(function (w) { opt("o7", String(w.i), w.x.t); });
+    }
+    $("t7").hidden = false;
+  });
+
+  /* task 7: Gamson's law or explanation */
+  $("o7").addEventListener("click", function (e) {
+    var b = e.target.closest(".opt"); if (!b || stage !== 7) return;
+    var cs = cur, f7 = cs.final, v = b.getAttribute("data-v"), ok, t, msg;
+    if (f7.kind === "gamson") {
+      var g = gamsonOf(cs), S = coalSeats(cs.el, cs.formed), x = seatsOf(cs.el, f7.ask);
+      ok = Number(v) === g;
+      msg = "Gamson’s law shares out posts in proportion to each party’s share of the government’s seats, not the whole parliament’s, and not equally.";
+      t = f7.ask + " brings " + x + " of the government’s " + S + " seats, and " + x + "/" + S + " of " + f7.K + " is " + g + ".";
+    } else {
+      ok = !!f7.opts[Number(v)].ok;
+      msg = f7.hint;
+      t = f7.opts.filter(function (o) { return o.ok; })[0].t;
+    }
+    if (!ok) {
+      first = false;
+      note("f7", "no", "Not that one.", msg + " Try again.");
+      say("Not that one. " + msg);
+      return;
+    }
+    lockOpts("o7", v);
+    stage = 8;
+    note("f7", "ok", "Right.", t);
+    say("Right. " + t);
+    caseView();
+    finishCase();
+  });
+
+  function finishCase() {
+    var cs = cur;
+    stage = Math.max(stage, 8);
+    if (first) done[cs.id] = true;
+    buildPicker();
+    var box = $("caseDone");
+    box.innerHTML = "<p>" + cs.note + "</p>" + (first ? "" : "<p>Finish a country with every answer right the first time to mark it with a check.</p>");
+    box.hidden = false;
+    $("nextCase").hidden = false;
+  }
+
+  $("nextCase").addEventListener("click", function () {
+    var order = [];
+    GROUPS.forEach(function (g) { CASES.forEach(function (c) { if (c.group === g.id) order.push(c.id); }); });
+    var i = order.indexOf(cur.id);
+    selectCase(order[(i + 1) % order.length], true);
+    $("practiceTitle").focus({ preventScroll: true });
+    say("Country " + cur.id + ".");
+  });
+
+  /* ================= modes ================= */
+
+  var mode = "guided";
+  var TABS = ["guided", "practice"];
+  function selectMode(m, focusTab) {
+    mode = m;
+    TABS.forEach(function (t) {
+      var tab = $("tab-" + t);
+      tab.setAttribute("aria-selected", t === m ? "true" : "false");
+      tab.tabIndex = t === m ? 0 : -1;
+      $(t + "Panel").hidden = t !== m;
+    });
+    movedAway = false; backBtn.hidden = true;
+    if (m === "guided") renderGuided();
+    else { if (!cur) selectCase("A", false); else { buildPicker(); caseView(); } }
+    if (focusTab) $("tab-" + m).focus();
+    say(m === "guided" ? "Guided walkthrough, step " + (step + 1) + "." : "Practice. Country " + cur.id + ".");
+  }
+  TABS.forEach(function (t) { $("tab-" + t).addEventListener("click", function () { selectMode(t, false); }); });
+  $("tabs").addEventListener("keydown", function (e) {
+    var i = TABS.indexOf(mode), next = null;
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") next = TABS[(i + 1) % 2];
+    else if (e.key === "Home") next = TABS[0];
+    else if (e.key === "End") next = TABS[1];
+    if (next) { e.preventDefault(); selectMode(next, true); }
+  });
+
+  /* ================= theme ================= */
+
+  var themeBtn = $("themeToggle");
+  function applyTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    themeBtn.textContent = t === "dark" ? "Switch to light mode" : "Switch to dark mode";
+  }
+  applyTheme(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  themeBtn.addEventListener("click", function () {
+    applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  });
+
+  /* ---------- exposed for the verification script only ---------- */
+  window.__gov = { CASES: CASES, LECT: LECT, STEPS: STEPS, analysis: analysis, typeOf: typeOf, matchOf: matchOf,
+    isMinimal: isMinimal, isConnected: isConnected, gapParties: gapParties, coalSeats: coalSeats, majority: majority,
+    total: total, gamsonOf: gamsonOf, gamsonOptions: gamsonOptions, label: label, lr: lr, key: key,
+    selectCase: selectCase, selectMode: selectMode, stageOf: function () { return stage; } };
+
+  renderGuided();
+})();
+</script>
+</body>
+</html>

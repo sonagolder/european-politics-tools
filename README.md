@@ -15,6 +15,7 @@ Start at the contents page, `index.html`, which lists the tools by topic. The si
 | 5 | Transitions to democracy | The tipping model: why nobody saw 1989 coming | `tipping-model.html` |
 | 9 | Electoral systems | From votes to seats | `list-pr-seat-allocation.html` |
 | 12 | Government formation | Forming a government | `forming-governments.html` |
+| 13 | Law-making in governments and parliaments | Delegation in government | `delegation-in-government.html` |
 
 ## Notes
 

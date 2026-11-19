@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delegation in government</title>
+<style>
+  :root {
+    --bg: #FAFAFA;
+    --panel: #FFFFFF;
+    --border: #D0D0D0;
+    --text: #111111;
+    --text-2: #555555;
+    --hint: #999999;
+    --deemph: #707070;
+    --accent: #0072B2;
+    --favorable: #0072B2;
+    --unfavorable: #B33E00;
+    --neutral-state: #5F5E5A;
+    --gold-ui: #B8860B;
+    --gold-text: #946B09;
+    --body-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --data-font: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --u: 8px;
+  }
+
+  html[data-theme="dark"] {
+    --bg: #1A1A1A;
+    --panel: #2A2A2A;
+    --border: #3A3A3A;
+    --text: #F2F2F2;
+    --text-2: #B3B3B3;
+    --hint: #7A7A7A;
+    --deemph: #8F8F8F;
+    --accent: #7FC7EE;
+    --favorable: #7FC7EE;
+    --unfavorable: #F08A4B;
+    --neutral-state: #A8A6A0;
+    --gold-ui: #E0B23D;
+    --gold-text: #E0B23D;
+  }
+
+  * { box-sizing: border-box; }
+
+  /* Author rules that set `display` outrank the browser's [hidden] rule, so anything
+     given a display value here would stay visible when hidden. Enforce it globally. */
+  [hidden] { display: none !important; }
+
+  body {
+    margin: 0;
+    padding: calc(var(--u) * 3) calc(var(--u) * 2) calc(var(--u) * 6);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body-font);
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
+  .wrap { max-width: 1120px; margin: 0 auto; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  header { margin-bottom: calc(var(--u) * 3); }
+  h1 { font-size: 1.65rem; font-weight: 600; margin: 0 0 var(--u) 0; line-height: 1.25; }
+  .standfirst { margin: 0; color: var(--text-2); max-width: 70ch; }
+
+  .topbar {
+    display: flex; flex-wrap: wrap; gap: calc(var(--u) * 2);
+    align-items: flex-end; justify-content: space-between;
+    margin-bottom: calc(var(--u) * 3);
+  }
+
+  .field-label { display: block; font-size: 0.8rem; color: var(--text-2); margin-bottom: var(--u); }
+
+  [role="tablist"] { display: flex; flex-wrap: wrap; gap: var(--u); }
+  [role="tab"] {
+    font: inherit; font-size: 0.95rem;
+    padding: var(--u) calc(var(--u) * 2);
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+  [role="tab"][aria-selected="true"] {
+    border-color: var(--accent);
+    box-shadow: inset 0 -3px 0 var(--accent);
+    font-weight: 600;
+  }
+
+  .theme-toggle, .look-btn {
+    font: inherit; font-size: 0.85rem;
+    padding: var(--u) calc(var(--u) * 2);
+    background: var(--panel); color: var(--accent);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+  .theme-toggle { color: var(--text); }
+  .looks { display: flex; flex-wrap: wrap; gap: var(--u); margin-top: var(--u); }
+
+  button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible,
+  h2[tabindex="-1"]:focus-visible, input[type="range"]:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* ---------- board ---------- */
+
+  .board {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: calc(var(--u) * 3);
+    align-items: start;
+  }
+  @media (max-width: 860px) { .board { grid-template-columns: minmax(0, 1fr); } }
+  .col { display: flex; flex-direction: column; gap: calc(var(--u) * 2); min-width: 0; }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 6px; padding: calc(var(--u) * 2);
+    scroll-margin-top: var(--u);
+  }
+  .card h2 { font-size: 1.05rem; font-weight: 600; margin: 0 0 var(--u) 0; }
+  .card-sub { margin: 0 0 calc(var(--u) * 2) 0; font-size: 0.92rem; color: var(--text-2); }
+  .card p { margin: 0 0 var(--u) 0; }
+
+  /* ---------- the policy line ---------- */
+
+  svg.line { display: block; width: 100%; height: auto; }
+  .line text { font-family: var(--body-font); fill: var(--text); }
+  .line .axis { stroke: var(--text); stroke-width: 2; }
+  .line .axis-ext { stroke: var(--deemph); stroke-width: 2; stroke-dasharray: 4 4; }
+  .line .tick { stroke: var(--text); stroke-width: 1.5; }
+  .line .tick-ext { stroke: var(--deemph); stroke-width: 1.5; }
+  .line .tl { font-family: var(--data-font); font-size: 12px; }
+  .line .tl-ext { font-family: var(--data-font); font-size: 12px; fill: var(--deemph); }
+  .line .mk { fill: var(--text); stroke: var(--panel); stroke-width: 1.5; }
+  .line .ml { font-family: var(--data-font); font-size: 13px; font-weight: 700; }
+  .line .ring { fill: none; stroke: var(--gold-ui); stroke-width: 3; }
+  .line .ring-l { font-size: 11px; fill: var(--gold-text); font-weight: 600; }
+  .line .brace { fill: none; stroke: var(--text-2); stroke-width: 1.5; }
+  .line .brace-l { font-size: 11px; fill: var(--text-2); }
+  .legend { display: flex; flex-wrap: wrap; gap: calc(var(--u) * 2); margin: var(--u) 0 0 0; font-size: 0.85rem; color: var(--text-2); }
+  .legend span { display: inline-flex; align-items: center; gap: calc(var(--u) * 0.5); }
+  .legend svg { width: 14px; height: 14px; }
+  .legend .mk { fill: var(--text); }
+  .line-cap { margin: var(--u) 0 0 0; font-size: 0.85rem; color: var(--text-2); }
+
+  /* ---------- the worksheet ---------- */
+
+  /* position: relative makes the scroller the containing block for the absolutely
+     positioned .sr-only text in its cells, so that text cannot widen the page.
+     See the house style's checklist item on scroll containers. */
+  .table-scroll { overflow-x: auto; position: relative; }
+  table.ws { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+  table.ws caption { text-align: left; font-size: 0.85rem; color: var(--text-2); padding-bottom: var(--u); }
+  table.ws th, table.ws td { border-bottom: 1px solid var(--border); padding: var(--u); vertical-align: top; text-align: left; }
+  table.ws tbody th { font-weight: 400; width: 58%; }
+  table.ws tbody tr:last-child th, table.ws tbody tr:last-child td { border-bottom: 0; }
+  .rf { display: block; font-size: 0.78rem; color: var(--text-2); margin-top: 2px; }
+  .rv { font-family: var(--data-font); font-variant-numeric: tabular-nums; font-weight: 700; }
+  .rv.unknown { color: var(--deemph); font-weight: 400; }
+  td.fresh { box-shadow: inset 3px 0 0 var(--accent); }
+
+  /* ---------- the panel ---------- */
+
+  .step-label { font-size: 0.8rem; color: var(--text-2); margin: 0 0 var(--u) 0; }
+  .step-title { font-size: 1.05rem; font-weight: 600; margin: 0 0 var(--u) 0; }
+  .step-body p { margin: 0 0 var(--u) 0; }
+  .nav { display: flex; gap: var(--u); align-items: center; margin-top: calc(var(--u) * 2); flex-wrap: wrap; }
+  .dots { display: flex; gap: var(--u); margin-left: auto; flex-wrap: wrap; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
+  .dot.on { background: var(--accent); }
+
+  .btn {
+    font: inherit; font-size: 0.95rem; padding: var(--u) calc(var(--u) * 2);
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+  .btn:disabled { color: var(--hint); border-style: dashed; cursor: default; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--panel); font-weight: 600; }
+  html[data-theme="dark"] .btn.primary { color: var(--bg); }
+  .btn.primary:disabled { background: var(--panel); color: var(--hint); border-color: var(--border); }
+
+  .cgroup { border: 1px solid var(--border); border-radius: 4px; padding: calc(var(--u) * 2); margin-bottom: calc(var(--u) * 2); }
+  .ctrl { margin-bottom: calc(var(--u) * 2); }
+  .ctrl:last-of-type { margin-bottom: 0; }
+  .ctrl-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--u); margin-bottom: 2px; }
+  .ctrl-head label { font-size: 0.9rem; font-weight: 600; }
+  .ctrl-val { font-family: var(--data-font); font-variant-numeric: tabular-nums; font-weight: 600; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); margin: 0; }
+  .scale { display: flex; justify-content: space-between; font-family: var(--data-font); font-size: 0.72rem; color: var(--text-2); margin-top: calc(var(--u) * 0.5); }
+  .cnote { margin: var(--u) 0 calc(var(--u) * 2) 0; font-size: 0.85rem; color: var(--text-2); }
+
+  .verdict-box { border: 1px solid var(--border); border-left: 4px solid var(--neutral-state); border-radius: 4px; padding: var(--u) calc(var(--u) * 2); margin-bottom: calc(var(--u) * 2); }
+  .verdict-box .who { font-size: 0.75rem; color: var(--text-2); margin: 0 0 2px 0; }
+  .verdict { font-size: 1.02rem; font-weight: 600; margin: 0 0 var(--u) 0; }
+  .why { margin: 0; font-size: 0.92rem; }
+
+  .progress { list-style: none; margin: 0 0 calc(var(--u) * 2) 0; padding: 0; font-size: 0.88rem; }
+  .progress li { display: flex; gap: var(--u); align-items: baseline; padding: 2px 0; color: var(--text-2); }
+  .progress li .pm { font-family: var(--data-font); width: 16px; flex: none; }
+  .progress li.done { color: var(--text); }
+  .progress li.done .pm { color: var(--gold-text); }
+
+  .problem { border: 1px solid var(--border); border-radius: 4px; padding: var(--u) calc(var(--u) * 2); }
+  .problem p { margin: 0 0 var(--u) 0; }
+  .problem p:last-child { margin-bottom: 0; }
+  .problem .nums { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  .task { border-top: 1px solid var(--border); padding-top: calc(var(--u) * 2); margin-top: calc(var(--u) * 2); }
+  .task-q { font-weight: 600; margin: 0 0 var(--u) 0; }
+  .opts { display: flex; flex-direction: column; gap: var(--u); }
+  .opts.row { flex-direction: row; flex-wrap: wrap; }
+  .opt {
+    font: inherit; font-size: 0.95rem; text-align: left;
+    padding: var(--u) calc(var(--u) * 2); background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  }
+  .opt.num { font-family: var(--data-font); font-variant-numeric: tabular-nums; }
+  .opts.row .opt.num { min-width: calc(var(--u) * 6); text-align: center; }
+  .opt:hover { border-color: var(--accent); }
+  .opt[aria-disabled="true"] { cursor: default; color: var(--deemph); }
+  .opt[aria-disabled="true"]:hover { border-color: var(--border); }
+  .opt.chosen[aria-disabled="true"] { color: var(--text); border: 2px solid var(--accent); padding: calc(var(--u) - 1px) calc(var(--u) * 2 - 1px); }
+
+  .result-note {
+    margin: var(--u) 0 0 0; padding: var(--u) calc(var(--u) * 2); border-radius: 4px;
+    border: 1px solid var(--border); font-size: 0.92rem;
+  }
+  .result-note.ok { box-shadow: inset 4px 0 0 var(--favorable); }
+  .result-note.no { box-shadow: inset 4px 0 0 var(--unfavorable); }
+  .result-note .head { font-weight: 600; }
+  .result-note.ok .head { color: var(--favorable); }
+  .result-note.no .head { color: var(--unfavorable); }
+
+  .score { font-family: var(--data-font); font-size: 0.85rem; color: var(--text-2); margin: calc(var(--u) * 2) 0 0 0; }
+
+  .back-btn {
+    position: fixed; right: calc(var(--u) * 2); bottom: calc(var(--u) * 2); z-index: 10;
+    font: inherit; font-size: 0.9rem; font-weight: 600;
+    padding: var(--u) calc(var(--u) * 2); border-radius: 4px; cursor: pointer;
+    background: var(--accent); color: var(--panel); border: 1px solid var(--accent);
+  }
+  html[data-theme="dark"] .back-btn { color: var(--bg); }
+
+  /* ---------- notes ---------- */
+
+  .notes { margin-top: calc(var(--u) * 4); }
+  .notes details {
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: calc(var(--u) * 1.5) calc(var(--u) * 2);
+    margin-bottom: calc(var(--u) * 1.5); background: var(--panel);
+  }
+  .notes summary { cursor: pointer; font-weight: 600; }
+  .notes details > *:not(summary) { max-width: 78ch; }
+  .notes details p { margin: calc(var(--u) * 1.5) 0 0 0; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .opt, .btn, [role="tab"] { transition: border-color 120ms ease, background-color 120ms ease; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Delegation in government</h1>
+    <p class="standfirst">
+      A prime minister hands each policy area to a cabinet minister, and ministers rely on civil servants to work
+      out the details. Each time, the person handing over the task risks getting a policy she didn&rsquo;t want.
+      The guided walkthrough works through the week 13 lecture&rsquo;s delegation model and its examples. Explore lets
+      you move the status quo and both ideal points yourself. Practice gives you new delegation problems to solve,
+      generated without end.
+    </p>
+  </header>
+
+  <div class="topbar">
+    <div>
+      <span class="field-label" id="modeLabel">Three ways to use this</span>
+      <div role="tablist" aria-labelledby="modeLabel" id="tabs">
+        <button role="tab" id="tab-guided" aria-selected="true" aria-controls="guidedPanel" type="button">Guided walkthrough</button>
+        <button role="tab" id="tab-explore" aria-selected="false" aria-controls="explorePanel" tabindex="-1" type="button">Explore</button>
+        <button role="tab" id="tab-practice" aria-selected="false" aria-controls="practicePanel" tabindex="-1" type="button">Practice</button>
+      </div>
+    </div>
+    <button class="theme-toggle" id="themeToggle" type="button">Switch to dark mode</button>
+  </div>
+
+  <div class="board">
+
+    <!-- ============ content column ============ -->
+    <div class="col">
+
+      <section class="card" id="lineCard" aria-labelledby="lineTitle">
+        <h2 id="lineTitle">The policy line</h2>
+        <p class="card-sub" id="lineSub"></p>
+        <svg class="line" id="line" viewBox="0 0 400 160" aria-hidden="true" focusable="false"></svg>
+        <div class="legend" aria-hidden="true">
+          <span><svg viewBox="0 0 14 14"><circle class="mk" cx="7" cy="7" r="5"></circle></svg>Principal&rsquo;s ideal point (P)</span>
+          <span><svg viewBox="0 0 14 14"><rect class="mk" x="2" y="2" width="10" height="10"></rect></svg>Agent&rsquo;s ideal point (A)</span>
+          <span><svg viewBox="0 0 14 14"><polygon class="mk" points="7,1 13,7 7,13 1,7"></polygon></svg>Status quo (SQ)</span>
+        </div>
+        <p class="line-cap" id="lineCap"></p>
+      </section>
+
+      <section class="card" id="wsCard" aria-labelledby="wsTitle">
+        <h2 id="wsTitle">The worksheet</h2>
+        <div class="table-scroll">
+          <table class="ws">
+            <caption>The lecture&rsquo;s three steps, from the positions to the final policy.</caption>
+            <tbody id="wsBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ the panel ============ -->
+    <div>
+
+      <section class="card" id="guidedPanel" role="tabpanel" aria-labelledby="tab-guided">
+        <p class="step-label" id="stepLabel"></p>
+        <div aria-live="polite" id="stepLive">
+          <h2 class="step-title" id="stepTitle" tabindex="-1"></h2>
+          <div class="step-body" id="stepBody"></div>
+          <div class="looks" id="stepLook"></div>
+        </div>
+        <div class="nav" id="guidedNav">
+          <button class="btn" type="button" id="prevBtn">Back</button>
+          <button class="btn primary" type="button" id="nextBtn">Next</button>
+          <div class="dots" id="dots" aria-hidden="true"></div>
+        </div>
+      </section>
+
+      <section class="card" id="explorePanel" role="tabpanel" aria-labelledby="tab-explore" hidden>
+        <h2 id="exploreTitle" tabindex="-1">Move the status quo and the ideal points</h2>
+        <div class="verdict-box" aria-live="polite" id="verdictBox">
+          <p class="who">What happens</p>
+          <p class="verdict" id="verdict"></p>
+          <p class="why" id="vWhy"></p>
+        </div>
+        <div class="cgroup">
+          <div class="ctrl">
+            <div class="ctrl-head"><label for="sSQ">Status quo (SQ)</label><span class="ctrl-val" id="oSQ"></span></div>
+            <input type="range" id="sSQ" min="0" max="10" step="1" value="3">
+          </div>
+          <div class="ctrl">
+            <div class="ctrl-head"><label for="sP">Principal&rsquo;s ideal point (P)</label><span class="ctrl-val" id="oP"></span></div>
+            <input type="range" id="sP" min="0" max="10" step="1" value="5">
+          </div>
+          <div class="ctrl">
+            <div class="ctrl-head"><label for="sA">Agent&rsquo;s ideal point (A)</label><span class="ctrl-val" id="oA"></span></div>
+            <input type="range" id="sA" min="0" max="10" step="1" value="8">
+          </div>
+          <div class="scale" aria-hidden="true"><span>0</span><span>10</span></div>
+        </div>
+        <p class="cnote">The acceptable range can run past the ends of the 0&ndash;10 scale: a principal at 9 with the status quo at 3 would accept anything from 3 to 15. The policy line draws the part past the scale dashed. The agent never proposes a policy past his own ideal point, so the final policy always lands on the scale.</p>
+      </section>
+
+      <section class="card" id="practicePanel" role="tabpanel" aria-labelledby="tab-practice" hidden>
+        <h2 id="practiceTitle" tabindex="-1">Practice</h2>
+        <p class="cnote">New problems are generated without end, and none of them is a lecture example or a homework question. The acceptable range can run past the ends of the 0&ndash;10 scale; when it does, the policy line draws that part dashed. Each one is one of the three kinds listed here. A kind is checked off once you solve a problem of that kind with every answer right the first time, and new problems favor the kinds you haven&rsquo;t checked off yet.</p>
+        <span class="field-label" id="progLabel">Kinds of problem</span>
+        <ul class="progress" id="progress" aria-labelledby="progLabel"></ul>
+        <div class="problem" id="probText"></div>
+        <div class="task" id="gt1">
+          <p class="task-q">1. What is the principal&rsquo;s acceptable range?</p>
+          <div class="opts" id="go1"></div><div id="gf1"></div>
+        </div>
+        <div class="task" id="gt2" hidden>
+          <p class="task-q">2. What policy does the agent propose?</p>
+          <div class="opts row" id="go2"></div><div id="gf2"></div>
+        </div>
+        <div class="task" id="gt3" hidden>
+          <p class="task-q">3. What is the final policy?</p>
+          <div class="opts row" id="go3"></div><div id="gf3"></div>
+        </div>
+        <div class="nav"><button class="btn primary" type="button" id="nextProb" hidden>Next problem</button></div>
+        <p class="score" id="score"></p>
+      </section>
+    </div>
+  </div>
+
+  <!-- ============ notes ============ -->
+
+  <div class="notes">
+    <details>
+      <summary>The rules of the game, in full</summary>
+      <p>
+        Policy is a single line, and the principal and the agent each have an ideal point on it. Each prefers
+        policies closer to their ideal point, and cares only about distance: a policy two units to the left is
+        exactly as good as one two units to the right.
+      </p>
+      <p>
+        The agent presents a policy proposal, and the principal says yes or no. Yes, and the proposal becomes the
+        policy; no, and the status quo stays. The principal says yes to any proposal at least as close to her ideal
+        point as the status quo, including one exactly as close. Without that last part, the agent could always
+        propose something a little closer to his own ideal point, and there would be no best proposal to make.
+      </p>
+      <p>
+        The agent knows all this, so he proposes the policy in the principal&rsquo;s acceptable range closest to his own
+        ideal point. When his ideal point is on the same side of the status quo as the principal&rsquo;s, or the status
+        quo is between them, that rule covers everything. When his ideal point is on the far side of the status quo
+        from hers, the point in the range closest to him is the status quo itself, so policy doesn&rsquo;t change. The
+        lecture&rsquo;s examples don&rsquo;t include that case, and practice leaves it out, but explore will show it.
+      </p>
+    </details>
+
+    <details>
+      <summary>Where these numbers come from</summary>
+      <p>
+        The examples in the walkthrough are the ones in the week 13 lecture slides on principal-agent models. The
+        problems in practice mode are generated by the tool. They are invented numbers, not real governments, and the
+        tool is built so that none of them can be a lecture example or a homework question.
+      </p>
+    </details>
+  </div>
+
+  <button class="back-btn" type="button" id="backBtn" hidden>Back to the steps</button>
+  <div class="sr-only" role="status" aria-live="polite" id="live"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var MINUS = "−";
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var liveEl = document.getElementById("live");
+  function say(msg) { liveEl.textContent = ""; setTimeout(function () { liveEl.textContent = msg; }, 30); }
+  function $(id) { return document.getElementById(id); }
+  function fmt(v) { return v < 0 ? MINUS + Math.abs(v) : String(v); }
+
+  /* ================= the model ================= */
+
+  /* Step 1: the distance from P to the SQ. Step 2: the acceptable range, that distance on
+     either side of P (indifference counts as acceptance). Step 3: the agent proposes the point
+     in the range closest to A. The principal accepts it, so it is the final policy. */
+  function solve(sq, p, a) {
+    var d = Math.abs(sq - p), lo = p - d, hi = p + d;
+    var x = Math.min(Math.max(a, lo), hi);
+    /* "behind": the agent's ideal point is the status quo or past it, so policy can't move. */
+    var where = d === 0 ? "atp" : x === sq ? "behind" : (a >= lo && a <= hi) ? (a === p ? "shared" : "inside") : "outside";
+    return { sq: sq, p: p, a: a, d: d, lo: lo, hi: hi, x: x, where: where };
+  }
+  function rangeText(r) { return r.lo === r.hi ? fmt(r.lo) + " only" : fmt(r.lo) + " to " + fmt(r.hi); }
+
+  /* ================= moving the reader ================= */
+
+  var CARDS = { line: "lineCard", ws: "wsCard" };
+  var CARD_NAMES = { line: "the policy line", ws: "the worksheet" };
+  var backBtn = $("backBtn");
+  var movedAway = false, autoScrollUntil = 0;
+  function markMoved() { movedAway = true; autoScrollUntil = Date.now() + (reduceMotion ? 100 : 900); }
+  function isEnoughOnScreen(el) {
+    var r = el.getBoundingClientRect(), vh = window.innerHeight;
+    if (r.top >= 0 && r.bottom <= vh) return true;
+    if (r.height > vh && r.top >= 0 && (vh - r.top) >= 0.6 * vh) return true;
+    return false;
+  }
+  function goTo(el) {
+    markMoved();
+    el.scrollIntoView({ block: "start", behavior: reduceMotion ? "auto" : "smooth" });
+    setTimeout(updateBack, reduceMotion ? 150 : 950);
+  }
+  function bring(k) {
+    var el = $(CARDS[k]);
+    if (!el || el.hidden || isEnoughOnScreen(el)) return;
+    goTo(el);
+  }
+  function lookButtons(container, keys) {
+    container.innerHTML = "";
+    (keys || []).forEach(function (k) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "look-btn";
+      b.textContent = "Look at " + CARD_NAMES[k];
+      b.addEventListener("click", function () { goTo($(CARDS[k])); });
+      container.appendChild(b);
+    });
+  }
+  function anchorFor(m) {
+    if (m === "guided") return $("guidedNav");
+    if (m === "explore") return $("verdictBox");
+    var ids = ["gt3", "gt2", "gt1"];
+    for (var i = 0; i < ids.length; i++) if (!$(ids[i]).hidden) return $(ids[i]);
+    return null;
+  }
+  function anchorVisible(el) { var r = el.getBoundingClientRect(); return r.bottom > 0 && r.top < window.innerHeight; }
+  function updateBack() {
+    var a = anchorFor(mode);
+    if (!a) { backBtn.hidden = true; return; }
+    if (anchorVisible(a)) { if (Date.now() >= autoScrollUntil) movedAway = false; backBtn.hidden = true; return; }
+    backBtn.hidden = !movedAway;
+    backBtn.textContent = mode === "guided" ? "Back to the steps" : mode === "explore" ? "Back to the sliders" : "Back to the question";
+  }
+  window.addEventListener("scroll", updateBack, { passive: true });
+  window.addEventListener("resize", updateBack);
+  backBtn.addEventListener("click", function () {
+    var a = anchorFor(mode); if (!a) return;
+    a.scrollIntoView({ block: "center", behavior: reduceMotion ? "auto" : "smooth" });
+    movedAway = false; backBtn.hidden = true;
+  });
+
+  /* ================= the policy line ================= */
+
+  /* show: { range, proposal, outcome } — which layers to draw. The line is aria-hidden;
+     the caption below it and the worksheet carry the same information as text. */
+  function drawLine(r, show, sub) {
+    show = show || {};
+    var lo = 0, hi = 10;
+    if (show.range) { lo = Math.min(0, r.lo); hi = Math.max(10, r.hi); }
+    var X0 = 24, X1 = 376;
+    function X(v) { return X0 + (v - lo) * (X1 - X0) / (hi - lo); }
+    var y = 80, parts = [];
+    var span = hi - lo, every = span <= 12 ? 1 : 2;
+
+    if (lo < 0) parts.push("<line class='axis-ext' x1='" + X(lo) + "' y1='" + y + "' x2='" + X(0) + "' y2='" + y + "'></line>");
+    if (hi > 10) parts.push("<line class='axis-ext' x1='" + X(10) + "' y1='" + y + "' x2='" + X(hi) + "' y2='" + y + "'></line>");
+    parts.push("<line class='axis' x1='" + X(0) + "' y1='" + y + "' x2='" + X(10) + "' y2='" + y + "'></line>");
+    for (var v = lo; v <= hi; v++) {
+      var ext = v < 0 || v > 10;
+      parts.push("<line class='" + (ext ? "tick-ext" : "tick") + "' x1='" + X(v) + "' y1='" + (y - 6) + "' x2='" + X(v) + "' y2='" + (y + 6) + "'></line>");
+      if ((v - lo) % every === 0 || v === 0 || v === 10)
+        parts.push("<text class='" + (ext ? "tl-ext" : "tl") + "' x='" + X(v) + "' y='" + (y + 24) + "' text-anchor='middle'>" + fmt(v) + "</text>");
+    }
+
+    if (show.range) {
+      var by = y + 36;
+      parts.push("<path class='brace' d='M" + X(r.lo) + "," + by + " L" + X(r.lo) + "," + (by + 8) + " L" + X(r.hi) + "," + (by + 8) + " L" + X(r.hi) + "," + by + "'></path>");
+      var mid = (X(r.lo) + X(r.hi)) / 2;
+      var lab = r.lo === r.hi ? "Acceptable range: " + fmt(r.lo) + " only" : "Principal’s acceptable range";
+      var anchor = mid < 90 ? "start" : mid > 310 ? "end" : "middle";
+      var lx = anchor === "start" ? Math.max(X(r.lo), 4) : anchor === "end" ? Math.min(X(r.hi), 396) : mid;
+      parts.push("<text class='brace-l' x='" + lx + "' y='" + (by + 24) + "' text-anchor='" + anchor + "'>" + lab + "</text>");
+    }
+    if (show.outcome || show.proposal) {
+      parts.push("<circle class='ring' cx='" + X(r.x) + "' cy='" + y + "' r='12'></circle>");
+    }
+
+    /* markers, labels stacked where they coincide: A above P above SQ */
+    var stack = {};
+    [["A", r.a], ["P", r.p], ["SQ", r.sq]].forEach(function (m) {
+      var k = m[1]; stack[k] = stack[k] || []; stack[k].push(m[0]);
+    });
+    Object.keys(stack).forEach(function (k) {
+      var xs = X(Number(k)), names = stack[k];
+      names.forEach(function (nm, i) {
+        var ty = y - 20 - (names.length - 1 - i) * 16;
+        parts.push("<text class='ml' x='" + xs + "' y='" + ty + "' text-anchor='middle'>" + nm + "</text>");
+      });
+      if (names.length === 1 && names[0] === "SQ") parts.push("<polygon class='mk' points='" + xs + "," + (y - 7) + " " + (xs + 7) + "," + y + " " + xs + "," + (y + 7) + " " + (xs - 7) + "," + y + "'></polygon>");
+      else if (names.length === 1 && names[0] === "A") parts.push("<rect class='mk' x='" + (xs - 6) + "' y='" + (y - 6) + "' width='12' height='12'></rect>");
+      else parts.push("<circle class='mk' cx='" + xs + "' cy='" + y + "' r='6'></circle>");
+    });
+    if (show.outcome || show.proposal) {
+      var ox = X(r.x);
+      var oa = ox < 40 ? "start" : ox > 360 ? "end" : "middle";
+      /* one row above the tallest stack of marker labels anywhere on the line, so it never sits beside one */
+      var maxH = 0;
+      Object.keys(stack).forEach(function (k) { maxH = Math.max(maxH, stack[k].length); });
+      parts.push("<text class='ring-l' x='" + ox + "' y='" + (y - 20 - maxH * 16) + "' text-anchor='" + oa + "'>" + (show.outcome ? "final policy" : "proposal") + "</text>");
+    }
+    $("line").innerHTML = parts.join("");
+
+    var cap = "Status quo at " + r.sq + ", principal’s ideal point at " + r.p + ", agent’s ideal point at " + r.a + ".";
+    if (show.range) cap += " The acceptable range runs from " + fmt(r.lo) + " to " + fmt(r.hi) + (r.lo < 0 || r.hi > 10 ? ", past the end of the 0–10 scale (dashed)." : ".");
+    if (show.outcome) cap += " The final policy is " + r.x + ".";
+    else if (show.proposal) cap += " The agent proposes " + r.x + ".";
+    $("lineCap").textContent = cap;
+    $("lineSub").textContent = sub || "";
+  }
+
+  /* ================= the worksheet ================= */
+
+  var WS = [
+    { k: "sq", label: "Status quo (SQ)" },
+    { k: "p", label: "Principal’s ideal point (P)" },
+    { k: "a", label: "Agent’s ideal point (A)" },
+    { k: "d", label: "Step 1: distance from P to the SQ", f: "how far apart P and the SQ are" },
+    { k: "range", label: "Step 2: the principal’s acceptable range", f: "that distance on either side of P" },
+    { k: "x", label: "Step 3: the agent’s proposal", f: "the policy in the range closest to A" },
+    { k: "out", label: "Final policy", f: "the principal says yes, so the proposal" }
+  ];
+  var ORDER = WS.map(function (w) { return w.k; });
+  function wsValue(k, r) {
+    switch (k) {
+      case "sq": return String(r.sq);
+      case "p": return String(r.p);
+      case "a": return String(r.a);
+      case "d": return String(r.d);
+      case "range": return rangeText(r);
+      case "x": return String(r.x);
+      case "out": return String(r.x);
+    }
+    return "";
+  }
+  /* Rows are built once and updated in place, so nothing in the table is ever destroyed. */
+  var wsCells = {};
+  (function buildWs() {
+    var body = $("wsBody");
+    WS.forEach(function (row) {
+      var tr = document.createElement("tr");
+      var th = document.createElement("th"); th.scope = "row";
+      th.appendChild(document.createTextNode(row.label));
+      if (row.f) { var f = document.createElement("span"); f.className = "rf"; f.textContent = row.f; th.appendChild(f); }
+      var td = document.createElement("td");
+      var v = document.createElement("span");
+      td.appendChild(v);
+      tr.appendChild(th); tr.appendChild(td);
+      body.appendChild(tr);
+      wsCells[row.k] = { td: td, v: v };
+    });
+  })();
+  function renderWs(r, shown, fresh) {
+    WS.forEach(function (row) {
+      var c = wsCells[row.k];
+      if (shown[row.k]) {
+        c.v.className = "rv"; c.v.textContent = wsValue(row.k, r); c.v.removeAttribute("aria-label");
+        c.td.className = fresh && fresh[row.k] ? "fresh" : "";
+      } else {
+        c.v.className = "rv unknown"; c.v.textContent = "?"; c.v.setAttribute("aria-label", "not yet worked out");
+        c.td.className = "";
+      }
+    });
+  }
+  function upto(k) {
+    var o = {};
+    for (var i = 0; i <= ORDER.indexOf(k); i++) o[ORDER[i]] = 1;
+    return o;
+  }
+
+  /* ================= guided walkthrough ================= */
+
+  /* The lecture's examples, in its order: the worked example, then the two pairs it discusses. */
+  var L_WORKED = solve(2, 5, 9), L_INSIDE = solve(3, 5, 7), L_SAME = solve(4, 5, 5), L_BEYOND = solve(3, 5, 8);
+  /* Built for the tool: the last pair with the status quo moved one step closer to P. */
+  var T_CLOSER = solve(4, 5, 8);
+
+  var STEPS = [
+    { title: "Who delegates to whom",
+      r: L_WORKED, show: {}, ws: {}, sub: "A status quo and two ideal points on a policy line. The next step explains what they mean.",
+      body: [
+        "Politicians decide on new policies, but they rarely carry them out themselves. A prime minister hands each area of policy to a cabinet minister, and ministers rely on the senior civil servants in their departments to work out the details, such as the specific regulations and procedures, and to put policy into effect.",
+        "Each of these is delegation. The person who hands over the task is the principal, and the person who carries it out is the agent. Delegation saves the principal time and draws on the agent’s expertise. The risk is that the agent wants something different, and uses the task to move policy toward what he wants rather than what she wants."
+      ] },
+    { title: "The rules of the game", changes: ["line"], look: ["line", "ws"],
+      r: L_WORKED, show: {}, ws: upto("a"), fresh: { sq: 1, p: 1, a: 1 }, sub: "The lecture’s worked example.",
+      body: [
+        "Policy runs along a line. The principal (P) and the agent (A) each have an ideal point, the policy they like best, and the closer a policy is to someone’s ideal point, the better they like it. The status quo (SQ) is the policy in place now.",
+        "The agent presents a policy proposal, and the principal says yes or no. She chooses whichever is closer to her ideal point, the proposal or the status quo, and if they are exactly as close she says yes. The agent knows this, so he proposes a policy as close to his own ideal point as she will accept. Finding that policy takes three steps."
+      ] },
+    { title: "Step 1: how far is the status quo from the principal?", changes: ["ws"], look: ["ws"],
+      r: L_WORKED, show: {}, ws: upto("d"), fresh: { d: 1 }, sub: "The lecture’s worked example.",
+      body: [
+        "In the lecture’s example the status quo is at 2, the principal’s ideal point at 5 and the agent’s at 9.",
+        "Start with the principal. The status quo is 5 − 2 = 3 away from her ideal point. That distance is how good the status quo is for her, and any proposal has to do at least as well."
+      ] },
+    { title: "Step 2: the acceptable range", changes: ["line"], look: ["line", "ws"],
+      r: L_WORKED, show: { range: true }, ws: upto("range"), fresh: { range: 1 }, sub: "The lecture’s worked example.",
+      body: [
+        "The principal accepts any proposal at least as close to her ideal point as the status quo. So the acceptable range runs 3 units on either side of 5: from 2 to 8.",
+        "The range goes past the principal’s ideal point, not just up to it. A policy of 8 is 3 away from her, exactly as far as the status quo, so she would say yes to it."
+      ] },
+    { title: "Step 3: the agent’s proposal", changes: ["line"], look: ["line", "ws"],
+      r: L_WORKED, show: { range: true, outcome: true }, ws: upto("out"), fresh: { x: 1, out: 1 }, sub: "The lecture’s worked example.",
+      body: [
+        "The agent proposes the policy in that range closest to his own ideal point. His ideal point, 9, is outside the range: propose 9 and the principal would say no and keep the status quo at 2. So he proposes 8, the edge of the range.",
+        "The principal says yes, and the final policy is 8, much closer to what the agent wanted than to what she wanted. She still says yes, because 8 is no worse for her than the status quo."
+      ] },
+    { title: "When the agent’s ideal point is inside the range", changes: ["line"], look: ["line", "ws"],
+      r: L_INSIDE, show: { range: true, outcome: true }, ws: upto("out"), fresh: { sq: 1, a: 1, d: 1, range: 1, x: 1, out: 1 }, sub: "The lecture’s second example.",
+      body: [
+        "Now the status quo is at 3, the principal is at 5 again, and the agent is at 7. The status quo is 2 away from her, so the acceptable range runs from 3 to 7.",
+        "The agent’s ideal point is in the range, so he simply proposes it. The principal says yes, and the final policy is 7: everything the agent wanted."
+      ] },
+    { title: "A minister from her own party, or from a coalition partner?", changes: ["line"], look: ["line", "ws"],
+      r: L_SAME, show: { range: true, outcome: true }, ws: upto("out"), fresh: { sq: 1, a: 1, d: 1, range: 1, x: 1, out: 1 }, sub: "The lecture’s third example.",
+      body: [
+        "Here the status quo is at 4, and the principal and the agent share an ideal point at 5. The acceptable range runs from 4 to 6, the agent proposes 5, and the principal gets exactly the policy she wants.",
+        "Suppose the principal is a prime minister and the agent one of her ministers. The lecture asks which of the last two examples looks like a minister from her own party, and which like a minister from a coalition partner. A minister from her own party is the more likely to share her ideal point, as here. A coalition partner’s minister is more likely to want something else, and, like the agent in the last example, can use the ministry to move policy toward his own party’s position."
+      ] },
+    { title: "When the agent wants more than she will accept", changes: ["line"], look: ["line", "ws"],
+      r: L_BEYOND, show: { range: true, outcome: true }, ws: upto("out"), fresh: { a: 1, x: 1, out: 1 }, sub: "The lecture’s fourth example.",
+      body: [
+        "The status quo and the principal are where they were two examples ago, at 3 and 5, so the acceptable range is again 3 to 7. This time the agent’s ideal point is 8, outside the range. He proposes 7, the policy in the range closest to 8, and the principal says yes.",
+        "The lecture asks in which of these two examples the agent had more discretion to move policy to his own ideal point. In the last example: with his ideal point at 7, he got everything he wanted, while here, with it at 8, the range stopped him one short.",
+        "Notice what did and didn’t change. The principal would accept exactly the same policies in both, 3 to 7. What changed is where the agent wants policy to go, and so whether the edge of the range gets in his way."
+      ] },
+    { title: "Where the status quo sits", changes: ["line"], look: ["line", "ws"],
+      r: T_CLOSER, show: { range: true, outcome: true }, ws: upto("out"), fresh: { sq: 1, d: 1, range: 1, x: 1, out: 1 }, sub: "The last example, with the status quo moved one step closer to the principal.",
+      body: [
+        "Keep the principal at 5 and the agent at 8, and move the status quo from 3 to 4. It is now only 1 away from her, so the acceptable range shrinks to 4 to 6, and the agent can get no closer to 8 than 6.",
+        "Nothing about the principal or the agent changed. What the agent can get depends on where the status quo sits. Step 2 is the reason: the range runs the distance from P to the status quo on either side of P, so a status quo close to the principal gives the agent little room, and one far from her gives him a lot."
+      ] },
+    { title: "Why ministers find civil servants hard to control",
+      r: T_CLOSER, show: { range: true, outcome: true }, ws: upto("out"), sub: "The last example.",
+      body: [
+        "In the game, the principal knows where the agent’s ideal point is and can see exactly what he proposes. Ministers dealing with civil servants often can’t. They need technical advice, and the civil servants are the ones who understand the technical side of a policy, which makes it hard for a minister to tell whether that advice is unbiased.",
+        "Political scientists call these two problems adverse selection, when the principal can’t observe what type of agent she has, such as what he wants, and moral hazard, when she can’t observe what he actually does. The lecture’s bottom line is that policy is shaped in important ways by civil servants nobody elected.",
+        "The reasoning in Step 2 comes back in the veto player part of the lecture: each veto player accepts any policy closer to it than the status quo, so finding the policies they all accept starts the same way. The practice tab has delegation problems to solve."
+      ] }
+  ];
+
+  var step = 0;
+  var dotsEl = $("dots");
+  STEPS.forEach(function () { var d = document.createElement("span"); d.className = "dot"; dotsEl.appendChild(d); });
+
+  function renderGuided(prev) {
+    var s = STEPS[step];
+    drawLine(s.r, s.show, s.sub);
+    renderWs(s.r, s.ws, s.fresh);
+    $("stepLabel").textContent = "Step " + (step + 1) + " of " + STEPS.length;
+    $("stepTitle").textContent = s.title;
+    $("stepBody").innerHTML = s.body.map(function (p) { return "<p>" + p + "</p>"; }).join("");
+    lookButtons($("stepLook"), s.look);
+    $("prevBtn").disabled = step === 0;
+    $("nextBtn").disabled = step === STEPS.length - 1;
+    var dots = dotsEl.children;
+    for (var i = 0; i < dots.length; i++) dots[i].className = "dot" + (i === step ? " on" : "");
+    if (prev !== undefined && step > prev && s.changes) bring(s.changes[0]);
+  }
+  $("prevBtn").addEventListener("click", function () {
+    if (step > 0) { var p = step; step--; renderGuided(p); if (step === 0) $("stepTitle").focus({ preventScroll: true }); }
+  });
+  $("nextBtn").addEventListener("click", function () {
+    if (step < STEPS.length - 1) { var p = step; step++; renderGuided(p); if (step === STEPS.length - 1) $("stepTitle").focus({ preventScroll: true }); }
+  });
+
+  /* ================= explore ================= */
+
+  var sSQ = $("sSQ"), sP = $("sP"), sA = $("sA");
+  function verdictOf(r) {
+    var v, w;
+    if (r.where === "atp") {
+      v = "Policy stays at " + r.p + ".";
+      w = "The status quo is already the principal’s ideal point, so any change makes her worse off. The acceptable range is the status quo alone, and that is all the agent can propose.";
+    } else if (r.where === "shared") {
+      v = "The agent proposes " + r.a + ", and the principal says yes.";
+      w = "The agent wants exactly what the principal wants. His ideal point is in the acceptable range, " + rangeText(r) + ", and the final policy is the principal’s ideal point too.";
+    } else if (r.where === "inside") {
+      v = "The agent proposes " + r.a + ", his own ideal point, and the principal says yes.";
+      w = "His ideal point is inside the acceptable range, " + rangeText(r) + ", so he simply proposes it. The final policy is everything he wanted.";
+    } else if (r.where === "outside") {
+      v = "The agent proposes " + r.x + ", the edge of the range, and the principal says yes.";
+      w = "His ideal point, " + r.a + ", is outside the acceptable range, " + rangeText(r) + ". The policy in the range closest to it is " + r.x + ", which is exactly as far from the principal as the status quo, so she accepts.";
+    } else {
+      v = "Policy stays at the status quo, " + r.sq + ".";
+      w = r.a === r.sq
+        ? "The agent’s ideal point is the status quo, and the status quo is in the acceptable range, so he proposes it."
+        : "The agent’s ideal point, " + r.a + ", is on the far side of the status quo from the principal. The policy in the acceptable range, " + rangeText(r) + ", closest to him is the status quo itself, so moving policy anywhere she would accept takes it away from him. The lecture’s examples don’t include this case.";
+    }
+    return { v: v, w: w };
+  }
+  function renderExplore(changed) {
+    var r = solve(Number(sSQ.value), Number(sP.value), Number(sA.value));
+    $("oSQ").textContent = r.sq; sSQ.setAttribute("aria-valuetext", String(r.sq));
+    $("oP").textContent = r.p; sP.setAttribute("aria-valuetext", String(r.p));
+    $("oA").textContent = r.a; sA.setAttribute("aria-valuetext", String(r.a));
+    drawLine(r, { range: true, outcome: true }, "Your example.");
+    renderWs(r, upto("out"));
+    var o = verdictOf(r);
+    $("verdict").textContent = o.v; $("vWhy").textContent = o.w;
+    if (changed) say(o.v);
+  }
+  [sSQ, sP, sA].forEach(function (s) { s.addEventListener("input", function () { renderExplore(true); }); });
+
+  /* ================= practice ================= */
+
+  /* Every course example of this model (the lecture's and the homework's) puts the principal's
+     ideal point at 4 or 5, or at 6 in mirror image. The generator never puts it there, so no
+     practice problem can reproduce one, or reproduce one reflected. */
+  var P_ALLOWED = [1, 2, 3, 7, 8, 9];
+
+  var KINDS = [
+    { v: "shared", t: "The agent shares the principal’s ideal point" },
+    { v: "inside", t: "The agent’s ideal point is inside the acceptable range" },
+    { v: "outside", t: "The agent’s ideal point is outside the acceptable range" }
+  ];
+
+  var FRAMES = [
+    { who: "A prime minister (the principal) asks a cabinet minister from her own party (the agent) to draft a new policy.", any: true },
+    { who: "A prime minister (the principal) asks a minister from her coalition partner (the agent) to draft a new policy.", any: false },
+    { who: "A minister (the principal) asks a senior civil servant in her department (the agent) to draft the regulations for a new policy.", any: true }
+  ];
+
+  function randInt(lo, hi) { return lo + Math.floor(Math.random() * (hi - lo + 1)); }
+  function shuffled(arr) { var a = arr.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+
+  /* Constraints, all checked by the verification script: P in P_ALLOWED; SQ differs from P;
+     the agent's ideal point is not at the status quo
+     and not beyond it (so the final policy always moves). */
+  function valid(r) {
+    return P_ALLOWED.indexOf(r.p) >= 0 && r.d > 0 &&
+      r.a >= 0 && r.a <= 10 && r.where !== "behind" && r.where !== "atp";
+  }
+  var kindsDone = {};
+  function genProblem(forceKind) {
+    var want = KINDS.filter(function (k) { return !kindsDone[k.v]; }).map(function (k) { return k.v; });
+    var target = forceKind || (want.length && Math.random() < 0.75 ? want[Math.floor(Math.random() * want.length)] : KINDS[Math.floor(Math.random() * KINDS.length)].v);
+    for (var tries = 0; tries < 5000; tries++) {
+      var p = P_ALLOWED[Math.floor(Math.random() * P_ALLOWED.length)];
+      var sq = randInt(0, 10), a = target === "shared" ? p : randInt(0, 10);
+      var r = solve(sq, p, a);
+      if (valid(r) && r.where === target) {
+        var frames = target === "shared" ? FRAMES.filter(function (f) { return f.any; }) : FRAMES;
+        r.frame = frames[Math.floor(Math.random() * frames.length)].who;
+        return r;
+      }
+    }
+    var fb = solve(6, 8, 10); fb.frame = FRAMES[0].who; return fb;
+  }
+
+  /* Options are listed in order (smallest first; ranges by left end, then right), so the
+     correct answer's position would otherwise follow from the geometry, and a student could
+     learn the position instead of the method. So: pick the correct answer's position uniformly
+     from the positions it can take, then pick three distractors that put it there, using as
+     many real mistakes as possible. Near misses (values a step or two from the answer) are
+     used only where real mistakes can't reach the chosen position. */
+  function pickBalanced(correct, real, near, key, cmp) {
+    var seen = {}, c = [];
+    seen[key(correct)] = 1;
+    real.forEach(function (v) { var k = key(v); if (!seen[k]) { seen[k] = 1; c.push({ v: v, real: 1 }); } });
+    near.forEach(function (v) { var k = key(v); if (!seen[k]) { seen[k] = 1; c.push({ v: v, real: 0 }); } });
+    var n = Math.min(3, c.length), best = {};
+    (function rec(start, acc) {
+      if (acc.length === n) {
+        var pos = 0, nReal = 0;
+        acc.forEach(function (o) { if (cmp(o.v, correct) < 0) pos++; nReal += o.real; });
+        if (!best[pos] || nReal > best[pos].nReal) best[pos] = { nReal: nReal, list: [] };
+        if (nReal === best[pos].nReal) best[pos].list.push(acc.slice());
+        return;
+      }
+      for (var i = start; i < c.length; i++) { acc.push(c[i]); rec(i + 1, acc); acc.pop(); }
+    })(0, []);
+    var poss = Object.keys(best);
+    var list = best[poss[Math.floor(Math.random() * poss.length)]].list;
+    var chosen = list[Math.floor(Math.random() * list.length)].map(function (o) { return o.v; });
+    return chosen.concat([correct]).sort(cmp);
+  }
+  function nearNums(x) { return [x - 1, x + 1, x - 2, x + 2, x - 3, x + 3].filter(onScale); }
+  function nearRanges(lo, hi) {
+    return [[lo, hi - 1], [lo, hi + 1], [lo - 1, hi], [lo + 1, hi], [lo - 1, hi - 1], [lo + 1, hi + 1], [lo - 2, hi - 2], [lo + 2, hi + 2]]
+      .filter(function (iv) { return iv[0] < iv[1]; });
+  }
+  function onScale(v) { return v >= 0 && v <= 10; }
+  function numCmp(x, y) { return x - y; }
+  function rangeCmp(x, y) { return x[0] - y[0] || x[1] - y[1]; }
+  function rangeOpts(r) {
+    var p = r.p, q = r.sq, a = r.a, d = r.d, da = Math.abs(a - q);
+    var pool = [
+      [Math.min(p, q), Math.max(p, q)],                  /* only the stretch from the SQ to P */
+      [Math.min(p, 2 * p - q), Math.max(p, 2 * p - q)],  /* only the side of P away from the SQ */
+      [q - d, q + d],                                    /* the distance on either side of the SQ, not of P */
+      [a - da, a + da],                                  /* the agent's range, not the principal's */
+      [Math.min(q, a), Math.max(q, a)],                  /* from the status quo to the agent */
+      [p - Math.ceil(d / 2), p + Math.ceil(d / 2)],      /* half the distance */
+      [Math.min(p, a), Math.max(p, a)],                  /* between the two ideal points */
+      [Math.max(r.lo, 0), Math.min(r.hi, 10)]            /* cut off at the end of the scale */
+    ].filter(function (iv) { return iv[0] < iv[1]; });
+    return pickBalanced([r.lo, r.hi], pool, nearRanges(r.lo, r.hi), function (iv) { return iv[0] + ":" + iv[1]; }, rangeCmp);
+  }
+  function makeOpts(r) {
+    var mid = Math.round((r.p + r.a) / 2);              /* splitting the difference between P and A */
+    var midSq = Math.round((r.sq + r.x) / 2);           /* splitting the difference between SQ and the proposal */
+    var s = r.x === r.p ? 1 : (r.x > r.p ? 1 : -1);
+    var inward = r.x - s, outward = r.x + s;            /* one step short of the edge (missing the tie rule), one step past it */
+    return {
+      1: rangeOpts(r),
+      2: pickBalanced(r.x, [r.a, r.p, r.sq, r.lo, r.hi, mid, inward, outward].filter(onScale), nearNums(r.x), String, numCmp),
+      3: pickBalanced(r.x, [r.sq, r.p, r.a, mid, midSq, inward].filter(onScale), nearNums(r.x), String, numCmp)
+    };
+  }
+
+  var gp = null, gStage = 1, gFirst = true, gStats = { done: 0, clean: 0 };
+  var G_SHOWN = [upto("a"), { d: 1, range: 1 }, { x: 1 }, { out: 1 }];
+  function gShown() { var s = {}; for (var i = 0; i < Math.min(gStage, 4); i++) for (var k in G_SHOWN[i]) s[k] = 1; return s; }
+  function renderGameCards(fresh) {
+    drawLine(gp, { range: gStage > 1, proposal: gStage === 3, outcome: gStage > 3 }, "This problem.");
+    renderWs(gp, gShown(), fresh || {});
+  }
+  function problemText(r) {
+    return "The status quo is at " + r.sq + ". The principal’s ideal point is " + r.p + " and the agent’s is " + r.a + ".";
+  }
+  function optBtn(container, v, text, cls) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "opt" + (cls ? " " + cls : ""); b.setAttribute("data-v", v); b.textContent = text;
+    $(container).appendChild(b);
+  }
+  function lockOpts(id, chosen) {
+    var bs = $(id).querySelectorAll(".opt");
+    for (var i = 0; i < bs.length; i++) { bs[i].setAttribute("aria-disabled", "true"); if (bs[i].getAttribute("data-v") === chosen) bs[i].classList.add("chosen"); }
+  }
+  function note(id, ok, head, text, looks) {
+    var el = $(id); el.innerHTML = "";
+    var d = document.createElement("div"); d.className = "result-note " + (ok ? "ok" : "no");
+    var h = document.createElement("span"); h.className = "head"; h.textContent = (ok ? "✓ " : "✕ ") + head + " ";
+    d.appendChild(h); d.appendChild(document.createTextNode(text));
+    if (looks) { var lk = document.createElement("div"); lk.className = "looks"; d.appendChild(lk); lookButtons(lk, looks); }
+    el.appendChild(d);
+  }
+
+  function newProblem(moveReader) {
+    gp = genProblem(); gStage = 1; gFirst = true;
+    var r = gp;
+    gp.opts = makeOpts(r);
+    $("probText").innerHTML = "<p>" + r.frame + "</p><p class='nums'>" + problemText(r) + "</p>";
+    ["go1", "go2", "go3", "gf1", "gf2", "gf3"].forEach(function (id) { $(id).innerHTML = ""; });
+    gp.opts[1].forEach(function (iv, i) { optBtn("go1", String(i), fmt(iv[0]) + " to " + fmt(iv[1]), "num"); });
+    [2, 3].forEach(function (t) { gp.opts[t].forEach(function (v) { optBtn("go" + t, String(v), fmt(v), "num"); }); });
+    ["gt2", "gt3"].forEach(function (id) { $(id).hidden = true; });
+    $("nextProb").hidden = true;
+    renderGameCards();
+    renderProgress(); renderScore();
+    if (moveReader) bring("line");
+  }
+
+  var G_WRONG = {
+    1: function (r) { return "Step 1: how far is the status quo from " + r.p + "? Step 2: the principal accepts anything at least that close to " + r.p + ", on either side of it."; },
+    2: function (r) { return "The agent wants the policy closest to " + r.a + " that the principal will accept. If " + r.a + " is in the acceptable range, that’s " + r.a + "; if not, it’s the point in the range nearest to it."; },
+    3: function (r) { return "The agent only proposes a policy the principal will accept. What happens to a proposal she says yes to?"; }
+  };
+  function gRight(t, r) {
+    if (t === 1) return "The status quo is " + r.d + " away from " + r.p + ", so the principal accepts anything from " + r.lo + " to " + r.hi + ".";
+    if (t === 2) return r.x === r.a
+      ? r.a + " is inside the acceptable range, so the agent proposes his own ideal point."
+      : r.a + " is outside the acceptable range, so the agent proposes its edge, " + r.x + ". That is exactly as far from the principal as the status quo, so she says yes.";
+    return "The principal says yes, so the final policy is the agent’s proposal, " + r.x + ".";
+  }
+  var G_FRESH = { 1: { d: 1, range: 1 }, 2: { x: 1 }, 3: { out: 1 } };
+
+  function answerGame(t, v) {
+    if (gStage !== t) return;
+    var r = gp, ok;
+    if (t === 1) ok = gp.opts[1][Number(v)][0] === r.lo && gp.opts[1][Number(v)][1] === r.hi;
+    else ok = Number(v) === r.x;
+    if (!ok) {
+      gFirst = false;
+      var m = G_WRONG[t](r) + " Try again.";
+      note("gf" + t, false, "Not that one.", m);
+      say("Not that one. " + m);
+      return;
+    }
+    lockOpts("go" + t, v);
+    gStage = t + 1;
+    var txt = gRight(t, r);
+    note("gf" + t, true, "Right.", txt, ["line", "ws"]);
+    say("Right. " + txt);
+    renderGameCards(G_FRESH[t]);
+    if (t < 3) $("gt" + (t + 1)).hidden = false;
+    else {
+      gStats.done++;
+      if (gFirst) { gStats.clean++; kindsDone[r.where] = true; }
+      $("nextProb").hidden = false;
+      renderProgress(); renderScore();
+    }
+    bring("line");
+  }
+  [1, 2, 3].forEach(function (t) {
+    $("go" + t).addEventListener("click", function (e) { var b = e.target.closest(".opt"); if (b) answerGame(t, b.getAttribute("data-v")); });
+  });
+  $("nextProb").addEventListener("click", function () {
+    newProblem(true);
+    $("practiceTitle").focus({ preventScroll: true });
+    say("New problem. " + gp.frame + " " + problemText(gp));
+  });
+  function renderProgress() {
+    var ul = $("progress"); ul.innerHTML = "";
+    KINDS.forEach(function (k) {
+      var li = document.createElement("li"); li.className = kindsDone[k.v] ? "done" : "";
+      li.innerHTML = "<span class='pm' aria-hidden='true'>" + (kindsDone[k.v] ? "✓" : "○") + "</span><span>" + k.t + (kindsDone[k.v] ? "<span class='sr-only'> (solved)</span>" : "<span class='sr-only'> (not yet)</span>") + "</span>";
+      ul.appendChild(li);
+    });
+  }
+  function renderScore() {
+    $("score").textContent = gStats.done === 0 ? "No problems finished yet." :
+      gStats.done + (gStats.done === 1 ? " problem" : " problems") + " finished, " + gStats.clean + " with every answer right the first time." +
+      (KINDS.every(function (k) { return kindsDone[k.v]; }) ? " All three kinds are checked off. New problems keep coming if you want more practice." : "");
+  }
+
+  /* ================= modes and theme ================= */
+
+  var mode = "guided", TABS = ["guided", "explore", "practice"];
+  function selectMode(m, focusTab) {
+    mode = m;
+    TABS.forEach(function (t) {
+      var tab = $("tab-" + t);
+      tab.setAttribute("aria-selected", t === m ? "true" : "false");
+      tab.tabIndex = t === m ? 0 : -1;
+      $(t + "Panel").hidden = t !== m;
+    });
+    movedAway = false; backBtn.hidden = true;
+    if (m === "guided") renderGuided();
+    else if (m === "explore") renderExplore();
+    else { if (!gp) newProblem(false); else renderGameCards(); }
+    if (focusTab) $("tab-" + m).focus();
+    say(m === "guided" ? "Guided walkthrough, step " + (step + 1) + "." : m === "explore" ? "Explore. The sliders move the status quo and the ideal points." : "Practice. " + gp.frame + " " + problemText(gp));
+  }
+  TABS.forEach(function (t) { $("tab-" + t).addEventListener("click", function () { selectMode(t, false); }); });
+  $("tabs").addEventListener("keydown", function (e) {
+    var i = TABS.indexOf(mode), next = null;
+    if (e.key === "ArrowRight") next = TABS[(i + 1) % 3];
+    else if (e.key === "ArrowLeft") next = TABS[(i + 2) % 3];
+    else if (e.key === "Home") next = TABS[0];
+    else if (e.key === "End") next = TABS[2];
+    if (next) { e.preventDefault(); selectMode(next, true); }
+  });
+
+  var themeBtn = $("themeToggle");
+  function applyTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    themeBtn.textContent = t === "dark" ? "Switch to light mode" : "Switch to dark mode";
+  }
+  applyTheme(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  themeBtn.addEventListener("click", function () {
+    applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  });
+
+  /* ---------- exposed for the verification script only ---------- */
+  window.__deleg = { solve: solve, valid: valid, genProblem: genProblem, makeOpts: makeOpts, rangeOpts: rangeOpts,
+    verdictOf: verdictOf, STEPS: STEPS, KINDS: KINDS, P_ALLOWED: P_ALLOWED, answerGame: answerGame,
+    selectMode: selectMode, newProblem: newProblem,
+    get gp() { return gp; }, get stage() { return gStage; } };
+
+  renderGuided();
+})();
+</script>
+</body>
+</html>
